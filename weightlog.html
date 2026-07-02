@@ -413,7 +413,7 @@
       <textarea id="f_suggestions" placeholder="ข้อเสนอแนะเพิ่มเติมเพื่อการปรับปรุงกระบวนการ (ถ้ามี)"></textarea>
     </div>
 
-    <button class="btn" id="submitBtn" onclick="submitForm()">บันทึกข้อมูล</button>
+    <button class="btn" id="submitBtn" onclick="reviewForm()">บันทึกข้อมูล</button>
   </section>
 
   <!-- ================= REPORT PAGE ================= -->
@@ -465,6 +465,13 @@
   <div class="modal">
     <button class="modal-close" onclick="closeModal()">&times;</button>
     <div id="modalBody"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="confirmModalOverlay" onclick="if(event.target===this && !saveInProgress) closeConfirmModal()">
+  <div class="modal">
+    <button class="modal-close" onclick="if(!saveInProgress) closeConfirmModal()">&times;</button>
+    <div id="confirmModalBody"></div>
   </div>
 </div>
 
@@ -573,7 +580,7 @@ function switchTab(tab, fromHistory) {
   if (!isForm) loadHistory();
 
   if (!fromHistory) {
-    history.pushState({ tab: tab, modal: false }, '', '#' + tab);
+    history.pushState({ tab: tab, overlay: null }, '', '#' + tab);
   }
 }
 
@@ -626,35 +633,28 @@ function buildProblemsText() {
 
 /* ---------------- Submit guard ---------------- */
 let saveInProgress = false;
+let pendingSaveData = null;
 
-async function submitForm() {
-  if (saveInProgress) return;
-
-  if (navigator.onLine === false) {
-    showToast('ไม่มีการเชื่อมต่ออินเทอร์เน็ต กรุณาตรวจสอบแล้วลองใหม่', 'error');
-    return;
-  }
-
+// รวบรวม + ตรวจสอบข้อมูลจากฟอร์ม คืนค่า { data } ถ้าผ่าน หรือ { error } ถ้าไม่ผ่าน
+function collectAndValidateForm() {
   const date = document.getElementById('f_date').value;
   const weighmaster = document.getElementById('f_weighmaster').value.trim();
   const vehFeedOutRaw = document.getElementById('f_veh_feed_out').value;
   const vehRawmatInRaw = document.getElementById('f_veh_rawmat_in').value;
 
-  if (!date) { showToast('กรุณาระบุวันที่', 'error'); return; }
-  if (!weighmaster) { showToast('กรุณาระบุชื่อผู้บันทึก', 'error'); return; }
-  if (weighmaster.length > 200) { showToast('ชื่อผู้บันทึกยาวเกินไป', 'error'); return; }
-  if (!selectedShift) { showToast('กรุณาเลือกกะปฏิบัติงาน', 'error'); return; }
+  if (!date) return { error: 'กรุณาระบุวันที่' };
+  if (!weighmaster) return { error: 'กรุณาระบุชื่อผู้บันทึก' };
+  if (weighmaster.length > 200) return { error: 'ชื่อผู้บันทึกยาวเกินไป' };
+  if (!selectedShift) return { error: 'กรุณาเลือกกะปฏิบัติงาน' };
 
   const vehFeedOut = Number(vehFeedOutRaw);
   const vehRawmatIn = Number(vehRawmatInRaw);
   if (!Number.isFinite(vehFeedOut) || vehFeedOut < 0) {
-    showToast('จำนวนรถส่งอาหารไม่ถูกต้อง (ต้องเป็นตัวเลขไม่ติดลบ)', 'error'); return;
+    return { error: 'จำนวนรถส่งอาหารไม่ถูกต้อง (ต้องเป็นตัวเลขไม่ติดลบ)' };
   }
   if (!Number.isFinite(vehRawmatIn) || vehRawmatIn < 0) {
-    showToast('จำนวนรถรับวัตถุดิบไม่ถูกต้อง (ต้องเป็นตัวเลขไม่ติดลบ)', 'error'); return;
+    return { error: 'จำนวนรถรับวัตถุดิบไม่ถูกต้อง (ต้องเป็นตัวเลขไม่ติดลบ)' };
   }
-
-  const problemsText = buildProblemsText();
 
   const data = {
     date: date,
@@ -663,26 +663,109 @@ async function submitForm() {
     veh_feed_out: Math.floor(vehFeedOut),
     veh_rawmat_in: Math.floor(vehRawmatIn),
     veh_other_type: document.getElementById('f_veh_other_type').value.trim(),
-    problems: problemsText,
+    problems: buildProblemsText(),
     corrective_action: document.getElementById('f_corrective').value.trim(),
     suggestions: document.getElementById('f_suggestions').value.trim()
   };
 
-  const btn = document.getElementById('submitBtn');
+  return { data: data };
+}
+
+// ขั้นที่ 1: ตรวจสอบข้อมูล แล้วเปิด popup สรุปให้ผู้ใช้ตรวจทานก่อน (ยังไม่ส่งจริง)
+function reviewForm() {
+  if (saveInProgress) return;
+
+  if (navigator.onLine === false) {
+    showToast('ไม่มีการเชื่อมต่ออินเทอร์เน็ต กรุณาตรวจสอบแล้วลองใหม่', 'error');
+    return;
+  }
+
+  const result = collectAndValidateForm();
+  if (result.error) {
+    showToast(result.error, 'error');
+    return;
+  }
+
+  pendingSaveData = result.data;
+  openConfirmModal(pendingSaveData);
+}
+
+function fmtMultiline_(text) {
+  return text && String(text).trim()
+    ? escHtml(text).replace(/\n/g, '<br>')
+    : '<span style="color:var(--muted);">-</span>';
+}
+
+// ขั้นที่ 2: แสดง popup สรุปข้อมูลทั้งหมดให้ตรวจสอบก่อนกดยืนยันบันทึกจริง
+function openConfirmModal(data) {
+  const rows = [
+    ['วันที่', data.date],
+    ['กะ', data.shift],
+    ['ผู้บันทึก', data.weighmaster],
+    ['รถส่งอาหาร (คัน)', data.veh_feed_out],
+    ['รถรับวัตถุดิบ/เคมีภัณฑ์/บรรจุภัณฑ์ (คัน)', data.veh_rawmat_in],
+    ['ประเภทรถอื่นๆ', data.veh_other_type || '-']
+  ];
+
+  let html = '<h3>⚠️ ตรวจสอบข้อมูลก่อนบันทึก</h3>';
+  html += '<div style="font-size:13px;color:var(--muted);margin-bottom:14px;">กรุณาตรวจสอบความถูกต้องอีกครั้ง ก่อนกด "ยืนยันบันทึก"</div>';
+
+  rows.forEach(([label, val]) => {
+    html += '<div class="modal-row"><span class="k">' + escHtml(label) + '</span>' + escHtml(val) + '</div>';
+  });
+
+  html += '<div class="modal-row"><span class="k">ปัญหาที่พบและรายละเอียด</span>' + fmtMultiline_(data.problems) + '</div>';
+  html += '<div class="modal-row"><span class="k">แนวทางการแก้ไข</span>' + fmtMultiline_(data.corrective_action) + '</div>';
+  html += '<div class="modal-row"><span class="k">ข้อเสนอแนะ</span>' + fmtMultiline_(data.suggestions) + '</div>';
+
+  html += '<div style="display:flex;gap:10px;margin-top:22px;">' +
+    '<button class="btn secondary" style="flex:1;" onclick="closeConfirmModal()">แก้ไขข้อมูล</button>' +
+    '<button class="btn" style="flex:1;" id="confirmSaveBtn" onclick="confirmAndSave()">ยืนยันบันทึก</button>' +
+    '</div>';
+
+  document.getElementById('confirmModalBody').innerHTML = html;
+  document.getElementById('confirmModalOverlay').classList.add('show');
+  history.pushState({ tab: currentTab, overlay: 'confirm' }, '', '#confirm');
+}
+
+function closeConfirmModal(fromHistory) {
+  if (saveInProgress) return; // กันปิดกลางคันตอนกำลังบันทึกอยู่
+  document.getElementById('confirmModalOverlay').classList.remove('show');
+  if (!fromHistory) history.back();
+}
+
+// ขั้นที่ 3: ผู้ใช้กดยืนยันแล้ว ค่อยส่งข้อมูลจริงไปที่ Apps Script
+async function confirmAndSave() {
+  if (saveInProgress || !pendingSaveData) return;
+
+  const confirmBtn = document.getElementById('confirmSaveBtn');
+  const mainBtn = document.getElementById('submitBtn');
+
   saveInProgress = true;
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> กำลังบันทึก...';
+  mainBtn.disabled = true;
+  if (confirmBtn) {
+    confirmBtn.disabled = true;
+    confirmBtn.innerHTML = '<span class="spinner"></span> กำลังบันทึก...';
+  }
 
   try {
-    await callApi('save', { data: data });
+    await callApi('save', { data: pendingSaveData });
     showToast('บันทึกข้อมูลสำเร็จ', 'success');
+    saveInProgress = false; // ปลดล็อกก่อนปิด modal เพื่อไม่ให้ closeConfirmModal ติด guard
+    closeConfirmModal();
     resetForm();
   } catch (err) {
+    saveInProgress = false;
     showToast('บันทึกไม่สำเร็จ: ' + err.message, 'error');
   } finally {
     saveInProgress = false;
-    btn.disabled = false;
-    btn.textContent = 'บันทึกข้อมูล';
+    mainBtn.disabled = false;
+    mainBtn.textContent = 'บันทึกข้อมูล';
+    if (confirmBtn) {
+      confirmBtn.disabled = false;
+      confirmBtn.textContent = 'ยืนยันบันทึก';
+    }
+    pendingSaveData = null;
   }
 }
 
@@ -824,43 +907,51 @@ function showDetail(idx) {
 
   document.getElementById('modalBody').innerHTML = html;
   document.getElementById('modalOverlay').classList.add('show');
-  history.pushState({ tab: currentTab, modal: true }, '', '#detail');
+  history.pushState({ tab: currentTab, overlay: 'detail' }, '', '#detail');
 }
 
 function closeModal(fromHistory) {
   document.getElementById('modalOverlay').classList.remove('show');
   if (!fromHistory) {
-    // ให้ปุ่ม back ของเบราว์เซอร์ "เดินไปข้างหน้า" มาเจอ state ที่ modal:false เอง
+    // ให้ปุ่ม back ของเบราว์เซอร์ "เดินไปข้างหน้า" มาเจอ state ที่ overlay:null เอง
     history.back();
   }
 }
 
+function getOpenOverlay_() {
+  if (document.getElementById('confirmModalOverlay').classList.contains('show')) return 'confirm';
+  if (document.getElementById('modalOverlay').classList.contains('show')) return 'detail';
+  return null;
+}
+
 /* ---------------- Browser back/forward handling ---------------- */
 // กันปัญหากดย้อนกลับแล้วหลุดออกจากเว็บทันที:
-// ให้ back ปิด modal ก่อน แล้วค่อยสลับกลับไปแท็บฟอร์ม แล้วค่อยออกจากเว็บจริงๆ
+// ให้ back ปิด popup ที่เปิดอยู่ก่อน (ตรวจสอบข้อมูล/รายละเอียด) แล้วค่อยสลับกลับไปแท็บฟอร์ม แล้วค่อยออกจากเว็บจริงๆ
 window.addEventListener('popstate', (event) => {
-  const state = event.state || { tab: 'form', modal: false };
-  const modalOpen = document.getElementById('modalOverlay').classList.contains('show');
+  const state = event.state || { tab: 'form', overlay: null };
+  const openOverlay = getOpenOverlay_();
 
-  if (modalOpen && !state.modal) {
-    closeModal(true);
+  if (openOverlay && openOverlay !== state.overlay) {
+    if (openOverlay === 'detail') closeModal(true);
+    if (openOverlay === 'confirm') closeConfirmModal(true);
   }
   if (state.tab && state.tab !== currentTab) {
     switchTab(state.tab, true);
   }
 });
 
-// ปิด modal ด้วยปุ่ม Esc เพื่อความสะดวก/เสถียรบนเดสก์ท็อป
+// ปิด popup ด้วยปุ่ม Esc เพื่อความสะดวก/เสถียรบนเดสก์ท็อป
 window.addEventListener('keydown', (event) => {
-  if (event.key === 'Escape' && document.getElementById('modalOverlay').classList.contains('show')) {
-    closeModal();
-  }
+  if (event.key !== 'Escape') return;
+  const openOverlay = getOpenOverlay_();
+  if (openOverlay === 'detail') closeModal();
+  if (openOverlay === 'confirm') closeConfirmModal();
 });
 
 /* ---------------- Init ---------------- */
 window.addEventListener('DOMContentLoaded', () => {
   setDefaultDate();
-  history.replaceState({ tab: 'form', modal: false }, '', '#form');
+  history.replaceState({ tab: 'form', overlay: null }, '', '#form');
   if (!APPS_SCRIPT_URL) {
     document.getElementById('configWarning').style.display = 'block';
   }
