@@ -533,6 +533,11 @@
       <div id="historyContainer">
         <div class="empty-state"><span class="spinner dark"></span> กำลังโหลดข้อมูล...</div>
       </div>
+      <div id="paginationControls" style="display:none;align-items:center;justify-content:space-between;margin-top:14px;gap:10px;flex-wrap:wrap;">
+        <button class="btn secondary" id="prevPageBtn" style="width:auto;padding:8px 16px;" onclick="changePage(-1)">← ก่อนหน้า</button>
+        <span id="pageInfo" style="font-size:12.5px;color:var(--muted);"></span>
+        <button class="btn secondary" id="nextPageBtn" style="width:auto;padding:8px 16px;" onclick="changePage(1)">ถัดไป →</button>
+      </div>
     </div>
 
   </section>
@@ -898,7 +903,15 @@ let currentRecords = [];
 let isLoadingHistory = false;
 let historyRequestSeq = 0; // กันผลลัพธ์ของ request เก่ามาทับผลลัพธ์ของ request ใหม่กว่า
 
-async function loadHistory() {
+const PAGE_SIZE = 20;
+let currentPage = 1;
+let totalRecordsCount = 0;
+
+// resetPage=true (ค่าเริ่มต้น) ใช้ตอนกดค้นหา/เข้าแท็บใหม่ -> กลับไปหน้า 1 เสมอ
+// resetPage=false ใช้ตอนกดปุ่มเปลี่ยนหน้า (ก่อนหน้า/ถัดไป) -> คงหน้าปัจจุบันไว้
+async function loadHistory(resetPage) {
+  if (resetPage !== false) currentPage = 1;
+
   const container = document.getElementById('historyContainer');
 
   if (isLoadingHistory) return; // กันกดค้นหาซ้ำซ้อนระหว่างรอผลลัพธ์เดิม
@@ -910,38 +923,62 @@ async function loadHistory() {
   const filters = {
     dateFrom: document.getElementById('r_dateFrom').value || undefined,
     dateTo: document.getElementById('r_dateTo').value || undefined,
-    shift: document.getElementById('r_shift').value || undefined
+    shift: document.getElementById('r_shift').value || undefined,
+    page: currentPage,
+    pageSize: PAGE_SIZE
   };
 
   try {
     const json = await callApi('list', { filters: filters });
     if (mySeq !== historyRequestSeq) return; // มี request ใหม่กว่าเข้ามาแล้ว ทิ้งผลลัพธ์นี้
     currentRecords = json.records || [];
-    renderSummary(currentRecords);
+    totalRecordsCount = json.totalCount || 0;
+    currentPage = json.page || currentPage;
+    renderSummary(json.summary || {}, totalRecordsCount);
     renderHistoryTable(currentRecords);
+    renderPaginationControls();
   } catch (err) {
     if (mySeq !== historyRequestSeq) return;
     container.innerHTML = '<div class="empty-state">โหลดข้อมูลไม่สำเร็จ: ' + escHtml(err.message) +
       '<br><button class="btn secondary" style="width:auto;margin-top:10px;" onclick="loadHistory()">ลองใหม่</button></div>';
     document.getElementById('summaryCards').innerHTML = '';
+    document.getElementById('paginationControls').style.display = 'none';
   } finally {
     if (mySeq === historyRequestSeq) isLoadingHistory = false;
   }
 }
 
-function renderSummary(records) {
-  let totalFeedOut = 0, totalRawmatIn = 0, problemCount = 0;
-  records.forEach(r => {
-    totalFeedOut += Number(r.veh_feed_out) || 0;
-    totalRawmatIn += Number(r.veh_rawmat_in) || 0;
-    if (r.problems && String(r.problems).trim()) problemCount++;
-  });
+function changePage(delta) {
+  if (isLoadingHistory) return;
+  const maxPage = Math.max(1, Math.ceil(totalRecordsCount / PAGE_SIZE));
+  const newPage = currentPage + delta;
+  if (newPage < 1 || newPage > maxPage) return;
+  currentPage = newPage;
+  loadHistory(false);
+}
 
+function renderPaginationControls() {
+  const container = document.getElementById('paginationControls');
+  const maxPage = Math.max(1, Math.ceil(totalRecordsCount / PAGE_SIZE));
+
+  if (totalRecordsCount === 0) {
+    container.style.display = 'none';
+    return;
+  }
+
+  container.style.display = 'flex';
+  document.getElementById('pageInfo').textContent =
+    'หน้า ' + currentPage + ' จาก ' + maxPage + ' (ทั้งหมด ' + totalRecordsCount + ' รายการ)';
+  document.getElementById('prevPageBtn').disabled = currentPage <= 1;
+  document.getElementById('nextPageBtn').disabled = currentPage >= maxPage;
+}
+
+function renderSummary(summary, totalCount) {
   const cards = [
-    { num: records.length, lbl: 'จำนวนรอบที่บันทึก' },
-    { num: totalFeedOut, lbl: 'รถส่งอาหาร (คัน)' },
-    { num: totalRawmatIn, lbl: 'รถรับวัตถุดิบ/เคมี/บรรจุภัณฑ์ (คัน)' },
-    { num: problemCount, lbl: 'รอบที่พบปัญหา' }
+    { num: totalCount || 0, lbl: 'จำนวนรอบที่บันทึก (ตามตัวกรอง)' },
+    { num: summary.totalFeedOut || 0, lbl: 'รถส่งอาหาร (คัน)' },
+    { num: summary.totalRawmatIn || 0, lbl: 'รถรับวัตถุดิบ/เคมี/บรรจุภัณฑ์ (คัน)' },
+    { num: summary.problemCount || 0, lbl: 'รอบที่พบปัญหา' }
   ];
 
   document.getElementById('summaryCards').innerHTML = cards.map(c =>
