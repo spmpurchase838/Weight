@@ -448,8 +448,16 @@
     <div class="card">
       <h2><span class="icon">🚚</span> สรุปจำนวนรถที่ชั่ง</h2>
       <div class="veh-row">
+        <div class="label">รถส่งวัตถุดิบ/เคมีภัณฑ์/บรรจุภัณฑ์ (คัน)</div>
+        <input type="number" min="0" max="500" id="f_veh_rawmat_out" value="0">
+      </div>
+      <div class="veh-row">
         <div class="label">รถส่งอาหาร (คัน)</div>
         <input type="number" min="0" max="500" id="f_veh_feed_out" value="0">
+      </div>
+      <div class="veh-row">
+        <div class="label">รถรับอาหาร (คัน)</div>
+        <input type="number" min="0" max="500" id="f_veh_feed_in" value="0">
       </div>
       <div class="veh-row">
         <div class="label">รถรับวัตถุดิบ/เคมีภัณฑ์/บรรจุภัณฑ์ (คัน)</div>
@@ -539,6 +547,7 @@
     <div class="card">
       <h2><span class="icon">📊</span> สรุปภาพรวม</h2>
       <div class="summary-cards" id="summaryCards"></div>
+      <div id="problemBreakdown" style="margin-top:14px;display:flex;flex-wrap:wrap;gap:6px;"></div>
     </div>
 
     <div class="card">
@@ -767,8 +776,19 @@ const PROBLEM_KEY_LABELS = {
   other: 'อื่นๆ'
 };
 
+// map key ฝั่ง UI (checkbox) -> ชื่อคอลัมน์ boolean ฝั่ง backend (Code.gs)
+// เพิ่มไว้เพื่อให้ filter/นับสถิติแยกประเภทปัญหาได้ในอนาคต โดยไม่ต้อง parse ข้อความย้อนหลัง
+const PROBLEM_FLAG_KEY_MAP = {
+  overweight: 'p_overweight',
+  driver_behavior: 'p_driver_behavior',
+  system: 'p_system',
+  wrong_queue: 'p_wrong_queue',
+  wrong_delivery: 'p_wrong_delivery',
+  other: 'p_other'
+};
+
 // รวม checkbox + รายละเอียดที่ติ๊กไว้ทั้งหมด ให้เป็นข้อความเดียว
-// เพื่อบันทึกลงคอลัมน์ "ปัญหาที่พบและรายละเอียด" ในชีต
+// เพื่อบันทึกลงคอลัมน์ "ปัญหาที่พบและรายละเอียด" ในชีต (ใช้แสดงผล/อ่านง่าย)
 function buildProblemsText() {
   const lines = [];
   Object.keys(PROBLEM_KEY_LABELS).forEach(key => {
@@ -778,6 +798,16 @@ function buildProblemsText() {
     }
   });
   return lines.join('\n');
+}
+
+// สร้าง object { p_overweight: true/false, ... } จากสถานะ checkbox ปัจจุบัน
+// ส่งไปพร้อมกับข้อความรวม เพื่อให้ backend เก็บลงคอลัมน์ TRUE/FALSE แยกประเภทด้วย
+function buildProblemFlags() {
+  const flags = {};
+  Object.keys(PROBLEM_FLAG_KEY_MAP).forEach(key => {
+    flags[PROBLEM_FLAG_KEY_MAP[key]] = getProblemData(key).checked;
+  });
+  return flags;
 }
 
 /* ---------------- Submit guard ---------------- */
@@ -790,11 +820,17 @@ const MAX_TEXT_LEN = 2000;
 const MAX_SHORT_LEN = 200;
 const MAX_VEHICLE_COUNT = 500;
 
+// รายการช่องนับจำนวนรถทั้งหมด: key ภายในระบบ, id ของ input ในฟอร์มหลัก/ฟอร์มแก้ไข, ป้ายชื่อไว้ใช้ในข้อความ error
+const VEHICLE_FIELDS = [
+  { key: 'veh_rawmat_out', formId: 'f_veh_rawmat_out', editFormId: 'e_veh_rawmat_out', label: 'รถส่งวัตถุดิบ/เคมีภัณฑ์/บรรจุภัณฑ์' },
+  { key: 'veh_feed_out', formId: 'f_veh_feed_out', editFormId: 'e_veh_feed_out', label: 'รถส่งอาหาร' },
+  { key: 'veh_feed_in', formId: 'f_veh_feed_in', editFormId: 'e_veh_feed_in', label: 'รถรับอาหาร' },
+  { key: 'veh_rawmat_in', formId: 'f_veh_rawmat_in', editFormId: 'e_veh_rawmat_in', label: 'รถรับวัตถุดิบ/เคมีภัณฑ์/บรรจุภัณฑ์' }
+];
+
 function collectAndValidateForm() {
   const date = document.getElementById('f_date').value;
   const weighmaster = document.getElementById('f_weighmaster').value.trim();
-  const vehFeedOutRaw = document.getElementById('f_veh_feed_out').value;
-  const vehRawmatInRaw = document.getElementById('f_veh_rawmat_in').value;
   const vehOtherType = document.getElementById('f_veh_other_type').value.trim();
   const correctiveAction = document.getElementById('f_corrective').value.trim();
   const suggestions = document.getElementById('f_suggestions').value.trim();
@@ -805,14 +841,16 @@ function collectAndValidateForm() {
   if (weighmaster.length > MAX_SHORT_LEN) return { error: 'ชื่อผู้บันทึกยาวเกินไป (ไม่เกิน ' + MAX_SHORT_LEN + ' ตัวอักษร)' };
   if (!selectedShift) return { error: 'กรุณาเลือกกะปฏิบัติงาน' };
 
-  const vehFeedOut = Number(vehFeedOutRaw);
-  const vehRawmatIn = Number(vehRawmatInRaw);
-  if (!Number.isFinite(vehFeedOut) || vehFeedOut < 0 || vehFeedOut > MAX_VEHICLE_COUNT) {
-    return { error: 'จำนวนรถส่งอาหารไม่ถูกต้อง (ต้องอยู่ระหว่าง 0-' + MAX_VEHICLE_COUNT + ' คัน)' };
+  const vehicleCounts = {};
+  for (let i = 0; i < VEHICLE_FIELDS.length; i++) {
+    const f = VEHICLE_FIELDS[i];
+    const val = Number(document.getElementById(f.formId).value);
+    if (!Number.isFinite(val) || val < 0 || val > MAX_VEHICLE_COUNT) {
+      return { error: 'จำนวน "' + f.label + '" ไม่ถูกต้อง (ต้องอยู่ระหว่าง 0-' + MAX_VEHICLE_COUNT + ' คัน)' };
+    }
+    vehicleCounts[f.key] = Math.floor(val);
   }
-  if (!Number.isFinite(vehRawmatIn) || vehRawmatIn < 0 || vehRawmatIn > MAX_VEHICLE_COUNT) {
-    return { error: 'จำนวนรถรับวัตถุดิบไม่ถูกต้อง (ต้องอยู่ระหว่าง 0-' + MAX_VEHICLE_COUNT + ' คัน)' };
-  }
+
   if (vehOtherType.length > MAX_SHORT_LEN) {
     return { error: 'ข้อความ "ประเภทรถอื่นๆ" ยาวเกินไป (ไม่เกิน ' + MAX_SHORT_LEN + ' ตัวอักษร)' };
   }
@@ -827,17 +865,15 @@ function collectAndValidateForm() {
     return { error: 'ข้อความ "ข้อเสนอแนะ" ยาวเกินไป (ไม่เกิน ' + MAX_TEXT_LEN + ' ตัวอักษร)' };
   }
 
-  const data = {
+  const data = Object.assign({
     date: date,
     weighmaster: weighmaster,
     shift: selectedShift,
-    veh_feed_out: Math.floor(vehFeedOut),
-    veh_rawmat_in: Math.floor(vehRawmatIn),
     veh_other_type: vehOtherType,
     problems: problemsText,
     corrective_action: correctiveAction,
     suggestions: suggestions
-  };
+  }, vehicleCounts, buildProblemFlags());
 
   return { data: data };
 }
@@ -943,8 +979,8 @@ async function confirmAndSave() {
 
 function resetForm() {
   document.getElementById('f_weighmaster').value = '';
-  ['f_veh_feed_out','f_veh_rawmat_in'].forEach(id => {
-    document.getElementById(id).value = 0;
+  VEHICLE_FIELDS.forEach(f => {
+    document.getElementById(f.formId).value = 0;
   });
   document.getElementById('f_veh_other_type').value = '';
   document.querySelectorAll('.problem-item').forEach(item => {
@@ -986,14 +1022,16 @@ function saveDraftToLocalStorage_() {
       date: document.getElementById('f_date').value,
       weighmaster: document.getElementById('f_weighmaster').value,
       shift: selectedShift,
-      veh_feed_out: document.getElementById('f_veh_feed_out').value,
-      veh_rawmat_in: document.getElementById('f_veh_rawmat_in').value,
+      vehicles: {},
       veh_other_type: document.getElementById('f_veh_other_type').value,
       problems: {},
       corrective_action: document.getElementById('f_corrective').value,
       suggestions: document.getElementById('f_suggestions').value,
       savedAt: Date.now()
     };
+    VEHICLE_FIELDS.forEach(f => {
+      draft.vehicles[f.key] = document.getElementById(f.formId).value;
+    });
     Object.keys(PROBLEM_KEY_LABELS).forEach(key => {
       const p = getProblemData(key);
       draft.problems[key] = { checked: p.checked, detail: p.detail };
@@ -1030,16 +1068,18 @@ function restoreDraftIfExists_() {
     return;
   }
 
+  const vehicles = draft.vehicles || {};
+  const hasAnyVehicleCount = VEHICLE_FIELDS.some(f => Number(vehicles[f.key]) > 0);
   const hasContent = draft.weighmaster || draft.veh_other_type ||
-    draft.corrective_action || draft.suggestions ||
-    Number(draft.veh_feed_out) > 0 || Number(draft.veh_rawmat_in) > 0 ||
+    draft.corrective_action || draft.suggestions || hasAnyVehicleCount ||
     Object.values(draft.problems || {}).some(p => p && p.checked);
   if (!hasContent) return;
 
   if (draft.date) document.getElementById('f_date').value = draft.date;
   document.getElementById('f_weighmaster').value = draft.weighmaster || '';
-  document.getElementById('f_veh_feed_out').value = draft.veh_feed_out || 0;
-  document.getElementById('f_veh_rawmat_in').value = draft.veh_rawmat_in || 0;
+  VEHICLE_FIELDS.forEach(f => {
+    document.getElementById(f.formId).value = vehicles[f.key] || 0;
+  });
   document.getElementById('f_veh_other_type').value = draft.veh_other_type || '';
   document.getElementById('f_corrective').value = draft.corrective_action || '';
   document.getElementById('f_suggestions').value = draft.suggestions || '';
@@ -1147,17 +1187,55 @@ function renderPaginationControls() {
   document.getElementById('nextPageBtn').disabled = currentPage >= maxPage;
 }
 
+// label ภาษาไทยสำหรับแสดงผล breakdown (key ต้องตรงกับ PROBLEM_FLAG_KEY_MAP ฝั่ง backend)
+const PROBLEM_BREAKDOWN_LABELS = {
+  p_overweight: 'น้ำหนักเกิน',
+  p_driver_behavior: 'พฤติกรรมคนขับ',
+  p_system: 'ระบบ/อุปกรณ์',
+  p_wrong_queue: 'ชั่งผิดคิว',
+  p_wrong_delivery: 'ส่งของผิดที่',
+  p_other: 'อื่นๆ'
+};
+
 function renderSummary(summary, totalCount) {
+  const vt = summary.vehicleTotals || {};
+  const totalVehicles = VEHICLE_FIELDS.reduce((s, f) => s + (vt[f.key] || 0), 0);
+
   const cards = [
     { num: totalCount || 0, lbl: 'จำนวนรอบที่บันทึก (ตามตัวกรอง)' },
-    { num: summary.totalFeedOut || 0, lbl: 'รถส่งอาหาร (คัน)' },
-    { num: summary.totalRawmatIn || 0, lbl: 'รถรับวัตถุดิบ/เคมี/บรรจุภัณฑ์ (คัน)' },
+    { num: totalVehicles, lbl: 'รถทั้งหมด (คัน)' },
+    { num: vt.veh_rawmat_out || 0, lbl: 'รถส่งวัตถุดิบ/เคมี/บรรจุภัณฑ์ (คัน)' },
+    { num: vt.veh_feed_out || 0, lbl: 'รถส่งอาหาร (คัน)' },
+    { num: vt.veh_feed_in || 0, lbl: 'รถรับอาหาร (คัน)' },
+    { num: vt.veh_rawmat_in || 0, lbl: 'รถรับวัตถุดิบ/เคมี/บรรจุภัณฑ์ (คัน)' },
     { num: summary.problemCount || 0, lbl: 'รอบที่พบปัญหา' }
   ];
 
   document.getElementById('summaryCards').innerHTML = cards.map(c =>
     '<div class="summary-card"><div class="num">' + escHtml(c.num) + '</div><div class="lbl">' + escHtml(c.lbl) + '</div></div>'
   ).join('');
+
+  renderProblemBreakdown_(summary.problemBreakdown || {});
+}
+
+// แสดงสถิติแยกตามประเภทปัญหา (มาจากคอลัมน์ TRUE/FALSE แยกประเภทในชีต)
+function renderProblemBreakdown_(breakdown) {
+  const container = document.getElementById('problemBreakdown');
+  if (!container) return;
+
+  const items = Object.keys(PROBLEM_BREAKDOWN_LABELS)
+    .map(k => ({ label: PROBLEM_BREAKDOWN_LABELS[k], count: breakdown[k] || 0 }))
+    .filter(item => item.count > 0)
+    .sort((a, b) => b.count - a.count);
+
+  if (!items.length) {
+    container.innerHTML = '<div style="font-size:12.5px;color:var(--muted);">ไม่พบปัญหาในช่วงที่เลือก</div>';
+    return;
+  }
+
+  container.innerHTML = items.map(item =>
+    '<span class="tag" style="font-size:12px;padding:4px 10px;">' + escHtml(item.label) + ': ' + escHtml(item.count) + ' ครั้ง</span>'
+  ).join(' ');
 }
 
 function renderHistoryTable(records) {
@@ -1168,7 +1246,7 @@ function renderHistoryTable(records) {
   }
 
   let html = '<table class="history"><thead><tr>' +
-    '<th>วันที่</th><th>กะ</th><th>ผู้บันทึก</th><th>รถส่งอาหาร</th><th>รถรับวัตถุดิบ</th><th>ปัญหา</th>' +
+    '<th>วันที่</th><th>กะ</th><th>ผู้บันทึก</th><th>รวมรถ (คัน)</th><th>ปัญหา</th>' +
     '</tr></thead><tbody>';
 
   records.forEach((r, idx) => {
@@ -1176,13 +1254,13 @@ function renderHistoryTable(records) {
     const tag = hasProblem
       ? '<span class="tag">มีปัญหา</span>'
       : '<span style="color:#5f6368;font-size:12px;">-</span>';
+    const totalVeh = VEHICLE_FIELDS.reduce((s, f) => s + (Number(r[f.key]) || 0), 0);
 
     html += '<tr onclick="showDetail(' + idx + ')">' +
       '<td>' + escHtml(r.date) + '</td>' +
       '<td>' + escHtml(r.shift) + '</td>' +
       '<td>' + escHtml(r.weighmaster) + '</td>' +
-      '<td>' + escHtml(r.veh_feed_out) + '</td>' +
-      '<td>' + escHtml(r.veh_rawmat_in) + '</td>' +
+      '<td>' + escHtml(totalVeh) + '</td>' +
       '<td>' + tag + '</td>' +
       '</tr>';
   });
@@ -1199,7 +1277,9 @@ function showDetail(idx) {
     ['วันที่', r.date],
     ['กะ', r.shift],
     ['ผู้บันทึก', r.weighmaster],
+    ['รถส่งวัตถุดิบ/เคมีภัณฑ์/บรรจุภัณฑ์ (คัน)', r.veh_rawmat_out],
     ['รถส่งอาหาร (คัน)', r.veh_feed_out],
+    ['รถรับอาหาร (คัน)', r.veh_feed_in],
     ['รถรับวัตถุดิบ/เคมีภัณฑ์/บรรจุภัณฑ์ (คัน)', r.veh_rawmat_in],
     ['ประเภทรถอื่นๆ', r.veh_other_type || '-']
   ];
@@ -1274,7 +1354,9 @@ function openEditModal(idx) {
         '<option value="ดึก">ดึก</option>' +
       '</select>' +
     '</div>' +
+    '<div class="field"><label>รถส่งวัตถุดิบ/เคมีภัณฑ์/บรรจุภัณฑ์ (คัน)</label><input type="number" min="0" max="500" id="e_veh_rawmat_out"></div>' +
     '<div class="field"><label>รถส่งอาหาร (คัน)</label><input type="number" min="0" max="500" id="e_veh_feed_out"></div>' +
+    '<div class="field"><label>รถรับอาหาร (คัน)</label><input type="number" min="0" max="500" id="e_veh_feed_in"></div>' +
     '<div class="field"><label>รถรับวัตถุดิบ/เคมีภัณฑ์/บรรจุภัณฑ์ (คัน)</label><input type="number" min="0" max="500" id="e_veh_rawmat_in"></div>' +
     '<div class="field"><label>ระบุประเภทรถอื่นๆ</label><input type="text" id="e_veh_other_type" maxlength="200"></div>' +
     '<div class="field"><label>ปัญหาที่พบและรายละเอียด</label><textarea id="e_problems" maxlength="2000" placeholder="ไม่มีปัญหาให้เว้นว่างไว้"></textarea><div class="char-counter" id="e_problemsCounter"></div></div>' +
@@ -1291,8 +1373,9 @@ function openEditModal(idx) {
   document.getElementById('e_date').value = r.date || '';
   document.getElementById('e_weighmaster').value = r.weighmaster || '';
   document.getElementById('e_shift').value = r.shift || 'เช้า';
-  document.getElementById('e_veh_feed_out').value = r.veh_feed_out || 0;
-  document.getElementById('e_veh_rawmat_in').value = r.veh_rawmat_in || 0;
+  VEHICLE_FIELDS.forEach(f => {
+    document.getElementById(f.editFormId).value = r[f.key] || 0;
+  });
   document.getElementById('e_veh_other_type').value = r.veh_other_type || '';
   document.getElementById('e_problems').value = r.problems || '';
   document.getElementById('e_corrective').value = r.corrective_action || '';
@@ -1324,8 +1407,6 @@ async function saveEdit() {
   const date = document.getElementById('e_date').value;
   const weighmaster = document.getElementById('e_weighmaster').value.trim();
   const shift = document.getElementById('e_shift').value;
-  const vehFeedOut = Number(document.getElementById('e_veh_feed_out').value);
-  const vehRawmatIn = Number(document.getElementById('e_veh_rawmat_in').value);
   const vehOtherType = document.getElementById('e_veh_other_type').value.trim();
   const problemsText = document.getElementById('e_problems').value.trim();
   const correctiveAction = document.getElementById('e_corrective').value.trim();
@@ -1336,12 +1417,18 @@ async function saveEdit() {
   if (!date) { showToast('กรุณาระบุวันที่', 'error'); return; }
   if (!weighmaster) { showToast('กรุณาระบุชื่อผู้บันทึก', 'error'); return; }
   if (weighmaster.length > MAX_SHORT_LEN) { showToast('ชื่อผู้บันทึกยาวเกินไป (ไม่เกิน ' + MAX_SHORT_LEN + ' ตัวอักษร)', 'error'); return; }
-  if (!Number.isFinite(vehFeedOut) || vehFeedOut < 0 || vehFeedOut > MAX_VEHICLE_COUNT) {
-    showToast('จำนวนรถส่งอาหารไม่ถูกต้อง (ต้องอยู่ระหว่าง 0-' + MAX_VEHICLE_COUNT + ' คัน)', 'error'); return;
+
+  const vehicleCounts = {};
+  for (let i = 0; i < VEHICLE_FIELDS.length; i++) {
+    const f = VEHICLE_FIELDS[i];
+    const val = Number(document.getElementById(f.editFormId).value);
+    if (!Number.isFinite(val) || val < 0 || val > MAX_VEHICLE_COUNT) {
+      showToast('จำนวน "' + f.label + '" ไม่ถูกต้อง (ต้องอยู่ระหว่าง 0-' + MAX_VEHICLE_COUNT + ' คัน)', 'error');
+      return;
+    }
+    vehicleCounts[f.key] = Math.floor(val);
   }
-  if (!Number.isFinite(vehRawmatIn) || vehRawmatIn < 0 || vehRawmatIn > MAX_VEHICLE_COUNT) {
-    showToast('จำนวนรถรับวัตถุดิบไม่ถูกต้อง (ต้องอยู่ระหว่าง 0-' + MAX_VEHICLE_COUNT + ' คัน)', 'error'); return;
-  }
+
   if (vehOtherType.length > MAX_SHORT_LEN) {
     showToast('ข้อความ "ประเภทรถอื่นๆ" ยาวเกินไป (ไม่เกิน ' + MAX_SHORT_LEN + ' ตัวอักษร)', 'error'); return;
   }
@@ -1355,18 +1442,16 @@ async function saveEdit() {
     showToast('ข้อความ "ข้อเสนอแนะ" ยาวเกินไป (ไม่เกิน ' + MAX_TEXT_LEN + ' ตัวอักษร)', 'error'); return;
   }
 
-  const data = {
+  const data = Object.assign({
     editedBy: editedBy,
     date: date,
     weighmaster: weighmaster,
     shift: shift,
-    veh_feed_out: Math.floor(vehFeedOut),
-    veh_rawmat_in: Math.floor(vehRawmatIn),
     veh_other_type: vehOtherType,
     problems: problemsText,
     corrective_action: correctiveAction,
     suggestions: suggestions
-  };
+  }, vehicleCounts);
 
   const btn = document.getElementById('editSaveBtn');
   editSaveInProgress = true;
@@ -1464,6 +1549,29 @@ window.addEventListener('keydown', (event) => {
   if (openOverlay === 'edit') closeEditModal();
   if (openOverlay === 'confirm') closeConfirmModal();
   if (openOverlay === 'detail') closeModal();
+});
+
+/* ---------------- เตือนก่อนปิด/รีเฟรชหน้าถ้ามีข้อมูลกรอกค้างไว้ ---------------- */
+// ใช้เกณฑ์เดียวกับตอนเช็ค draft (hasContent) เพื่อไม่ให้เตือนพร่ำเพรื่อตอนฟอร์มว่างเปล่า
+function hasUnsavedFormData_() {
+  const weighmaster = document.getElementById('f_weighmaster').value.trim();
+  const vehOtherType = document.getElementById('f_veh_other_type').value.trim();
+  const corrective = document.getElementById('f_corrective').value.trim();
+  const suggestions = document.getElementById('f_suggestions').value.trim();
+  const anyVehicleCount = VEHICLE_FIELDS.some(f => (Number(document.getElementById(f.formId).value) || 0) > 0);
+  const anyProblemChecked = Object.keys(PROBLEM_KEY_LABELS).some(key => getProblemData(key).checked);
+
+  return !!(weighmaster || vehOtherType || corrective || suggestions ||
+    anyVehicleCount || anyProblemChecked);
+}
+
+window.addEventListener('beforeunload', (event) => {
+  // ไม่เตือนตอนกำลังบันทึกอยู่ (ป้องกันเตือนซ้ำซ้อนตอนกด "ยืนยันบันทึก" ที่ทำให้หน้าเปลี่ยน state)
+  if (saveInProgress) return;
+  if (hasUnsavedFormData_()) {
+    event.preventDefault();
+    event.returnValue = ''; // ข้อความจริงจะถูกกำหนดโดยเบราว์เซอร์เอง (ข้อจำกัดของ browser API)
+  }
 });
 
 /* ---------------- Network status indicator ---------------- */
