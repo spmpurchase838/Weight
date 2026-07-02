@@ -148,6 +148,13 @@
     gap:12px;
   }
   @media (max-width:600px){ .problem-grid{grid-template-columns:1fr;} }
+  @media (max-width:480px){
+    header.appbar{ flex-wrap:wrap; gap:8px; padding:10px 14px; }
+    header.appbar h1{ font-size:16px; }
+    .appbar-right{ width:100%; justify-content:space-between; }
+    .net-status{ font-size:10.5px; padding:3px 8px; }
+    nav.tabs button{ padding:7px 12px; font-size:13px; }
+  }
   .problem-item{
     border:1.5px solid var(--border);
     border-radius:8px;
@@ -321,17 +328,81 @@
     vertical-align:middle;
     margin-right:6px;
   }
+  .spinner.dark{
+    border-color:rgba(15,157,88,0.25);
+    border-top-color:var(--primary);
+  }
   @keyframes spin{to{transform:rotate(360deg);}}
+
+  /* แถบโหลดด้านบนสุด: ขึ้นทุกครั้งที่กำลังติดต่อ server */
+  #topLoadingBar{
+    position:fixed;
+    top:0; left:0;
+    height:3px;
+    width:100%;
+    z-index:200;
+    overflow:hidden;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .2s ease;
+  }
+  #topLoadingBar.active{ opacity:1; }
+  #topLoadingBar::before{
+    content:'';
+    position:absolute;
+    top:0; left:0;
+    height:100%;
+    width:40%;
+    background:var(--primary);
+    animation:loadingBarSlide 1s ease-in-out infinite;
+  }
+  @keyframes loadingBarSlide{
+    0%{ left:-40%; }
+    100%{ left:100%; }
+  }
+
+  /* ไฟแสดงสถานะอินเทอร์เน็ต */
+  .net-status{
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    font-size:11.5px;
+    font-weight:700;
+    padding:4px 10px;
+    border-radius:12px;
+    white-space:nowrap;
+  }
+  .net-status .dot{
+    width:7px; height:7px;
+    border-radius:50%;
+    flex-shrink:0;
+  }
+  .net-status.online{ background:rgba(15,157,88,0.1); color:var(--primary-dark); }
+  .net-status.online .dot{ background:var(--primary); }
+  .net-status.offline{ background:rgba(217,48,37,0.1); color:var(--danger); }
+  .net-status.offline .dot{ background:var(--danger); animation:blinkDot 1s ease-in-out infinite; }
+  @keyframes blinkDot{ 0%,100%{opacity:1;} 50%{opacity:.3;} }
+
+  .appbar-right{
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
 </style>
 </head>
 <body>
 
+<div id="topLoadingBar"></div>
+
 <header class="appbar">
   <h1>⚖️ ห้องชั่ง SPM</h1>
-  <nav class="tabs">
-    <button id="tabFormBtn" class="active" onclick="switchTab('form')">บันทึกข้อมูล</button>
-    <button id="tabReportBtn" onclick="switchTab('report')">ประวัติ &amp; รายงาน</button>
-  </nav>
+  <div class="appbar-right">
+    <span id="netStatus" class="net-status online"><span class="dot"></span><span id="netStatusText">ออนไลน์</span></span>
+    <nav class="tabs">
+      <button id="tabFormBtn" class="active" onclick="switchTab('form')">บันทึกข้อมูล</button>
+      <button id="tabReportBtn" onclick="switchTab('report')">ประวัติ &amp; รายงาน</button>
+    </nav>
+  </div>
 </header>
 
 <main>
@@ -460,7 +531,7 @@
     <div class="card">
       <h2><span class="icon">🕘</span> ประวัติการบันทึก</h2>
       <div id="historyContainer">
-        <div class="empty-state">กำลังโหลดข้อมูล...</div>
+        <div class="empty-state"><span class="spinner dark"></span> กำลังโหลดข้อมูล...</div>
       </div>
     </div>
 
@@ -540,6 +611,14 @@ function showToast(msg, type) {
 const API_TIMEOUT_MS = 15000; // กันหน้าเว็บค้างถ้าเน็ตมีปัญหา/Apps Script ตอบช้าผิดปกติ
 const API_MAX_RETRY = 1;       // retry เฉพาะตอนเน็ตหลุด/timeout ไม่ retry ตอน error จาก server เอง
 
+// นับจำนวน request ที่กำลังทำงานอยู่ กันแถบโหลดปิดก่อนเวลาถ้ามีหลาย request ซ้อนกัน
+let activeApiCalls = 0;
+function setTopLoading_(active) {
+  activeApiCalls += active ? 1 : -1;
+  if (activeApiCalls < 0) activeApiCalls = 0;
+  document.getElementById('topLoadingBar').classList.toggle('active', activeApiCalls > 0);
+}
+
 async function fetchWithTimeout_(url, options, timeoutMs) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -556,31 +635,36 @@ async function callApi(action, extra) {
   }
   const body = Object.assign({ action: action, token: TOKEN }, extra || {});
 
-  let lastErr;
-  for (let attempt = 0; attempt <= API_MAX_RETRY; attempt++) {
-    try {
-      const res = await fetchWithTimeout_(APPS_SCRIPT_URL, {
-        method: 'POST',
-        body: JSON.stringify(body)
-        // ไม่ตั้ง Content-Type เอง เพื่อเลี่ยง CORS preflight (Apps Script จะรับเป็น text/plain)
-      }, API_TIMEOUT_MS);
+  setTopLoading_(true);
+  try {
+    let lastErr;
+    for (let attempt = 0; attempt <= API_MAX_RETRY; attempt++) {
+      try {
+        const res = await fetchWithTimeout_(APPS_SCRIPT_URL, {
+          method: 'POST',
+          body: JSON.stringify(body)
+          // ไม่ตั้ง Content-Type เอง เพื่อเลี่ยง CORS preflight (Apps Script จะรับเป็น text/plain)
+        }, API_TIMEOUT_MS);
 
-      if (!res.ok) throw new Error('เครือข่ายผิดพลาด: ' + res.status);
-      const json = await res.json();
-      if (!json.success) throw new Error(json.error || 'เกิดข้อผิดพลาดไม่ทราบสาเหตุ');
-      return json;
-    } catch (err) {
-      lastErr = (err && err.name === 'AbortError')
-        ? new Error('เชื่อมต่อไม่สำเร็จ (หมดเวลา) กรุณาตรวจสอบอินเทอร์เน็ต')
-        : err;
-      // retry เฉพาะ network-level error (ไม่ retry ถ้า server ตอบ error กลับมาแล้ว)
-      if (attempt < API_MAX_RETRY && (err.name === 'AbortError' || err instanceof TypeError)) {
-        continue;
+        if (!res.ok) throw new Error('เครือข่ายผิดพลาด: ' + res.status);
+        const json = await res.json();
+        if (!json.success) throw new Error(json.error || 'เกิดข้อผิดพลาดไม่ทราบสาเหตุ');
+        return json;
+      } catch (err) {
+        lastErr = (err && err.name === 'AbortError')
+          ? new Error('เชื่อมต่อไม่สำเร็จ (หมดเวลา) กรุณาตรวจสอบอินเทอร์เน็ต')
+          : err;
+        // retry เฉพาะ network-level error (ไม่ retry ถ้า server ตอบ error กลับมาแล้ว)
+        if (attempt < API_MAX_RETRY && (err.name === 'AbortError' || err instanceof TypeError)) {
+          continue;
+        }
+        throw lastErr;
       }
-      throw lastErr;
     }
+    throw lastErr;
+  } finally {
+    setTopLoading_(false);
   }
-  throw lastErr;
 }
 
 /* ---------------- Tabs ---------------- */
@@ -821,7 +905,7 @@ async function loadHistory() {
   isLoadingHistory = true;
   const mySeq = ++historyRequestSeq;
 
-  container.innerHTML = '<div class="empty-state">กำลังโหลดข้อมูล...</div>';
+  container.innerHTML = '<div class="empty-state"><span class="spinner dark"></span> กำลังโหลดข้อมูล...</div>';
 
   const filters = {
     dateFrom: document.getElementById('r_dateFrom').value || undefined,
@@ -1118,10 +1202,28 @@ window.addEventListener('keydown', (event) => {
   if (openOverlay === 'detail') closeModal();
 });
 
+/* ---------------- Network status indicator ---------------- */
+function updateNetStatus_(showToastMsg) {
+  const el = document.getElementById('netStatus');
+  const textEl = document.getElementById('netStatusText');
+  const isOnline = navigator.onLine !== false;
+
+  el.className = 'net-status ' + (isOnline ? 'online' : 'offline');
+  textEl.textContent = isOnline ? 'ออนไลน์' : 'ออฟไลน์';
+
+  if (showToastMsg) {
+    showToast(isOnline ? 'กลับมาเชื่อมต่ออินเทอร์เน็ตแล้ว' : 'ขาดการเชื่อมต่ออินเทอร์เน็ต', isOnline ? 'success' : 'error');
+  }
+}
+
+window.addEventListener('online', () => updateNetStatus_(true));
+window.addEventListener('offline', () => updateNetStatus_(true));
+
 /* ---------------- Init ---------------- */
 window.addEventListener('DOMContentLoaded', () => {
   setDefaultDate();
   history.replaceState({ tab: 'form', overlay: null }, '', '#form');
+  updateNetStatus_(false);
   if (!APPS_SCRIPT_URL) {
     document.getElementById('configWarning').style.display = 'block';
   }
