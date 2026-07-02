@@ -494,6 +494,9 @@
     </div>
 
     <button class="btn" id="submitBtn" onclick="reviewForm()">บันทึกข้อมูล</button>
+    <div style="text-align:center;margin-top:10px;">
+      <a href="javascript:void(0)" onclick="clearDraftAndReset_()" style="font-size:12.5px;color:var(--muted);text-decoration:underline;">ล้างข้อมูลที่กรอกไว้ทั้งหมด</a>
+    </div>
   </section>
 
   <!-- ================= REPORT PAGE ================= -->
@@ -696,6 +699,7 @@ document.querySelectorAll('.shift-option').forEach(el => {
     document.querySelectorAll('.shift-option').forEach(o => o.classList.remove('selected'));
     el.classList.add('selected');
     selectedShift = el.dataset.value;
+    scheduleDraftSave_();
   });
 });
 
@@ -704,8 +708,19 @@ document.querySelectorAll('.problem-item').forEach(item => {
   const chk = item.querySelector('input[type=checkbox]');
   chk.addEventListener('change', () => {
     item.classList.toggle('checked', chk.checked);
+    scheduleDraftSave_();
   });
+  item.querySelector('textarea').addEventListener('input', scheduleDraftSave_);
 });
+
+/* ---------------- Draft auto-save: ผูกกับทุกช่องกรอกหลักของฟอร์ม ---------------- */
+['f_date', 'f_weighmaster', 'f_veh_feed_out', 'f_veh_rawmat_in', 'f_veh_other_type', 'f_corrective', 'f_suggestions']
+  .forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('input', scheduleDraftSave_);
+    el.addEventListener('change', scheduleDraftSave_);
+  });
 
 function getProblemData(key) {
   const item = document.querySelector('.problem-item[data-key="' + key + '"]');
@@ -858,6 +873,7 @@ async function confirmAndSave() {
     showToast('บันทึกข้อมูลสำเร็จ', 'success');
     saveInProgress = false; // ปลดล็อกก่อนปิด modal เพื่อไม่ให้ closeConfirmModal ติด guard
     closeConfirmModal();
+    clearDraft_(); // บันทึกสำเร็จแล้ว ไม่ต้องเก็บ draft ไว้อีกต่อไป
     resetForm();
   } catch (err) {
     saveInProgress = false;
@@ -896,6 +912,113 @@ function setDefaultDate() {
   const d = new Date();
   const iso = d.toISOString().slice(0, 10);
   document.getElementById('f_date').value = iso;
+}
+
+/* ==========================================================
+   Draft auto-save (localStorage)
+   เก็บข้อมูลที่กรอกในฟอร์มไว้อัตโนมัติ กันข้อมูลหายถ้าเน็ตหลุด/ปิดแท็บ/รีเฟรชโดยไม่ตั้งใจ
+   ก่อนกด "ยืนยันบันทึก" สำเร็จ — ใช้ localStorage ได้ปกติเพราะไฟล์นี้ deploy จริงบน
+   GitHub Pages (คนละ context กับ Claude artifact ที่ localStorage ใช้ไม่ได้)
+   ========================================================== */
+const DRAFT_KEY = 'spm_weighlog_draft_v1';
+const DRAFT_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000; // ทิ้ง draft ที่เก่าเกิน 7 วันไปเลย กันความสับสน
+let draftSaveTimer = null;
+
+function scheduleDraftSave_() {
+  clearTimeout(draftSaveTimer);
+  draftSaveTimer = setTimeout(saveDraftToLocalStorage_, 400);
+}
+
+function saveDraftToLocalStorage_() {
+  try {
+    const draft = {
+      date: document.getElementById('f_date').value,
+      weighmaster: document.getElementById('f_weighmaster').value,
+      shift: selectedShift,
+      veh_feed_out: document.getElementById('f_veh_feed_out').value,
+      veh_rawmat_in: document.getElementById('f_veh_rawmat_in').value,
+      veh_other_type: document.getElementById('f_veh_other_type').value,
+      problems: {},
+      corrective_action: document.getElementById('f_corrective').value,
+      suggestions: document.getElementById('f_suggestions').value,
+      savedAt: Date.now()
+    };
+    Object.keys(PROBLEM_KEY_LABELS).forEach(key => {
+      const p = getProblemData(key);
+      draft.problems[key] = { checked: p.checked, detail: p.detail };
+    });
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+  } catch (e) {
+    // localStorage อาจใช้ไม่ได้ (โหมดส่วนตัว/ปิดไว้) ไม่ต้องหยุดการทำงานหลักของฟอร์ม
+  }
+}
+
+function clearDraft_() {
+  try { localStorage.removeItem(DRAFT_KEY); } catch (e) { /* ignore */ }
+}
+
+function restoreDraftIfExists_() {
+  let raw;
+  try {
+    raw = localStorage.getItem(DRAFT_KEY);
+  } catch (e) {
+    return;
+  }
+  if (!raw) return;
+
+  let draft;
+  try {
+    draft = JSON.parse(raw);
+  } catch (e) {
+    clearDraft_();
+    return;
+  }
+
+  if (!draft.savedAt || (Date.now() - draft.savedAt) > DRAFT_MAX_AGE_MS) {
+    clearDraft_();
+    return;
+  }
+
+  const hasContent = draft.weighmaster || draft.veh_other_type ||
+    draft.corrective_action || draft.suggestions ||
+    Number(draft.veh_feed_out) > 0 || Number(draft.veh_rawmat_in) > 0 ||
+    Object.values(draft.problems || {}).some(p => p && p.checked);
+  if (!hasContent) return;
+
+  if (draft.date) document.getElementById('f_date').value = draft.date;
+  document.getElementById('f_weighmaster').value = draft.weighmaster || '';
+  document.getElementById('f_veh_feed_out').value = draft.veh_feed_out || 0;
+  document.getElementById('f_veh_rawmat_in').value = draft.veh_rawmat_in || 0;
+  document.getElementById('f_veh_other_type').value = draft.veh_other_type || '';
+  document.getElementById('f_corrective').value = draft.corrective_action || '';
+  document.getElementById('f_suggestions').value = draft.suggestions || '';
+
+  if (draft.shift) {
+    document.querySelectorAll('.shift-option').forEach(o => {
+      o.classList.toggle('selected', o.dataset.value === draft.shift);
+    });
+    selectedShift = draft.shift;
+  }
+
+  Object.keys(draft.problems || {}).forEach(key => {
+    const p = draft.problems[key];
+    const item = document.querySelector('.problem-item[data-key="' + key + '"]');
+    if (!item || !p) return;
+    const chk = item.querySelector('input[type=checkbox]');
+    chk.checked = !!p.checked;
+    item.classList.toggle('checked', !!p.checked);
+    item.querySelector('textarea').value = p.detail || '';
+  });
+
+  showToast('กู้คืนข้อมูลที่กรอกค้างไว้ (ยังไม่ได้บันทึก) ให้อัตโนมัติแล้ว', 'success');
+}
+
+function clearDraftAndReset_() {
+  const confirmed = window.confirm('ล้างข้อมูลที่กรอกไว้ทั้งหมดในฟอร์มนี้หรือไม่?');
+  if (!confirmed) return;
+  clearDraft_();
+  resetForm();
+  showToast('ล้างข้อมูลแล้ว', 'success');
 }
 
 /* ---------------- Report page ---------------- */
@@ -1042,6 +1165,13 @@ function showDetail(idx) {
   html += '<div class="modal-row"><span class="k">แนวทางการแก้ไข</span>' + (r.corrective_action ? escHtml(r.corrective_action).replace(/\n/g, '<br>') : '-') + '</div>';
   html += '<div class="modal-row"><span class="k">ข้อเสนอแนะ</span>' + (r.suggestions ? escHtml(r.suggestions).replace(/\n/g, '<br>') : '-') + '</div>';
 
+  if (r.lastEditedBy) {
+    const editedAtStr = r.lastEditedAt ? new Date(r.lastEditedAt).toLocaleString('th-TH') : '-';
+    html += '<div class="modal-row" style="background:#f8faf9;padding:8px 10px;border-radius:6px;font-size:12px;color:var(--muted);">' +
+      '✏️ แก้ไขล่าสุดโดย ' + escHtml(r.lastEditedBy) + ' เมื่อ ' + escHtml(editedAtStr) +
+      '</div>';
+  }
+
   html += '<div style="display:flex;gap:10px;margin-top:20px;">' +
     '<button class="btn secondary" style="flex:1;" onclick="openEditModal(' + idx + ')">แก้ไขข้อมูล</button>' +
     '<button class="btn danger" style="flex:1;" onclick="deleteRecord(' + idx + ')">ลบรายการนี้</button>' +
@@ -1074,6 +1204,16 @@ function openEditModal(idx) {
 
   const html =
     '<h3>แก้ไขข้อมูล</h3>' +
+    (r.lastEditedBy
+      ? '<div style="font-size:12px;color:var(--muted);margin-bottom:12px;background:#f8faf9;padding:8px 10px;border-radius:6px;">' +
+        'แก้ไขล่าสุดโดย: ' + escHtml(r.lastEditedBy) +
+        (r.lastEditedAt ? ' เมื่อ ' + escHtml(new Date(r.lastEditedAt).toLocaleString('th-TH')) : '') +
+        '</div>'
+      : '') +
+    '<div class="field" style="background:#fff8e1;padding:10px;border-radius:8px;">' +
+      '<label>ชื่อผู้แก้ไขข้อมูลนี้ <span class="req">*</span></label>' +
+      '<input type="text" id="e_editedBy" placeholder="ระบุชื่อ-นามสกุลผู้ทำการแก้ไข (จำเป็นต้องกรอก)">' +
+    '</div>' +
     '<div class="field"><label>วันที่</label><input type="date" id="e_date"></div>' +
     '<div class="field"><label>ผู้บันทึก/เจ้าหน้าที่เครื่องชั่ง</label><input type="text" id="e_weighmaster"></div>' +
     '<div class="field"><label>กะปฏิบัติงาน</label>' +
@@ -1125,12 +1265,14 @@ async function saveEdit() {
     return;
   }
 
+  const editedBy = document.getElementById('e_editedBy').value.trim();
   const date = document.getElementById('e_date').value;
   const weighmaster = document.getElementById('e_weighmaster').value.trim();
   const shift = document.getElementById('e_shift').value;
   const vehFeedOut = Number(document.getElementById('e_veh_feed_out').value);
   const vehRawmatIn = Number(document.getElementById('e_veh_rawmat_in').value);
 
+  if (!editedBy) { showToast('กรุณาระบุชื่อผู้แก้ไขข้อมูล', 'error'); return; }
   if (!date) { showToast('กรุณาระบุวันที่', 'error'); return; }
   if (!weighmaster) { showToast('กรุณาระบุชื่อผู้บันทึก', 'error'); return; }
   if (!Number.isFinite(vehFeedOut) || vehFeedOut < 0) {
@@ -1141,6 +1283,7 @@ async function saveEdit() {
   }
 
   const data = {
+    editedBy: editedBy,
     date: date,
     weighmaster: weighmaster,
     shift: shift,
@@ -1183,10 +1326,21 @@ async function deleteRecord(idx) {
     return;
   }
 
+  const deletedBy = window.prompt(
+    'กรุณาระบุชื่อ-นามสกุลผู้ทำการลบข้อมูลนี้ (เพื่อบันทึกไว้เป็นหลักฐาน):',
+    ''
+  );
+  if (deletedBy === null) return; // กดยกเลิก
+  if (!deletedBy.trim()) {
+    showToast('กรุณาระบุชื่อผู้ทำการลบ', 'error');
+    return;
+  }
+
   const confirmed = window.confirm(
     'ยืนยันการลบข้อมูลนี้หรือไม่?\n\n' +
     'วันที่: ' + r.date + '\nกะ: ' + r.shift + '\nผู้บันทึก: ' + r.weighmaster +
-    '\n\nการลบไม่สามารถย้อนกลับได้'
+    '\nผู้ทำการลบ: ' + deletedBy.trim() +
+    '\n\nข้อมูลจะถูกย้ายไปเก็บในแท็บ "ประวัติการลบ" ไม่แสดงในระบบอีก'
   );
   if (!confirmed) return;
 
@@ -1196,7 +1350,7 @@ async function deleteRecord(idx) {
   }
 
   try {
-    await callApi('delete', { entryId: r.entryId });
+    await callApi('delete', { entryId: r.entryId, deletedBy: deletedBy.trim() });
     showToast('ลบข้อมูลสำเร็จ', 'success');
     document.getElementById('modalOverlay').classList.remove('show');
     history.back(); // กลับจาก state 'detail' ไป state ของแท็บรายงาน
@@ -1259,6 +1413,7 @@ window.addEventListener('offline', () => updateNetStatus_(true));
 /* ---------------- Init ---------------- */
 window.addEventListener('DOMContentLoaded', () => {
   setDefaultDate();
+  restoreDraftIfExists_();
   history.replaceState({ tab: 'form', overlay: null }, '', '#form');
   updateNetStatus_(false);
   if (!APPS_SCRIPT_URL) {
