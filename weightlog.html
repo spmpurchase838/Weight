@@ -204,6 +204,14 @@
   .modal .field{margin-bottom:12px;}
   .modal .field label{font-size:12.5px;}
   .modal textarea{min-height:56px;}
+  .char-counter{
+    font-size:11px;
+    color:var(--muted);
+    text-align:right;
+    margin-top:3px;
+  }
+  .char-counter.warn{ color:var(--warn); }
+  .char-counter.danger{ color:var(--danger); font-weight:700; }
   .toast{
     position:fixed;
     bottom:24px;
@@ -424,7 +432,7 @@
 
       <div class="field">
         <label>ผู้บันทึก/เวรหน้าที่เครื่องชั่ง (Weighmaster) <span class="req">*</span></label>
-        <input type="text" id="f_weighmaster" placeholder="ระบุชื่อ-นามสกุล">
+        <input type="text" id="f_weighmaster" maxlength="200" placeholder="ระบุชื่อ-นามสกุล">
       </div>
 
       <div class="field">
@@ -441,15 +449,15 @@
       <h2><span class="icon">🚚</span> สรุปจำนวนรถที่ชั่ง</h2>
       <div class="veh-row">
         <div class="label">รถส่งอาหาร (คัน)</div>
-        <input type="number" min="0" id="f_veh_feed_out" value="0">
+        <input type="number" min="0" max="500" id="f_veh_feed_out" value="0">
       </div>
       <div class="veh-row">
         <div class="label">รถรับวัตถุดิบ/เคมีภัณฑ์/บรรจุภัณฑ์ (คัน)</div>
-        <input type="number" min="0" id="f_veh_rawmat_in" value="0">
+        <input type="number" min="0" max="500" id="f_veh_rawmat_in" value="0">
       </div>
       <div class="field" style="margin-top:14px;">
         <label>ระบุประเภทรถอื่นๆ (Other Truck Type)</label>
-        <input type="text" id="f_veh_other_type" placeholder="เช่น รถขนส่งเครื่องจักร, รถส่งซ่อมบำรุง ฯลฯ (เว้นว่างได้ถ้าไม่มี)">
+        <input type="text" id="f_veh_other_type" maxlength="200" placeholder="เช่น รถขนส่งเครื่องจักร, รถส่งซ่อมบำรุง ฯลฯ (เว้นว่างได้ถ้าไม่มี)">
       </div>
     </div>
 
@@ -458,39 +466,41 @@
       <div class="problem-grid" id="problemGrid">
         <div class="problem-item" data-key="overweight">
           <label class="chk"><input type="checkbox"> ปัญหาน้ำหนักเกิน (Overweight)</label>
-          <textarea placeholder="ระบุรายละเอียด เช่น ทะเบียนรถ, เกินกี่ กก."></textarea>
+          <textarea maxlength="2000" placeholder="ระบุรายละเอียด เช่น ทะเบียนรถ, เกินกี่ กก."></textarea>
         </div>
         <div class="problem-item" data-key="driver_behavior">
           <label class="chk"><input type="checkbox"> ปัญหาด้านพฤติกรรมคนขับ (Driver Behavior)</label>
-          <textarea placeholder="ระบุรายละเอียด เช่น ไม่ให้ความร่วมมือ, คำพูด"></textarea>
+          <textarea maxlength="2000" placeholder="ระบุรายละเอียด เช่น ไม่ให้ความร่วมมือ, คำพูด"></textarea>
         </div>
         <div class="problem-item" data-key="system">
           <label class="chk"><input type="checkbox"> ปัญหาด้านระบบ/อุปกรณ์ (System/Equipment)</label>
-          <textarea placeholder="ระบุรายละเอียด"></textarea>
+          <textarea maxlength="2000" placeholder="ระบุรายละเอียด"></textarea>
         </div>
         <div class="problem-item" data-key="wrong_queue">
           <label class="chk"><input type="checkbox"> ปัญหาการชั่งน้ำหนักรถผิดคิว</label>
-          <textarea placeholder="ระบุรายละเอียด"></textarea>
+          <textarea maxlength="2000" placeholder="ระบุรายละเอียด"></textarea>
         </div>
         <div class="problem-item" data-key="wrong_delivery">
           <label class="chk"><input type="checkbox"> ปัญหาการส่งของผิดที่</label>
-          <textarea placeholder="ระบุรายละเอียด"></textarea>
+          <textarea maxlength="2000" placeholder="ระบุรายละเอียด"></textarea>
         </div>
         <div class="problem-item" data-key="other">
           <label class="chk"><input type="checkbox"> อื่นๆ</label>
-          <textarea placeholder="ระบุรายละเอียด"></textarea>
+          <textarea maxlength="2000" placeholder="ระบุรายละเอียด"></textarea>
         </div>
       </div>
     </div>
 
     <div class="card">
       <h2><span class="icon">🛠️</span> แนวทางการแก้ไข (Corrective Action)</h2>
-      <textarea id="f_corrective" placeholder="ระบุรายละเอียดการแก้ไขปัญหาเบื้องต้น (ถ้ามี)"></textarea>
+      <textarea id="f_corrective" maxlength="2000" placeholder="ระบุรายละเอียดการแก้ไขปัญหาเบื้องต้น (ถ้ามี)"></textarea>
+      <div class="char-counter" id="f_correctiveCounter"></div>
     </div>
 
     <div class="card">
       <h2><span class="icon">💡</span> ข้อเสนอแนะ (Suggestions)</h2>
-      <textarea id="f_suggestions" placeholder="ข้อเสนอแนะเพิ่มเติมเพื่อการปรับปรุงกระบวนการ (ถ้ามี)"></textarea>
+      <textarea id="f_suggestions" maxlength="2000" placeholder="ข้อเสนอแนะเพิ่มเติมเพื่อการปรับปรุงกระบวนการ (ถ้ามี)"></textarea>
+      <div class="char-counter" id="f_suggestionsCounter"></div>
     </div>
 
     <button class="btn" id="submitBtn" onclick="reviewForm()">บันทึกข้อมูล</button>
@@ -615,6 +625,25 @@ function showToast(msg, type) {
   t.className = 'toast show' + (type ? ' ' + type : '');
   setTimeout(() => { t.className = 'toast'; }, 2800);
 }
+
+// แสดงตัวนับตัวอักษร current/max ใต้ textarea อัปเดตสดตอนพิมพ์
+function setupCharCounter_(inputId, counterId, maxLen) {
+  const el = document.getElementById(inputId);
+  const counter = document.getElementById(counterId);
+  if (!el || !counter) return;
+
+  const update = () => {
+    const len = el.value.length;
+    counter.textContent = len + ' / ' + maxLen;
+    counter.classList.toggle('warn', len > maxLen * 0.8 && len <= maxLen * 0.95);
+    counter.classList.toggle('danger', len > maxLen * 0.95);
+  };
+  el.addEventListener('input', update);
+  update();
+}
+
+setupCharCounter_('f_corrective', 'f_correctiveCounter', 2000);
+setupCharCounter_('f_suggestions', 'f_suggestionsCounter', 2000);
 
 const API_TIMEOUT_MS = 15000; // กันหน้าเว็บค้างถ้าเน็ตมีปัญหา/Apps Script ตอบช้าผิดปกติ
 const API_MAX_RETRY = 1;       // retry เฉพาะตอนเน็ตหลุด/timeout ไม่ retry ตอน error จาก server เอง
@@ -756,24 +785,46 @@ let saveInProgress = false;
 let pendingSaveData = null;
 
 // รวบรวม + ตรวจสอบข้อมูลจากฟอร์ม คืนค่า { data } ถ้าผ่าน หรือ { error } ถ้าไม่ผ่าน
+// ค่าเหล่านี้ต้องตรงกับฝั่ง server (Code.gs) เพื่อให้ error message สอดคล้องกัน
+const MAX_TEXT_LEN = 2000;
+const MAX_SHORT_LEN = 200;
+const MAX_VEHICLE_COUNT = 500;
+
 function collectAndValidateForm() {
   const date = document.getElementById('f_date').value;
   const weighmaster = document.getElementById('f_weighmaster').value.trim();
   const vehFeedOutRaw = document.getElementById('f_veh_feed_out').value;
   const vehRawmatInRaw = document.getElementById('f_veh_rawmat_in').value;
+  const vehOtherType = document.getElementById('f_veh_other_type').value.trim();
+  const correctiveAction = document.getElementById('f_corrective').value.trim();
+  const suggestions = document.getElementById('f_suggestions').value.trim();
+  const problemsText = buildProblemsText();
 
   if (!date) return { error: 'กรุณาระบุวันที่' };
   if (!weighmaster) return { error: 'กรุณาระบุชื่อผู้บันทึก' };
-  if (weighmaster.length > 200) return { error: 'ชื่อผู้บันทึกยาวเกินไป' };
+  if (weighmaster.length > MAX_SHORT_LEN) return { error: 'ชื่อผู้บันทึกยาวเกินไป (ไม่เกิน ' + MAX_SHORT_LEN + ' ตัวอักษร)' };
   if (!selectedShift) return { error: 'กรุณาเลือกกะปฏิบัติงาน' };
 
   const vehFeedOut = Number(vehFeedOutRaw);
   const vehRawmatIn = Number(vehRawmatInRaw);
-  if (!Number.isFinite(vehFeedOut) || vehFeedOut < 0) {
-    return { error: 'จำนวนรถส่งอาหารไม่ถูกต้อง (ต้องเป็นตัวเลขไม่ติดลบ)' };
+  if (!Number.isFinite(vehFeedOut) || vehFeedOut < 0 || vehFeedOut > MAX_VEHICLE_COUNT) {
+    return { error: 'จำนวนรถส่งอาหารไม่ถูกต้อง (ต้องอยู่ระหว่าง 0-' + MAX_VEHICLE_COUNT + ' คัน)' };
   }
-  if (!Number.isFinite(vehRawmatIn) || vehRawmatIn < 0) {
-    return { error: 'จำนวนรถรับวัตถุดิบไม่ถูกต้อง (ต้องเป็นตัวเลขไม่ติดลบ)' };
+  if (!Number.isFinite(vehRawmatIn) || vehRawmatIn < 0 || vehRawmatIn > MAX_VEHICLE_COUNT) {
+    return { error: 'จำนวนรถรับวัตถุดิบไม่ถูกต้อง (ต้องอยู่ระหว่าง 0-' + MAX_VEHICLE_COUNT + ' คัน)' };
+  }
+  if (vehOtherType.length > MAX_SHORT_LEN) {
+    return { error: 'ข้อความ "ประเภทรถอื่นๆ" ยาวเกินไป (ไม่เกิน ' + MAX_SHORT_LEN + ' ตัวอักษร)' };
+  }
+  // เช็คความยาวรวมของปัญหาทั้งหมดที่ติ๊กไว้ (ไม่ใช่แค่ทีละช่อง เพราะติ๊กหลายข้อพร้อมกันได้)
+  if (problemsText.length > MAX_TEXT_LEN) {
+    return { error: 'ข้อความ "ปัญหาที่พบ" รวมกันยาวเกินไป (ไม่เกิน ' + MAX_TEXT_LEN + ' ตัวอักษร) กรุณาย่อให้สั้นลง' };
+  }
+  if (correctiveAction.length > MAX_TEXT_LEN) {
+    return { error: 'ข้อความ "แนวทางการแก้ไข" ยาวเกินไป (ไม่เกิน ' + MAX_TEXT_LEN + ' ตัวอักษร)' };
+  }
+  if (suggestions.length > MAX_TEXT_LEN) {
+    return { error: 'ข้อความ "ข้อเสนอแนะ" ยาวเกินไป (ไม่เกิน ' + MAX_TEXT_LEN + ' ตัวอักษร)' };
   }
 
   const data = {
@@ -782,10 +833,10 @@ function collectAndValidateForm() {
     shift: selectedShift,
     veh_feed_out: Math.floor(vehFeedOut),
     veh_rawmat_in: Math.floor(vehRawmatIn),
-    veh_other_type: document.getElementById('f_veh_other_type').value.trim(),
-    problems: buildProblemsText(),
-    corrective_action: document.getElementById('f_corrective').value.trim(),
-    suggestions: document.getElementById('f_suggestions').value.trim()
+    veh_other_type: vehOtherType,
+    problems: problemsText,
+    corrective_action: correctiveAction,
+    suggestions: suggestions
   };
 
   return { data: data };
@@ -1212,10 +1263,10 @@ function openEditModal(idx) {
       : '') +
     '<div class="field" style="background:#fff8e1;padding:10px;border-radius:8px;">' +
       '<label>ชื่อผู้แก้ไขข้อมูลนี้ <span class="req">*</span></label>' +
-      '<input type="text" id="e_editedBy" placeholder="ระบุชื่อ-นามสกุลผู้ทำการแก้ไข (จำเป็นต้องกรอก)">' +
+      '<input type="text" id="e_editedBy" maxlength="200" placeholder="ระบุชื่อ-นามสกุลผู้ทำการแก้ไข (จำเป็นต้องกรอก)">' +
     '</div>' +
     '<div class="field"><label>วันที่</label><input type="date" id="e_date"></div>' +
-    '<div class="field"><label>ผู้บันทึก/เจ้าหน้าที่เครื่องชั่ง</label><input type="text" id="e_weighmaster"></div>' +
+    '<div class="field"><label>ผู้บันทึก/เจ้าหน้าที่เครื่องชั่ง</label><input type="text" id="e_weighmaster" maxlength="200"></div>' +
     '<div class="field"><label>กะปฏิบัติงาน</label>' +
       '<select id="e_shift">' +
         '<option value="เช้า">เช้า</option>' +
@@ -1223,12 +1274,12 @@ function openEditModal(idx) {
         '<option value="ดึก">ดึก</option>' +
       '</select>' +
     '</div>' +
-    '<div class="field"><label>รถส่งอาหาร (คัน)</label><input type="number" min="0" id="e_veh_feed_out"></div>' +
-    '<div class="field"><label>รถรับวัตถุดิบ/เคมีภัณฑ์/บรรจุภัณฑ์ (คัน)</label><input type="number" min="0" id="e_veh_rawmat_in"></div>' +
-    '<div class="field"><label>ระบุประเภทรถอื่นๆ</label><input type="text" id="e_veh_other_type"></div>' +
-    '<div class="field"><label>ปัญหาที่พบและรายละเอียด</label><textarea id="e_problems" placeholder="ไม่มีปัญหาให้เว้นว่างไว้"></textarea></div>' +
-    '<div class="field"><label>แนวทางการแก้ไข</label><textarea id="e_corrective"></textarea></div>' +
-    '<div class="field"><label>ข้อเสนอแนะ</label><textarea id="e_suggestions"></textarea></div>' +
+    '<div class="field"><label>รถส่งอาหาร (คัน)</label><input type="number" min="0" max="500" id="e_veh_feed_out"></div>' +
+    '<div class="field"><label>รถรับวัตถุดิบ/เคมีภัณฑ์/บรรจุภัณฑ์ (คัน)</label><input type="number" min="0" max="500" id="e_veh_rawmat_in"></div>' +
+    '<div class="field"><label>ระบุประเภทรถอื่นๆ</label><input type="text" id="e_veh_other_type" maxlength="200"></div>' +
+    '<div class="field"><label>ปัญหาที่พบและรายละเอียด</label><textarea id="e_problems" maxlength="2000" placeholder="ไม่มีปัญหาให้เว้นว่างไว้"></textarea><div class="char-counter" id="e_problemsCounter"></div></div>' +
+    '<div class="field"><label>แนวทางการแก้ไข</label><textarea id="e_corrective" maxlength="2000"></textarea><div class="char-counter" id="e_correctiveCounter"></div></div>' +
+    '<div class="field"><label>ข้อเสนอแนะ</label><textarea id="e_suggestions" maxlength="2000"></textarea><div class="char-counter" id="e_suggestionsCounter"></div></div>' +
     '<div style="display:flex;gap:10px;margin-top:16px;">' +
       '<button class="btn secondary" style="flex:1;" onclick="closeEditModal()">ยกเลิก</button>' +
       '<button class="btn" style="flex:1;" id="editSaveBtn" onclick="saveEdit()">บันทึกการแก้ไข</button>' +
@@ -1246,6 +1297,10 @@ function openEditModal(idx) {
   document.getElementById('e_problems').value = r.problems || '';
   document.getElementById('e_corrective').value = r.corrective_action || '';
   document.getElementById('e_suggestions').value = r.suggestions || '';
+
+  setupCharCounter_('e_problems', 'e_problemsCounter', 2000);
+  setupCharCounter_('e_corrective', 'e_correctiveCounter', 2000);
+  setupCharCounter_('e_suggestions', 'e_suggestionsCounter', 2000);
 
   document.getElementById('editModalOverlay').classList.add('show');
   history.pushState({ tab: currentTab, overlay: 'edit' }, '', '#edit');
@@ -1271,15 +1326,33 @@ async function saveEdit() {
   const shift = document.getElementById('e_shift').value;
   const vehFeedOut = Number(document.getElementById('e_veh_feed_out').value);
   const vehRawmatIn = Number(document.getElementById('e_veh_rawmat_in').value);
+  const vehOtherType = document.getElementById('e_veh_other_type').value.trim();
+  const problemsText = document.getElementById('e_problems').value.trim();
+  const correctiveAction = document.getElementById('e_corrective').value.trim();
+  const suggestions = document.getElementById('e_suggestions').value.trim();
 
   if (!editedBy) { showToast('กรุณาระบุชื่อผู้แก้ไขข้อมูล', 'error'); return; }
+  if (editedBy.length > MAX_SHORT_LEN) { showToast('ชื่อผู้แก้ไขยาวเกินไป (ไม่เกิน ' + MAX_SHORT_LEN + ' ตัวอักษร)', 'error'); return; }
   if (!date) { showToast('กรุณาระบุวันที่', 'error'); return; }
   if (!weighmaster) { showToast('กรุณาระบุชื่อผู้บันทึก', 'error'); return; }
-  if (!Number.isFinite(vehFeedOut) || vehFeedOut < 0) {
-    showToast('จำนวนรถส่งอาหารไม่ถูกต้อง (ต้องเป็นตัวเลขไม่ติดลบ)', 'error'); return;
+  if (weighmaster.length > MAX_SHORT_LEN) { showToast('ชื่อผู้บันทึกยาวเกินไป (ไม่เกิน ' + MAX_SHORT_LEN + ' ตัวอักษร)', 'error'); return; }
+  if (!Number.isFinite(vehFeedOut) || vehFeedOut < 0 || vehFeedOut > MAX_VEHICLE_COUNT) {
+    showToast('จำนวนรถส่งอาหารไม่ถูกต้อง (ต้องอยู่ระหว่าง 0-' + MAX_VEHICLE_COUNT + ' คัน)', 'error'); return;
   }
-  if (!Number.isFinite(vehRawmatIn) || vehRawmatIn < 0) {
-    showToast('จำนวนรถรับวัตถุดิบไม่ถูกต้อง (ต้องเป็นตัวเลขไม่ติดลบ)', 'error'); return;
+  if (!Number.isFinite(vehRawmatIn) || vehRawmatIn < 0 || vehRawmatIn > MAX_VEHICLE_COUNT) {
+    showToast('จำนวนรถรับวัตถุดิบไม่ถูกต้อง (ต้องอยู่ระหว่าง 0-' + MAX_VEHICLE_COUNT + ' คัน)', 'error'); return;
+  }
+  if (vehOtherType.length > MAX_SHORT_LEN) {
+    showToast('ข้อความ "ประเภทรถอื่นๆ" ยาวเกินไป (ไม่เกิน ' + MAX_SHORT_LEN + ' ตัวอักษร)', 'error'); return;
+  }
+  if (problemsText.length > MAX_TEXT_LEN) {
+    showToast('ข้อความ "ปัญหาที่พบ" ยาวเกินไป (ไม่เกิน ' + MAX_TEXT_LEN + ' ตัวอักษร)', 'error'); return;
+  }
+  if (correctiveAction.length > MAX_TEXT_LEN) {
+    showToast('ข้อความ "แนวทางการแก้ไข" ยาวเกินไป (ไม่เกิน ' + MAX_TEXT_LEN + ' ตัวอักษร)', 'error'); return;
+  }
+  if (suggestions.length > MAX_TEXT_LEN) {
+    showToast('ข้อความ "ข้อเสนอแนะ" ยาวเกินไป (ไม่เกิน ' + MAX_TEXT_LEN + ' ตัวอักษร)', 'error'); return;
   }
 
   const data = {
@@ -1289,10 +1362,10 @@ async function saveEdit() {
     shift: shift,
     veh_feed_out: Math.floor(vehFeedOut),
     veh_rawmat_in: Math.floor(vehRawmatIn),
-    veh_other_type: document.getElementById('e_veh_other_type').value.trim(),
-    problems: document.getElementById('e_problems').value.trim(),
-    corrective_action: document.getElementById('e_corrective').value.trim(),
-    suggestions: document.getElementById('e_suggestions').value.trim()
+    veh_other_type: vehOtherType,
+    problems: problemsText,
+    corrective_action: correctiveAction,
+    suggestions: suggestions
   };
 
   const btn = document.getElementById('editSaveBtn');
