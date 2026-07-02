@@ -188,6 +188,15 @@
     color:var(--primary-dark);
     border:1.5px solid var(--primary);
   }
+  .btn.danger{
+    background:var(--danger);
+  }
+  .btn.danger:hover{
+    background:#a52714;
+  }
+  .modal .field{margin-bottom:12px;}
+  .modal .field label{font-size:12.5px;}
+  .modal textarea{min-height:56px;}
   .toast{
     position:fixed;
     bottom:24px;
@@ -472,6 +481,13 @@
   <div class="modal">
     <button class="modal-close" onclick="if(!saveInProgress) closeConfirmModal()">&times;</button>
     <div id="confirmModalBody"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="editModalOverlay" onclick="if(event.target===this && !editSaveInProgress) closeEditModal()">
+  <div class="modal">
+    <button class="modal-close" onclick="if(!editSaveInProgress) closeEditModal()">&times;</button>
+    <div id="editModalBody"></div>
   </div>
 </div>
 
@@ -905,6 +921,11 @@ function showDetail(idx) {
   html += '<div class="modal-row"><span class="k">แนวทางการแก้ไข</span>' + (r.corrective_action ? escHtml(r.corrective_action).replace(/\n/g, '<br>') : '-') + '</div>';
   html += '<div class="modal-row"><span class="k">ข้อเสนอแนะ</span>' + (r.suggestions ? escHtml(r.suggestions).replace(/\n/g, '<br>') : '-') + '</div>';
 
+  html += '<div style="display:flex;gap:10px;margin-top:20px;">' +
+    '<button class="btn secondary" style="flex:1;" onclick="openEditModal(' + idx + ')">แก้ไขข้อมูล</button>' +
+    '<button class="btn danger" style="flex:1;" onclick="deleteRecord(' + idx + ')">ลบรายการนี้</button>' +
+    '</div>';
+
   document.getElementById('modalBody').innerHTML = html;
   document.getElementById('modalOverlay').classList.add('show');
   history.pushState({ tab: currentTab, overlay: 'detail' }, '', '#detail');
@@ -918,7 +939,154 @@ function closeModal(fromHistory) {
   }
 }
 
+/* ---------------- Edit record ---------------- */
+let currentEditEntryId = null;
+let editSaveInProgress = false;
+
+function openEditModal(idx) {
+  const r = currentRecords[idx];
+  if (!r || !r.entryId) {
+    showToast('ไม่พบรหัสอ้างอิงของรายการนี้ แก้ไขไม่ได้', 'error');
+    return;
+  }
+  currentEditEntryId = r.entryId;
+
+  const html =
+    '<h3>แก้ไขข้อมูล</h3>' +
+    '<div class="field"><label>วันที่</label><input type="date" id="e_date"></div>' +
+    '<div class="field"><label>ผู้บันทึก/เจ้าหน้าที่เครื่องชั่ง</label><input type="text" id="e_weighmaster"></div>' +
+    '<div class="field"><label>กะปฏิบัติงาน</label>' +
+      '<select id="e_shift">' +
+        '<option value="เช้า">เช้า</option>' +
+        '<option value="บ่าย">บ่าย</option>' +
+        '<option value="ดึก">ดึก</option>' +
+      '</select>' +
+    '</div>' +
+    '<div class="field"><label>รถส่งอาหาร (คัน)</label><input type="number" min="0" id="e_veh_feed_out"></div>' +
+    '<div class="field"><label>รถรับวัตถุดิบ/เคมีภัณฑ์/บรรจุภัณฑ์ (คัน)</label><input type="number" min="0" id="e_veh_rawmat_in"></div>' +
+    '<div class="field"><label>ระบุประเภทรถอื่นๆ</label><input type="text" id="e_veh_other_type"></div>' +
+    '<div class="field"><label>ปัญหาที่พบและรายละเอียด</label><textarea id="e_problems" placeholder="ไม่มีปัญหาให้เว้นว่างไว้"></textarea></div>' +
+    '<div class="field"><label>แนวทางการแก้ไข</label><textarea id="e_corrective"></textarea></div>' +
+    '<div class="field"><label>ข้อเสนอแนะ</label><textarea id="e_suggestions"></textarea></div>' +
+    '<div style="display:flex;gap:10px;margin-top:16px;">' +
+      '<button class="btn secondary" style="flex:1;" onclick="closeEditModal()">ยกเลิก</button>' +
+      '<button class="btn" style="flex:1;" id="editSaveBtn" onclick="saveEdit()">บันทึกการแก้ไข</button>' +
+    '</div>';
+
+  document.getElementById('editModalBody').innerHTML = html;
+
+  // เติมค่าปัจจุบันหลังสร้าง element แล้ว (ปลอดภัยกว่าฝังผ่าน string ตรงๆ)
+  document.getElementById('e_date').value = r.date || '';
+  document.getElementById('e_weighmaster').value = r.weighmaster || '';
+  document.getElementById('e_shift').value = r.shift || 'เช้า';
+  document.getElementById('e_veh_feed_out').value = r.veh_feed_out || 0;
+  document.getElementById('e_veh_rawmat_in').value = r.veh_rawmat_in || 0;
+  document.getElementById('e_veh_other_type').value = r.veh_other_type || '';
+  document.getElementById('e_problems').value = r.problems || '';
+  document.getElementById('e_corrective').value = r.corrective_action || '';
+  document.getElementById('e_suggestions').value = r.suggestions || '';
+
+  document.getElementById('editModalOverlay').classList.add('show');
+  history.pushState({ tab: currentTab, overlay: 'edit' }, '', '#edit');
+}
+
+function closeEditModal(fromHistory) {
+  if (editSaveInProgress) return; // กันปิดกลางคันตอนกำลังบันทึกอยู่
+  document.getElementById('editModalOverlay').classList.remove('show');
+  if (!fromHistory) history.back();
+}
+
+async function saveEdit() {
+  if (editSaveInProgress || !currentEditEntryId) return;
+
+  if (navigator.onLine === false) {
+    showToast('ไม่มีการเชื่อมต่ออินเทอร์เน็ต กรุณาตรวจสอบแล้วลองใหม่', 'error');
+    return;
+  }
+
+  const date = document.getElementById('e_date').value;
+  const weighmaster = document.getElementById('e_weighmaster').value.trim();
+  const shift = document.getElementById('e_shift').value;
+  const vehFeedOut = Number(document.getElementById('e_veh_feed_out').value);
+  const vehRawmatIn = Number(document.getElementById('e_veh_rawmat_in').value);
+
+  if (!date) { showToast('กรุณาระบุวันที่', 'error'); return; }
+  if (!weighmaster) { showToast('กรุณาระบุชื่อผู้บันทึก', 'error'); return; }
+  if (!Number.isFinite(vehFeedOut) || vehFeedOut < 0) {
+    showToast('จำนวนรถส่งอาหารไม่ถูกต้อง (ต้องเป็นตัวเลขไม่ติดลบ)', 'error'); return;
+  }
+  if (!Number.isFinite(vehRawmatIn) || vehRawmatIn < 0) {
+    showToast('จำนวนรถรับวัตถุดิบไม่ถูกต้อง (ต้องเป็นตัวเลขไม่ติดลบ)', 'error'); return;
+  }
+
+  const data = {
+    date: date,
+    weighmaster: weighmaster,
+    shift: shift,
+    veh_feed_out: Math.floor(vehFeedOut),
+    veh_rawmat_in: Math.floor(vehRawmatIn),
+    veh_other_type: document.getElementById('e_veh_other_type').value.trim(),
+    problems: document.getElementById('e_problems').value.trim(),
+    corrective_action: document.getElementById('e_corrective').value.trim(),
+    suggestions: document.getElementById('e_suggestions').value.trim()
+  };
+
+  const btn = document.getElementById('editSaveBtn');
+  editSaveInProgress = true;
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> กำลังบันทึก...'; }
+
+  try {
+    await callApi('update', { entryId: currentEditEntryId, data: data });
+    showToast('แก้ไขข้อมูลสำเร็จ', 'success');
+    editSaveInProgress = false;
+    // ปิด edit modal + detail modal ที่ซ้อนอยู่ด้านหลัง แล้วกลับ history ทีเดียว 2 ระดับ
+    document.getElementById('editModalOverlay').classList.remove('show');
+    document.getElementById('modalOverlay').classList.remove('show');
+    history.go(-2);
+    currentEditEntryId = null;
+    loadHistory();
+  } catch (err) {
+    editSaveInProgress = false;
+    showToast('แก้ไขไม่สำเร็จ: ' + err.message, 'error');
+  } finally {
+    editSaveInProgress = false;
+    if (btn) { btn.disabled = false; btn.textContent = 'บันทึกการแก้ไข'; }
+  }
+}
+
+/* ---------------- Delete record ---------------- */
+async function deleteRecord(idx) {
+  const r = currentRecords[idx];
+  if (!r || !r.entryId) {
+    showToast('ไม่พบรหัสอ้างอิงของรายการนี้ ลบไม่ได้', 'error');
+    return;
+  }
+
+  const confirmed = window.confirm(
+    'ยืนยันการลบข้อมูลนี้หรือไม่?\n\n' +
+    'วันที่: ' + r.date + '\nกะ: ' + r.shift + '\nผู้บันทึก: ' + r.weighmaster +
+    '\n\nการลบไม่สามารถย้อนกลับได้'
+  );
+  if (!confirmed) return;
+
+  if (navigator.onLine === false) {
+    showToast('ไม่มีการเชื่อมต่ออินเทอร์เน็ต กรุณาตรวจสอบแล้วลองใหม่', 'error');
+    return;
+  }
+
+  try {
+    await callApi('delete', { entryId: r.entryId });
+    showToast('ลบข้อมูลสำเร็จ', 'success');
+    document.getElementById('modalOverlay').classList.remove('show');
+    history.back(); // กลับจาก state 'detail' ไป state ของแท็บรายงาน
+    loadHistory();
+  } catch (err) {
+    showToast('ลบไม่สำเร็จ: ' + err.message, 'error');
+  }
+}
+
 function getOpenOverlay_() {
+  if (document.getElementById('editModalOverlay').classList.contains('show')) return 'edit';
   if (document.getElementById('confirmModalOverlay').classList.contains('show')) return 'confirm';
   if (document.getElementById('modalOverlay').classList.contains('show')) return 'detail';
   return null;
@@ -932,8 +1100,9 @@ window.addEventListener('popstate', (event) => {
   const openOverlay = getOpenOverlay_();
 
   if (openOverlay && openOverlay !== state.overlay) {
-    if (openOverlay === 'detail') closeModal(true);
+    if (openOverlay === 'edit') closeEditModal(true);
     if (openOverlay === 'confirm') closeConfirmModal(true);
+    if (openOverlay === 'detail') closeModal(true);
   }
   if (state.tab && state.tab !== currentTab) {
     switchTab(state.tab, true);
@@ -944,8 +1113,9 @@ window.addEventListener('popstate', (event) => {
 window.addEventListener('keydown', (event) => {
   if (event.key !== 'Escape') return;
   const openOverlay = getOpenOverlay_();
-  if (openOverlay === 'detail') closeModal();
+  if (openOverlay === 'edit') closeEditModal();
   if (openOverlay === 'confirm') closeConfirmModal();
+  if (openOverlay === 'detail') closeModal();
 });
 
 /* ---------------- Init ---------------- */
