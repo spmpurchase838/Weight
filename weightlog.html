@@ -121,20 +121,30 @@
   .shift-option{
     flex:1;
     min-width:110px;
-    min-height:52px;
+    min-height:60px;
     display:flex;
+    flex-direction:column;
     align-items:center;
     justify-content:center;
     border:1.5px solid var(--border);
     border-radius:8px;
-    padding:14px 16px;
+    padding:12px 16px;
     text-align:center;
     cursor:pointer;
-    font-size:16px;
-    font-weight:700;
     color:var(--muted);
     user-select:none;
     position:relative;
+  }
+  .shift-option .shift-name{
+    font-size:16px;
+    font-weight:700;
+    line-height:1.3;
+  }
+  .shift-option .shift-time{
+    font-size:11.5px;
+    font-weight:500;
+    opacity:0.75;
+    margin-top:2px;
   }
   .shift-option.selected{
     border-color:var(--primary);
@@ -266,7 +276,7 @@
     max-width:90vw;
     text-align:center;
   }
-  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0); pointer-events:auto; cursor:pointer;}
   .toast.error{background:var(--danger);}
   .toast.success{background:var(--primary-dark);}
 
@@ -310,6 +320,13 @@
   table.history th{color:var(--muted); font-weight:700; font-size:13px;}
   table.history tr{cursor:pointer;}
   table.history tr:hover{background:#f8faf9;}
+  table.history td.row-arrow{
+    color:var(--muted);
+    font-size:18px;
+    font-weight:700;
+    text-align:center;
+    width:28px;
+  }
   .tag{
     display:inline-block;
     background:#fce8e6;
@@ -358,6 +375,18 @@
     line-height:1;
     min-width:44px;
     min-height:44px;
+  }
+  /* กรอบแดงเน้นฟิลด์ที่ validation ไม่ผ่าน ใช้ได้ทั้ง input เดี่ยวๆ และ container (เช่น shift-group, card) */
+  .validation-error{
+    outline:3px solid var(--danger) !important;
+    outline-offset:2px;
+    border-radius:8px;
+    animation:shakeError .35s ease;
+  }
+  @keyframes shakeError{
+    0%,100%{ transform:translateX(0); }
+    25%{ transform:translateX(-4px); }
+    75%{ transform:translateX(4px); }
   }
   .config-warning{
     background:#fff8e1;
@@ -470,6 +499,10 @@
       <div class="field">
         <label>วันที่ (Date) <span class="req">*</span></label>
         <input type="date" id="f_date">
+        <div style="display:flex;gap:8px;margin-top:8px;">
+          <button type="button" class="btn secondary" style="width:auto;padding:8px 16px;font-size:13px;min-height:38px;" onclick="setQuickDate_(0)">วันนี้</button>
+          <button type="button" class="btn secondary" style="width:auto;padding:8px 16px;font-size:13px;min-height:38px;" onclick="setQuickDate_(-1)">เมื่อวาน</button>
+        </div>
       </div>
 
       <div class="field">
@@ -482,17 +515,21 @@
         <div class="shift-group" id="shiftGroup" role="radiogroup" aria-label="กะปฏิบัติงาน">
           <label class="shift-option">
             <input type="radio" name="shift" value="เช้า" class="visually-hidden">
-            เช้า
+            <span class="shift-name">เช้า</span>
+            <span class="shift-time">08:00–16:00</span>
           </label>
           <label class="shift-option">
             <input type="radio" name="shift" value="บ่าย" class="visually-hidden">
-            บ่าย
+            <span class="shift-name">บ่าย</span>
+            <span class="shift-time">16:00–00:00</span>
           </label>
           <label class="shift-option">
             <input type="radio" name="shift" value="ดึก" class="visually-hidden">
-            ดึก
+            <span class="shift-name">ดึก</span>
+            <span class="shift-time">00:00–08:00</span>
           </label>
         </div>
+        <div style="font-size:11.5px;color:var(--muted);margin-top:6px;">* ช่วงเวลาโดยประมาณ ปรับตามตารางกะจริงของหน้างาน</div>
       </div>
     </div>
 
@@ -520,32 +557,38 @@
       </div>
     </div>
 
-    <div class="card">
+    <div class="card" id="problemsCard">
       <h2><span class="icon">⚠️</span> ปัญหาที่พบ (เลือกหัวข้อเพื่อกรอกรายละเอียดเพิ่มเติม)</h2>
       <div class="problem-grid" id="problemGrid">
         <div class="problem-item" data-key="overweight">
           <label class="chk"><input type="checkbox"> ปัญหาน้ำหนักเกิน (Overweight)</label>
-          <textarea maxlength="2000" placeholder="ระบุรายละเอียด เช่น ทะเบียนรถ, เกินกี่ กก."></textarea>
+          <textarea id="pd_overweight" maxlength="2000" placeholder="ระบุรายละเอียด เช่น ทะเบียนรถ, เกินกี่ กก."></textarea>
+          <div class="char-counter" id="pd_overweightCounter"></div>
         </div>
         <div class="problem-item" data-key="driver_behavior">
           <label class="chk"><input type="checkbox"> ปัญหาด้านพฤติกรรมคนขับ (Driver Behavior)</label>
-          <textarea maxlength="2000" placeholder="ระบุรายละเอียด เช่น ไม่ให้ความร่วมมือ, คำพูด"></textarea>
+          <textarea id="pd_driver_behavior" maxlength="2000" placeholder="ระบุรายละเอียด เช่น ไม่ให้ความร่วมมือ, คำพูด"></textarea>
+          <div class="char-counter" id="pd_driver_behaviorCounter"></div>
         </div>
         <div class="problem-item" data-key="system">
           <label class="chk"><input type="checkbox"> ปัญหาด้านระบบ/อุปกรณ์ (System/Equipment)</label>
-          <textarea maxlength="2000" placeholder="ระบุรายละเอียด"></textarea>
+          <textarea id="pd_system" maxlength="2000" placeholder="ระบุรายละเอียด"></textarea>
+          <div class="char-counter" id="pd_systemCounter"></div>
         </div>
         <div class="problem-item" data-key="wrong_queue">
           <label class="chk"><input type="checkbox"> ปัญหาการชั่งน้ำหนักรถผิดคิว</label>
-          <textarea maxlength="2000" placeholder="ระบุรายละเอียด"></textarea>
+          <textarea id="pd_wrong_queue" maxlength="2000" placeholder="ระบุรายละเอียด"></textarea>
+          <div class="char-counter" id="pd_wrong_queueCounter"></div>
         </div>
         <div class="problem-item" data-key="wrong_delivery">
           <label class="chk"><input type="checkbox"> ปัญหาการส่งของผิดที่</label>
-          <textarea maxlength="2000" placeholder="ระบุรายละเอียด"></textarea>
+          <textarea id="pd_wrong_delivery" maxlength="2000" placeholder="ระบุรายละเอียด"></textarea>
+          <div class="char-counter" id="pd_wrong_deliveryCounter"></div>
         </div>
         <div class="problem-item" data-key="other">
           <label class="chk"><input type="checkbox"> อื่นๆ</label>
-          <textarea maxlength="2000" placeholder="ระบุรายละเอียด"></textarea>
+          <textarea id="pd_other" maxlength="2000" placeholder="ระบุรายละเอียด"></textarea>
+          <div class="char-counter" id="pd_otherCounter"></div>
         </div>
       </div>
     </div>
@@ -679,11 +722,25 @@ function escHtml(str) {
     .replace(/'/g, '&#39;');
 }
 
+let toastHideTimer = null;
+
 function showToast(msg, type) {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.className = 'toast show' + (type ? ' ' + type : '');
-  setTimeout(() => { t.className = 'toast'; }, 2800);
+
+  // success ต้องอยู่นานพอให้เห็นแน่ๆ เพราะหน้างานห้องชั่งมักถูกขัดจังหวะ (รับสาย/คุยงาน)
+  // กันกดซ้ำเพราะไม่มั่นใจว่าบันทึกไปแล้วหรือยัง
+  const duration = type === 'success' ? 5000 : 4200;
+
+  clearTimeout(toastHideTimer);
+  toastHideTimer = setTimeout(() => { t.className = 'toast'; }, duration);
+
+  // แตะที่ toast เพื่อปิดก่อนเวลาได้ ถ้าอ่านเสร็จแล้ว
+  t.onclick = () => {
+    clearTimeout(toastHideTimer);
+    t.className = 'toast';
+  };
 }
 
 // แสดงตัวนับตัวอักษร current/max ใต้ textarea อัปเดตสดตอนพิมพ์
@@ -704,6 +761,9 @@ function setupCharCounter_(inputId, counterId, maxLen) {
 
 setupCharCounter_('f_corrective', 'f_correctiveCounter', 2000);
 setupCharCounter_('f_suggestions', 'f_suggestionsCounter', 2000);
+['overweight', 'driver_behavior', 'system', 'wrong_queue', 'wrong_delivery', 'other'].forEach(key => {
+  setupCharCounter_('pd_' + key, 'pd_' + key + 'Counter', 2000);
+});
 
 const API_TIMEOUT_MS = 15000; // กันหน้าเว็บค้างถ้าเน็ตมีปัญหา/Apps Script ตอบช้าผิดปกติ
 const API_MAX_RETRY = 1;       // retry เฉพาะตอนเน็ตหลุด/timeout ไม่ retry ตอน error จาก server เอง
@@ -894,33 +954,33 @@ function collectAndValidateForm() {
   const suggestions = document.getElementById('f_suggestions').value.trim();
   const problemsText = buildProblemsText();
 
-  if (!date) return { error: 'กรุณาระบุวันที่' };
-  if (!weighmaster) return { error: 'กรุณาระบุชื่อผู้บันทึก' };
-  if (weighmaster.length > MAX_SHORT_LEN) return { error: 'ชื่อผู้บันทึกยาวเกินไป (ไม่เกิน ' + MAX_SHORT_LEN + ' ตัวอักษร)' };
-  if (!selectedShift) return { error: 'กรุณาเลือกกะปฏิบัติงาน' };
+  if (!date) return { error: 'กรุณาระบุวันที่', fieldId: 'f_date' };
+  if (!weighmaster) return { error: 'กรุณาระบุชื่อผู้บันทึก', fieldId: 'f_weighmaster' };
+  if (weighmaster.length > MAX_SHORT_LEN) return { error: 'ชื่อผู้บันทึกยาวเกินไป (ไม่เกิน ' + MAX_SHORT_LEN + ' ตัวอักษร)', fieldId: 'f_weighmaster' };
+  if (!selectedShift) return { error: 'กรุณาเลือกกะปฏิบัติงาน', fieldId: 'shiftGroup' };
 
   const vehicleCounts = {};
   for (let i = 0; i < VEHICLE_FIELDS.length; i++) {
     const f = VEHICLE_FIELDS[i];
     const val = Number(document.getElementById(f.formId).value);
     if (!Number.isFinite(val) || val < 0 || val > MAX_VEHICLE_COUNT) {
-      return { error: 'จำนวน "' + f.label + '" ไม่ถูกต้อง (ต้องอยู่ระหว่าง 0-' + MAX_VEHICLE_COUNT + ' คัน)' };
+      return { error: 'จำนวน "' + f.label + '" ไม่ถูกต้อง (ต้องอยู่ระหว่าง 0-' + MAX_VEHICLE_COUNT + ' คัน)', fieldId: f.formId };
     }
     vehicleCounts[f.key] = Math.floor(val);
   }
 
   if (vehOtherType.length > MAX_SHORT_LEN) {
-    return { error: 'ข้อความ "ประเภทรถอื่นๆ" ยาวเกินไป (ไม่เกิน ' + MAX_SHORT_LEN + ' ตัวอักษร)' };
+    return { error: 'ข้อความ "ประเภทรถอื่นๆ" ยาวเกินไป (ไม่เกิน ' + MAX_SHORT_LEN + ' ตัวอักษร)', fieldId: 'f_veh_other_type' };
   }
   // เช็คความยาวรวมของปัญหาทั้งหมดที่ติ๊กไว้ (ไม่ใช่แค่ทีละช่อง เพราะติ๊กหลายข้อพร้อมกันได้)
   if (problemsText.length > MAX_TEXT_LEN) {
-    return { error: 'ข้อความ "ปัญหาที่พบ" รวมกันยาวเกินไป (ไม่เกิน ' + MAX_TEXT_LEN + ' ตัวอักษร) กรุณาย่อให้สั้นลง' };
+    return { error: 'ข้อความ "ปัญหาที่พบ" รวมกันยาวเกินไป (ไม่เกิน ' + MAX_TEXT_LEN + ' ตัวอักษร) กรุณาย่อให้สั้นลง', fieldId: 'problemsCard' };
   }
   if (correctiveAction.length > MAX_TEXT_LEN) {
-    return { error: 'ข้อความ "แนวทางการแก้ไข" ยาวเกินไป (ไม่เกิน ' + MAX_TEXT_LEN + ' ตัวอักษร)' };
+    return { error: 'ข้อความ "แนวทางการแก้ไข" ยาวเกินไป (ไม่เกิน ' + MAX_TEXT_LEN + ' ตัวอักษร)', fieldId: 'f_corrective' };
   }
   if (suggestions.length > MAX_TEXT_LEN) {
-    return { error: 'ข้อความ "ข้อเสนอแนะ" ยาวเกินไป (ไม่เกิน ' + MAX_TEXT_LEN + ' ตัวอักษร)' };
+    return { error: 'ข้อความ "ข้อเสนอแนะ" ยาวเกินไป (ไม่เกิน ' + MAX_TEXT_LEN + ' ตัวอักษร)', fieldId: 'f_suggestions' };
   }
 
   const data = Object.assign({
@@ -937,6 +997,29 @@ function collectAndValidateForm() {
 }
 
 // ขั้นที่ 1: ตรวจสอบข้อมูล แล้วเปิด popup สรุปให้ผู้ใช้ตรวจทานก่อน (ยังไม่ส่งจริง)
+// scroll ไปหาฟิลด์ที่ error + ทำกรอบแดงให้เห็นชัด กันผู้ใช้ต้องไล่หาเองในฟอร์มยาว
+function showValidationError_(fieldId, message) {
+  showToast(message, 'error');
+
+  const el = fieldId && document.getElementById(fieldId);
+  if (!el) return;
+
+  el.classList.add('validation-error');
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+  // โฟกัสได้เฉพาะ input/textarea/select จริงๆ (ไม่ใช่ div ครอบอย่าง shiftGroup/problemsCard)
+  const focusable = ['INPUT', 'TEXTAREA', 'SELECT'].indexOf(el.tagName) !== -1;
+  if (focusable) {
+    setTimeout(() => { try { el.focus({ preventScroll: true }); } catch (e) { el.focus(); } }, 300);
+  }
+
+  const clearHighlight = () => el.classList.remove('validation-error');
+  el.addEventListener('input', clearHighlight, { once: true });
+  el.addEventListener('change', clearHighlight, { once: true });
+  el.addEventListener('click', clearHighlight, { once: true });
+  setTimeout(clearHighlight, 6000); // fallback เผื่อผู้ใช้ไม่ได้โต้ตอบกับฟิลด์นี้เลย
+}
+
 function reviewForm() {
   if (saveInProgress) return;
 
@@ -951,7 +1034,7 @@ function reviewForm() {
 
   const result = collectAndValidateForm();
   if (result.error) {
-    showToast(result.error, 'error');
+    showValidationError_(result.fieldId, result.error);
     return;
   }
 
@@ -1064,10 +1147,28 @@ function resetForm() {
   setDefaultDate();
 }
 
+// ใช้ local date components แทน toISOString() (ซึ่งอิง UTC) เพราะเวลาไทยคือ UTC+7
+// ถ้าใช้ toISOString() ช่วงเที่ยงคืน-ตี 7 วันที่จะเพี้ยนไปเป็นเมื่อวาน (บั๊กที่พบตอนแก้ feature นี้)
+function formatLocalDateYYYYMMDD_(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return y + '-' + m + '-' + d;
+}
+
 function setDefaultDate() {
+  document.getElementById('f_date').value = formatLocalDateYYYYMMDD_(new Date());
+}
+
+// ปุ่มลัดเลือกวันที่ "วันนี้ / เมื่อวาน" สำหรับกะดึกที่มาบันทึกข้อมูลหลังเที่ยงคืน
+// แต่ต้องการบันทึกของเมื่อวาน (offsetDays: 0 = วันนี้, -1 = เมื่อวาน)
+function setQuickDate_(offsetDays) {
   const d = new Date();
-  const iso = d.toISOString().slice(0, 10);
-  document.getElementById('f_date').value = iso;
+  d.setDate(d.getDate() + offsetDays);
+  const dateInput = document.getElementById('f_date');
+  dateInput.value = formatLocalDateYYYYMMDD_(d);
+  dateInput.classList.remove('validation-error');
+  scheduleDraftSave_();
 }
 
 /* ==========================================================
@@ -1317,7 +1418,7 @@ function renderHistoryTable(records) {
 
   let html = '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">' +
     '<table class="history"><thead><tr>' +
-    '<th>วันที่</th><th>กะ</th><th>ผู้บันทึก</th><th>รวมรถ (คัน)</th><th>ปัญหา</th>' +
+    '<th>วันที่</th><th>กะ</th><th>ผู้บันทึก</th><th>รวมรถ (คัน)</th><th>ปัญหา</th><th></th>' +
     '</tr></thead><tbody>';
 
   records.forEach((r, idx) => {
@@ -1333,6 +1434,7 @@ function renderHistoryTable(records) {
       '<td>' + escHtml(r.weighmaster) + '</td>' +
       '<td>' + escHtml(totalVeh) + '</td>' +
       '<td>' + tag + '</td>' +
+      '<td class="row-arrow">›</td>' +
       '</tr>';
   });
 
