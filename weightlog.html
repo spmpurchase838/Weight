@@ -693,7 +693,7 @@ function xorDecode(encoded) {
 }
 // วิธีสร้างค่านี้: btoa(url.split('').map(c=>String.fromCharCode(c.charCodeAt(0)^42)).join(''))
 // ⚠️ แทนที่ค่านี้ด้วย URL ของ Apps Script ที่ deploy จริงของคุณ
-const APPS_SCRIPT_URL_ENCODED = 'Ql5eWlkQBQVZSVhDWl4ETUVFTUZPBElFRwVHS0lYRVkFWQVrYUxTSUhdTVlcaGh1bmMdWUJHXkNPeB5CYG11YGVMYhsTWUVbbEBCQxlSa2FGTWteT3xsW21QYWVbGxxcYW5/X2JBfktTe0EFT1JPSQ=='; // ใส่ค่าที่เข้ารหัสแล้วตรงนี้
+const APPS_SCRIPT_URL_ENCODED = 'Ql5eWlkQBQVZSVhDWl4ETUVFTUZPBElFRwVHS0lYRVkFWQVrYUxTSUhTWB1ZSBobU2Zoc3VHXh5ZRn9yeltbTUxZSUx6W0ZTU2RsGEBEfgdbfxpwUhxHcHN8B2VodUhCa04YexllbUIeZxkFT1JPSQ=='; // ใส่ค่าที่เข้ารหัสแล้วตรงนี้
 const TOKEN = 'z0CPHpdf8xJmfbMbwxVE1t2ghIEOJY03'; // ต้องตรงกับค่าใน Code.gs
 
 const APPS_SCRIPT_URL = xorDecode(APPS_SCRIPT_URL_ENCODED);
