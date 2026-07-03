@@ -22,11 +22,21 @@
     --radius:10px;
   }
   *{box-sizing:border-box;}
+  html{
+    /* กัน pull-to-refresh ของ Chrome มือถือลากแล้วรีเฟรชหน้าโดยไม่ตั้งใจ (ข้อมูลที่กรอกค้างอาจดูเหมือนหาย) */
+    overscroll-behavior-y:contain;
+  }
   body{
     margin:0;
     font-family:'Sarabun', 'Segoe UI', Tahoma, sans-serif;
     background:var(--bg);
     color:var(--text);
+    /* ลดดีเลย์ ~300ms ก่อนปุ่ม/ลิงก์ตอบสนองบนมือถือ (browser รอเช็คว่าเป็น double-tap zoom ไหม) */
+    touch-action:manipulation;
+    -webkit-tap-highlight-color:transparent; /* กันสี่เหลี่ยมเทาๆ กระพริบตอนแตะใน Android/iOS Safari */
+  }
+  body.modal-open{
+    overflow:hidden; /* กันหน้าพื้นหลังเลื่อนตามตอนมี popup เปิดอยู่ (บั๊กมือถือที่พบบ่อย) */
   }
   header.appbar{
     background:var(--card);
@@ -470,8 +480,8 @@
   <div class="appbar-right">
     <span id="netStatus" class="net-status online"><span class="dot"></span><span id="netStatusText">ออนไลน์</span></span>
     <nav class="tabs">
-      <button id="tabFormBtn" class="active" onclick="switchTab('form')">บันทึกข้อมูล</button>
-      <button id="tabReportBtn" onclick="switchTab('report')">ประวัติ &amp; รายงาน</button>
+      <button type="button" id="tabFormBtn" class="active" onclick="switchTab('form')">บันทึกข้อมูล</button>
+      <button type="button" id="tabReportBtn" onclick="switchTab('report')">ประวัติ &amp; รายงาน</button>
     </nav>
   </div>
 </header>
@@ -525,19 +535,19 @@
       <h2><span class="icon">🚚</span> สรุปจำนวนรถที่ชั่ง</h2>
       <div class="veh-row">
         <div class="label">รถส่งวัตถุดิบ/เคมีภัณฑ์/บรรจุภัณฑ์ (คัน)</div>
-        <input type="number" min="0" max="500" id="f_veh_rawmat_out" value="0">
+        <input type="number" min="0" max="500" inputmode="numeric" id="f_veh_rawmat_out" value="0">
       </div>
       <div class="veh-row">
         <div class="label">รถส่งอาหาร (คัน)</div>
-        <input type="number" min="0" max="500" id="f_veh_feed_out" value="0">
+        <input type="number" min="0" max="500" inputmode="numeric" id="f_veh_feed_out" value="0">
       </div>
       <div class="veh-row">
         <div class="label">รถรับอาหาร (คัน)</div>
-        <input type="number" min="0" max="500" id="f_veh_feed_in" value="0">
+        <input type="number" min="0" max="500" inputmode="numeric" id="f_veh_feed_in" value="0">
       </div>
       <div class="veh-row">
         <div class="label">รถรับวัตถุดิบ/เคมีภัณฑ์/บรรจุภัณฑ์ (คัน)</div>
-        <input type="number" min="0" max="500" id="f_veh_rawmat_in" value="0">
+        <input type="number" min="0" max="500" inputmode="numeric" id="f_veh_rawmat_in" value="0">
       </div>
       <div class="field" style="margin-top:14px;">
         <label>ระบุประเภทรถอื่นๆ (Other Truck Type)</label>
@@ -593,7 +603,7 @@
       <div class="char-counter" id="f_suggestionsCounter"></div>
     </div>
 
-    <button class="btn" id="submitBtn" onclick="reviewForm()">บันทึกข้อมูล</button>
+    <button type="button" class="btn" id="submitBtn" onclick="reviewForm()">บันทึกข้อมูล</button>
     <div style="text-align:center;margin-top:10px;">
       <a href="javascript:void(0)" onclick="clearDraftAndReset_()" style="font-size:12.5px;color:var(--muted);text-decoration:underline;">ล้างข้อมูลที่กรอกไว้ทั้งหมด</a>
     </div>
@@ -622,7 +632,7 @@
             <option value="ดึก">ดึก</option>
           </select>
         </div>
-        <button class="btn secondary" onclick="loadHistory()">ค้นหา</button>
+        <button type="button" class="btn secondary" onclick="loadHistory()">ค้นหา</button>
       </div>
     </div>
 
@@ -638,9 +648,9 @@
         <div class="empty-state"><span class="spinner dark"></span> กำลังโหลดข้อมูล...</div>
       </div>
       <div id="paginationControls" style="display:none;align-items:center;justify-content:space-between;margin-top:14px;gap:10px;flex-wrap:wrap;">
-        <button class="btn secondary" id="prevPageBtn" style="width:auto;padding:8px 16px;" onclick="changePage(-1)">← ก่อนหน้า</button>
+        <button type="button" class="btn secondary" id="prevPageBtn" style="width:auto;padding:8px 16px;" onclick="changePage(-1)">← ก่อนหน้า</button>
         <span id="pageInfo" style="font-size:12.5px;color:var(--muted);"></span>
-        <button class="btn secondary" id="nextPageBtn" style="width:auto;padding:8px 16px;" onclick="changePage(1)">ถัดไป →</button>
+        <button type="button" class="btn secondary" id="nextPageBtn" style="width:auto;padding:8px 16px;" onclick="changePage(1)">ถัดไป →</button>
       </div>
     </div>
 
@@ -652,21 +662,21 @@
 
 <div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this) closeModal()">
   <div class="modal">
-    <button class="modal-close" onclick="closeModal()">&times;</button>
+    <button type="button" class="modal-close" onclick="closeModal()">&times;</button>
     <div id="modalBody"></div>
   </div>
 </div>
 
 <div class="modal-overlay" id="confirmModalOverlay" onclick="if(event.target===this && !saveInProgress) closeConfirmModal()">
   <div class="modal">
-    <button class="modal-close" onclick="if(!saveInProgress) closeConfirmModal()">&times;</button>
+    <button type="button" class="modal-close" onclick="if(!saveInProgress) closeConfirmModal()">&times;</button>
     <div id="confirmModalBody"></div>
   </div>
 </div>
 
 <div class="modal-overlay" id="editModalOverlay" onclick="if(event.target===this && !editSaveInProgress) closeEditModal()">
   <div class="modal">
-    <button class="modal-close" onclick="if(!editSaveInProgress) closeEditModal()">&times;</button>
+    <button type="button" class="modal-close" onclick="if(!editSaveInProgress) closeEditModal()">&times;</button>
     <div id="editModalBody"></div>
   </div>
 </div>
@@ -1063,8 +1073,8 @@ function openConfirmModal(data) {
   html += '<div class="modal-row"><span class="k">ข้อเสนอแนะ</span>' + fmtMultiline_(data.suggestions) + '</div>';
 
   html += '<div style="display:flex;gap:10px;margin-top:22px;">' +
-    '<button class="btn secondary" style="flex:1;" onclick="closeConfirmModal()">แก้ไขข้อมูล</button>' +
-    '<button class="btn" style="flex:1;" id="confirmSaveBtn" onclick="confirmAndSave()">ยืนยันบันทึก</button>' +
+    '<button type="button" class="btn secondary" style="flex:1;" onclick="closeConfirmModal()">แก้ไขข้อมูล</button>' +
+    '<button type="button" class="btn" style="flex:1;" id="confirmSaveBtn" onclick="confirmAndSave()">ยืนยันบันทึก</button>' +
     '</div>';
 
   document.getElementById('confirmModalBody').innerHTML = html;
@@ -1313,7 +1323,7 @@ async function loadHistory(resetPage) {
   } catch (err) {
     if (mySeq !== historyRequestSeq) return;
     container.innerHTML = '<div class="empty-state">โหลดข้อมูลไม่สำเร็จ: ' + escHtml(err.message) +
-      '<br><button class="btn secondary" style="width:auto;margin-top:10px;" onclick="loadHistory()">ลองใหม่</button></div>';
+      '<br><button type="button" class="btn secondary" style="width:auto;margin-top:10px;" onclick="loadHistory()">ลองใหม่</button></div>';
     document.getElementById('summaryCards').innerHTML = '';
     document.getElementById('paginationControls').style.display = 'none';
   } finally {
@@ -1465,8 +1475,8 @@ function showDetail(idx) {
   }
 
   html += '<div style="display:flex;gap:10px;margin-top:20px;">' +
-    '<button class="btn secondary" style="flex:1;" onclick="openEditModal(' + idx + ')">แก้ไขข้อมูล</button>' +
-    '<button class="btn danger" style="flex:1;" onclick="deleteRecord(' + idx + ')">ลบรายการนี้</button>' +
+    '<button type="button" class="btn secondary" style="flex:1;" onclick="openEditModal(' + idx + ')">แก้ไขข้อมูล</button>' +
+    '<button type="button" class="btn danger" style="flex:1;" onclick="deleteRecord(' + idx + ')">ลบรายการนี้</button>' +
     '</div>';
 
   document.getElementById('modalBody').innerHTML = html;
@@ -1515,17 +1525,17 @@ function openEditModal(idx) {
         '<option value="ดึก">ดึก</option>' +
       '</select>' +
     '</div>' +
-    '<div class="field"><label>รถส่งวัตถุดิบ/เคมีภัณฑ์/บรรจุภัณฑ์ (คัน)</label><input type="number" min="0" max="500" id="e_veh_rawmat_out"></div>' +
-    '<div class="field"><label>รถส่งอาหาร (คัน)</label><input type="number" min="0" max="500" id="e_veh_feed_out"></div>' +
-    '<div class="field"><label>รถรับอาหาร (คัน)</label><input type="number" min="0" max="500" id="e_veh_feed_in"></div>' +
-    '<div class="field"><label>รถรับวัตถุดิบ/เคมีภัณฑ์/บรรจุภัณฑ์ (คัน)</label><input type="number" min="0" max="500" id="e_veh_rawmat_in"></div>' +
+    '<div class="field"><label>รถส่งวัตถุดิบ/เคมีภัณฑ์/บรรจุภัณฑ์ (คัน)</label><input type="number" min="0" max="500" inputmode="numeric" id="e_veh_rawmat_out"></div>' +
+    '<div class="field"><label>รถส่งอาหาร (คัน)</label><input type="number" min="0" max="500" inputmode="numeric" id="e_veh_feed_out"></div>' +
+    '<div class="field"><label>รถรับอาหาร (คัน)</label><input type="number" min="0" max="500" inputmode="numeric" id="e_veh_feed_in"></div>' +
+    '<div class="field"><label>รถรับวัตถุดิบ/เคมีภัณฑ์/บรรจุภัณฑ์ (คัน)</label><input type="number" min="0" max="500" inputmode="numeric" id="e_veh_rawmat_in"></div>' +
     '<div class="field"><label>ระบุประเภทรถอื่นๆ</label><input type="text" id="e_veh_other_type" maxlength="200"></div>' +
     '<div class="field"><label>ปัญหาที่พบและรายละเอียด</label><textarea id="e_problems" maxlength="2000" placeholder="ไม่มีปัญหาให้เว้นว่างไว้"></textarea><div class="char-counter" id="e_problemsCounter"></div></div>' +
     '<div class="field"><label>แนวทางการแก้ไข</label><textarea id="e_corrective" maxlength="2000"></textarea><div class="char-counter" id="e_correctiveCounter"></div></div>' +
     '<div class="field"><label>ข้อเสนอแนะ</label><textarea id="e_suggestions" maxlength="2000"></textarea><div class="char-counter" id="e_suggestionsCounter"></div></div>' +
     '<div style="display:flex;gap:10px;margin-top:16px;">' +
-      '<button class="btn secondary" style="flex:1;" onclick="closeEditModal()">ยกเลิก</button>' +
-      '<button class="btn" style="flex:1;" id="editSaveBtn" onclick="saveEdit()">บันทึกการแก้ไข</button>' +
+      '<button type="button" class="btn secondary" style="flex:1;" onclick="closeEditModal()">ยกเลิก</button>' +
+      '<button type="button" class="btn" style="flex:1;" id="editSaveBtn" onclick="saveEdit()">บันทึกการแก้ไข</button>' +
     '</div>';
 
   document.getElementById('editModalBody').innerHTML = html;
@@ -1752,12 +1762,33 @@ function updateNetStatus_(showToastMsg) {
 window.addEventListener('online', () => updateNetStatus_(true));
 window.addEventListener('offline', () => updateNetStatus_(true));
 
+/* ---------------- กันหน้าพื้นหลังเลื่อนตามตอนมี popup เปิดอยู่ (บั๊กมือถือที่พบบ่อย) ---------------- */
+// ใช้ MutationObserver คอยดู class ของทั้ง 3 overlay แทนการเขียนโค้ดเพิ่มทุกจุดที่เปิด/ปิด popup
+// กันพลาดจุดใดจุดหนึ่งไป และให้ทำงานถูกต้องแม้จะมีการเพิ่ม popup ใหม่ในอนาคต
+function setupModalScrollLock_() {
+  const overlayIds = ['modalOverlay', 'confirmModalOverlay', 'editModalOverlay'];
+  const update = () => {
+    const anyOpen = overlayIds.some(id => {
+      const el = document.getElementById(id);
+      return el && el.classList.contains('show');
+    });
+    document.body.classList.toggle('modal-open', anyOpen);
+  };
+  overlayIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    new MutationObserver(update).observe(el, { attributes: true, attributeFilter: ['class'] });
+  });
+  update();
+}
+
 /* ---------------- Init ---------------- */
 window.addEventListener('DOMContentLoaded', () => {
   setDefaultDate();
   restoreDraftIfExists_();
   history.replaceState({ tab: 'form', overlay: null }, '', '#form');
   updateNetStatus_(false);
+  setupModalScrollLock_();
   if (!APPS_SCRIPT_URL) {
     document.getElementById('configWarning').style.display = 'block';
   }
