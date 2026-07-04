@@ -16,6 +16,7 @@
   *{box-sizing:border-box;}
   html{ overscroll-behavior-y:contain; }
   body{ margin:0; font-family:'Sarabun','Segoe UI',Tahoma,sans-serif; background:var(--bg); color:var(--text); touch-action:manipulation; -webkit-tap-highlight-color:transparent; }
+  body.modal-open{ overflow:hidden; }
   header.appbar{ background:var(--card); border-bottom:1px solid var(--border); padding:14px 20px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:20; flex-wrap:wrap; gap:10px; }
   header.appbar h1{ font-size:18px; margin:0; }
   .appbar-right{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
@@ -27,122 +28,558 @@
   .card h2{ font-size:16px; margin:0 0 16px; display:flex; align-items:center; gap:8px; }
   .field{ margin-bottom:16px; }
   .field > label{ display:block; font-size:15px; font-weight:600; margin-bottom:7px; }
-  input[type=text], input[type=number], input[type=date], textarea, select{
+  .field > label .req{ color:var(--danger); }
+  input[type=text], input[type=number], input[type=date], textarea, select, input[type=month]{
     width:100%; padding:14px; border:1.5px solid var(--border); border-radius:8px; font-size:16px;
     font-family:inherit; background:#fff; color:var(--text); min-height:48px;
   }
+  input:focus, textarea:focus, select:focus{ outline:none; border-color:var(--primary); box-shadow:0 0 0 3px rgba(15,157,88,0.12); }
+  textarea{ resize:vertical; min-height:80px; }
+
+  .shift-group{ display:flex; gap:10px; flex-wrap:wrap; }
+  .shift-option{ flex:1; min-width:100px; min-height:52px; display:flex; align-items:center; justify-content:center; border:1.5px solid var(--border); border-radius:8px; padding:14px; text-align:center; cursor:pointer; color:var(--muted); user-select:none; position:relative; }
+  .shift-option .shift-name{ font-size:16px; font-weight:700; }
+  .shift-option.selected{ border-color:var(--primary); background:rgba(15,157,88,0.08); color:var(--primary-dark); }
+
+  .veh-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 0; border-bottom:1px solid var(--border); }
+  .veh-row:last-child{ border-bottom:none; }
+  .veh-row .label{ font-size:15px; flex:1; }
+  .veh-row input{ width:100px; text-align:center; padding:12px 8px; }
+
+  .problem-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  @media (max-width:600px){ .problem-grid{ grid-template-columns:1fr; } }
+  .problem-item{ border:1.5px solid var(--border); border-radius:8px; padding:16px; }
+  .problem-item.checked{ border-color:var(--primary); }
+  .problem-item label.chk{ display:flex; align-items:center; gap:12px; font-size:15px; font-weight:600; cursor:pointer; min-height:32px; }
+  .problem-item input[type=checkbox]{ width:26px; height:26px; flex-shrink:0; accent-color:var(--primary); cursor:pointer; }
+  .problem-item textarea{ margin-top:10px; display:none; font-size:15px; }
+  .problem-item.checked textarea{ display:block; }
+
   .btn{ background:var(--primary); color:#fff; border:none; padding:15px 24px; border-radius:26px; font-size:17px; font-weight:700; cursor:pointer; width:100%; min-height:52px; }
   .btn:hover{ background:var(--primary-dark); }
-  
-  /* เพิ่มเติมส่วนการแสดงผลแบบบล็อกให้เหมือนรายวัน */
-  .item-block { border: 1.5px solid var(--border); padding: 15px; margin-bottom: 15px; border-radius: 8px; background: #fff; }
-  .print-meta { margin-bottom: 8px; font-size: 14px; }
-  .print-meta span { margin-right: 20px; font-weight: 600; }
-  
+  .btn:disabled{ background:#9aa0a6; cursor:not-allowed; }
+  .btn.secondary{ background:#fff; color:var(--primary-dark); border:1.5px solid var(--primary); }
+  .btn.danger{ background:var(--danger); }
+
+  /* ปรับปรุงหน้าสรุปแบบใหม่ให้อ่านง่าย */
+  .quick-summary-box { background:#f8faf9; border:1px solid var(--border); border-radius:8px; padding:16px; margin-bottom:16px; }
+  .quick-summary-box h4 { margin:0 0 10px 0; font-size:15px; color:var(--primary-dark); display:flex; align-items:center; gap:6px; }
+  .quick-stats-row { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
+  .quick-stat-badge { background:#fff; border:1px solid var(--border); padding:8px 12px; border-radius:6px; font-size:13.5px; font-weight:600; display:flex; align-items:center; gap:6px; }
+  .quick-stat-badge.has-val { background:#fce8e6; color:var(--danger); border-color:#fad2cf; }
+  .issue-text-list { background:#fff; border:1px solid var(--border); border-radius:6px; padding:12px; font-size:14px; line-height:1.6; max-height:200px; overflow-y:auto; white-space:pre-wrap; }
+
+  table.history{ width:100%; border-collapse:collapse; font-size:14px; margin-top:14px; }
+  table.history th, table.history td{ text-align:left; padding:14px 10px; border-bottom:1px solid var(--border); white-space:nowrap; }
+  table.history th{ color:var(--muted); font-weight:700; font-size:12.5px; }
+  table.history tr{ cursor:pointer; }
+  table.history tr:hover{ background:#f8faf9; }
+  table.history td.row-arrow{ color:var(--muted); font-size:18px; font-weight:700; text-align:center; width:28px; }
+
+  .tag{ display:inline-block; background:#fce8e6; color:var(--danger); border-radius:10px; padding:2px 8px; font-size:11px; margin:1px 2px 1px 0; }
+  .empty-state{ text-align:center; color:var(--muted); padding:40px 10px; font-size:14px; }
+
+  .modal-overlay{ position:fixed; inset:0; background:rgba(0,0,0,0.45); display:none; align-items:center; justify-content:center; z-index:50; padding:16px; }
+  .modal-overlay.show{ display:flex; }
+  .modal{ background:#fff; border-radius:12px; max-width:520px; width:100%; max-height:85vh; overflow-y:auto; padding:22px 24px; }
+  .modal h3{ margin-top:0; font-size:18px; }
+  .modal-row{ margin-bottom:12px; font-size:15px; }
+  .modal-row .k{ color:var(--muted); font-weight:600; display:block; margin-bottom:3px; font-size:13px; }
+  .modal-close{ float:right; background:none; border:none; font-size:28px; cursor:pointer; color:var(--muted); padding:6px 10px; line-height:1; }
+
+  .toast{ position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px); background:#323232; color:#fff; padding:12px 20px; border-radius:8px; font-size:14px; opacity:0; pointer-events:none; transition:all .25s ease; z-index:100; max-width:90vw; text-align:center; }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+  .toast.error{ background:var(--danger); }
+  .toast.success{ background:var(--primary-dark); }
+
+  .config-warning{ background:#fff8e1; border:1px solid #f9ab00; color:#7a5b00; padding:12px 16px; border-radius:8px; font-size:13px; margin-bottom:16px; }
+  .spinner{ display:inline-block; width:16px; height:16px; border:2px solid rgba(255,255,255,0.5); border-top-color:#fff; border-radius:50%; animation:spin .7s linear infinite; vertical-align:middle; margin-right:6px; }
+  .spinner.dark{ border-color:rgba(15,157,88,0.25); border-top-color:var(--primary); }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  #topLoadingBar{ position:fixed; top:0; left:0; height:3px; width:100%; z-index:200; overflow:hidden; opacity:0; pointer-events:none; transition:opacity .2s ease; }
+  #topLoadingBar.active{ opacity:1; }
+  #topLoadingBar::before{ content:''; position:absolute; top:0; left:0; height:100%; width:40%; background:var(--primary); animation:loadingBarSlide 1s ease-in-out infinite; }
+  @keyframes loadingBarSlide{ 0%{left:-40%;} 100%{left:100%;} }
+
+  .net-status{ display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:700; padding:4px 10px; border-radius:12px; }
+  .net-status .dot{ width:7px; height:7px; border-radius:50%; }
+  .net-status.online{ background:rgba(15,157,88,0.1); color:var(--primary-dark); }
+  .net-status.online .dot{ background:var(--primary); }
+  .net-status.offline{ background:rgba(217,48,37,0.1); color:var(--danger); }
+  .net-status.offline .dot{ background:var(--danger); }
+
+  @media (max-width:480px){
+    header.appbar{ padding:10px 14px; }
+    header.appbar h1{ font-size:16px; }
+    nav.tabs button{ padding:8px 12px; font-size:13px; }
+  }
+
+  /* ตกแต่งโครงสร้างตารางและซ่อนส่วนอื่นเมื่อทำการพิมพ์รายงานสรุปออกทาง PDF/Printer */
+  #print-area { display: none; }
   @media print {
-    .no-print { display: none !important; }
-    #print-area { display: block !important; }
-    .item-block { page-break-inside: avoid; }
+    .no-print, header.appbar, #configWarning, .modal-overlay, .toast, #topLoadingBar, button, .btn, .card { display: none !important; }
+    body { background: #fff !important; color: #000 !important; }
+    main { max-width: 100% !important; margin: 0 !important; padding: 0 !important; }
+    #print-area { display: block !important; font-family: 'Sarabun', sans-serif; padding: 10px; }
+    .print-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; }
+    .print-header h2 { margin: 0; font-size: 20px; }
+    .print-meta { font-size: 15px; margin-bottom: 15px; }
+    .print-meta span { margin-right: 20px; }
+    .print-section { margin-bottom: 25px; }
+    .print-section h3 { font-size: 16px; margin: 0 0 10px 0; border-bottom: 1px dashed #ccc; padding-bottom: 4px; }
+    table.print-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    table.print-table th, table.print-table td { border: 1px solid #000; padding: 10px; text-align: left; font-size: 13px; vertical-align: top; white-space: normal; word-break: break-word; line-height: 1.6; }
+    table.print-table th { background: #f2f2f2 !important; -webkit-print-color-adjust: exact; font-weight: bold; }
+    .item-block { border: 1px solid #000; padding: 12px; margin-bottom: 15px; border-radius: 4px; page-break-inside: avoid; }
+    .text-danger { color: #d93025 !important; font-weight: bold; }
+    .text-success { color: #0f9d58 !important; }
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
   }
 </style>
 </head>
 <body>
 
+<div id="topLoadingBar"></div>
+
 <header class="appbar">
   <h1>⚖️ ห้องชั่ง SPM</h1>
   <div class="appbar-right">
+    <span id="netStatus" class="net-status online"><span class="dot"></span><span id="netStatusText">ออนไลน์</span></span>
     <nav class="tabs">
-      <button type="button" class="active" onclick="switchTab('form')">บันทึกข้อมูล</button>
-      <button type="button" onclick="switchTab('report')">ประวัติ &amp; รายงาน</button>
+      <button type="button" id="tabFormBtn" class="active" onclick="switchTab('form')">บันทึกข้อมูล</button>
+      <button type="button" id="tabReportBtn" onclick="switchTab('report')">ประวัติ &amp; รายงาน</button>
     </nav>
   </div>
 </header>
 
 <main>
+  <div id="configWarning" class="config-warning" style="display:none;">
+    ⚠️ ยังไม่ได้ตั้งค่า URL ของ Apps Script — แก้ค่า <code>APPS_SCRIPT_URL_ENCODED</code> ในโค้ดก่อนใช้งานจริง
+  </div>
+
   <section id="page-form">
-    </section>
+    <div class="card">
+      <h2><span class="icon">📋</span> ฟอร์มบันทึกข้อมูลห้องชั่ง</h2>
+      <div class="field"><label>วันที่ (Date) <span class="req">*</span></label><input type="date" id="f_date"></div>
+      <div class="field"><label>ผู้บันทึก/เวรหน้าที่เครื่องชั่ง <span class="req">*</span></label><input type="text" id="f_weighmaster" maxlength="200" placeholder="ระบุชื่อ-นามสกุล"></div>
+      <div class="field"><label>ทะเบียนรถ (ถ้ามีปัญหาเกี่ยวข้อง)</label><input type="text" id="f_license_plate" maxlength="50" placeholder="ระบุเลขทะเบียนรถ"></div>
+      <div class="field"><label>กะปฏิบัติงาน (Shift) <span class="req">*</span></label>
+        <div class="shift-group" id="shiftGroup">
+          <label class="shift-option"><input type="radio" name="shift" value="เช้า" style="display:none;"><span class="shift-name">เช้า</span></label>
+          <label class="shift-option"><input type="radio" name="shift" value="บ่าย" style="display:none;"><span class="shift-name">บ่าย</span></label>
+          <label class="shift-option"><input type="radio" name="shift" value="ดึก" style="display:none;"><span class="shift-name">ดึก</span></label>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <h2><span class="icon">🚚</span> สรุปจำนวนรถที่ชั่ง</h2>
+      <div class="veh-row"><div class="label">รถส่งวัตถุดิบ/เคมีภัณฑ์/บรรจุภัณฑ์ (คัน)</div><input type="number" min="0" value="0" id="f_veh_rawmat_out"></div>
+      <div class="veh-row"><div class="label">รถส่งอาหาร (คัน)</div><input type="number" min="0" value="0" id="f_veh_feed_out"></div>
+      <div class="veh-row"><div class="label">รถรับอาหาร (รถภายใน)</div><input type="number" min="0" value="0" id="f_veh_feed_in"></div>
+      <div class="veh-row"><div class="label">รถรับวัตถุดิบ/เคมีภัณฑ์/บรรจุภัณฑ์ (รถภายใน)</div><input type="number" min="0" value="0" id="f_veh_rawmat_in"></div>
+      <div class="field" style="margin-top:14px;"><label>ระบุประเภทรถอื่นๆ</label><input type="text" id="f_veh_other_type" placeholder="เว้นว่างได้ถ้าไม่มี"></div>
+    </div>
+    <div class="card" id="problemsCard">
+      <h2><span class="icon">⚠️</span> ปัญหาที่พบ (เลือกหัวข้อเพื่อกรอกรายละเอียดเพิ่มเติม)</h2>
+      <div class="problem-grid">
+        <div class="problem-item" data-key="overweight"><label class="chk"><input type="checkbox"> น้ำหนักเกิน</label><textarea id="pd_overweight" placeholder="ระบุรายละเอียด เช่น ทะเบียนรถ, เกินกี่ กก."></textarea></div>
+        <div class="problem-item" data-key="driver_behavior"><label class="chk"><input type="checkbox"> พฤติกรรมคนขับ</label><textarea id="pd_driver_behavior" placeholder="ระบุรายละเอียด เช่น ทะเบียนรถ, พฤติกรรมที่พบ"></textarea></div>
+        <div class="problem-item" data-key="system"><label class="chk"><input type="checkbox"> ระบบ/อุปกรณ์</label><textarea id="pd_system" placeholder="ระบุรายละเอียด เช่น เครื่องชั่งค้าง, ไม้กั้นเสีย, ระบบล่ม"></textarea></div>
+        <div class="problem-item" data-key="wrong_queue"><label class="chk"><input type="checkbox"> ชั่งรถผิดคิว</label><textarea id="pd_wrong_queue" placeholder="ระบุรายละเอียด เช่น ทะเบียนรถ, คิวที่ชั่งผิดไป"></textarea></div>
+        <div class="problem-item" data-key="wrong_plate"><label class="chk"><input type="checkbox"> ทะเบียนผิด (สลับคัน)</label><textarea id="pd_wrong_plate" placeholder="ระบุรายละเอียด เช่น กรอกข้อมูลรถคู่ที่สลับทะเบียนกัน"></textarea></div>
+        <div class="problem-item" data-key="wrong_delivery"><label class="chk"><input type="checkbox"> ส่งของผิดที่</label><textarea id="pd_wrong_delivery" placeholder="ระบุรายละเอียด เช่น ทะเบียนรถ, สถานที่ที่ควรส่งกับที่ส่งผิด"></textarea></div>
+        <div class="problem-item" data-key="other"><label class="chk"><input type="checkbox"> อื่นๆ</label><textarea id="pd_other" placeholder="ระบุรายละเอียด เช่น ทะเบียนรถ, เหตุการณ์ที่พบ"></textarea></div>
+      </div>
+    </div>
+    <div class="card"><h2><span class="icon">🛠️</span> แนวทางการแก้ไข</h2><textarea id="f_corrective"></textarea></div>
+    <div class="card"><h2><span class="icon">💡</span> ข้อเสนอแนะ</h2><textarea id="f_suggestions"></textarea></div>
+    <button type="button" class="btn no-print" id="submitBtn" onclick="reviewForm()">บันทึกข้อมูล</button>
+  </section>
 
   <section id="page-report" style="display:none;">
     <div class="card no-print">
-      <h2><span class="icon">📅</span> 1. เลือกช่วงเวลาที่ต้องการสรุป</h2>
-      <div style="display:flex; gap:15px; margin-bottom:14px;">
-        <label><input type="radio" name="reportScope" value="daily" checked onclick="toggleScopeInput()"> รายวัน</label>
-        <label><input type="radio" name="reportScope" value="range" onclick="toggleScopeInput()"> ช่วงวันที่ (Custom)</label>
+      <h2><span class="icon">📅</span> 1. เลือกช่วงเวลาเพื่อ Export รายงานภาพรวม</h2>
+      <div style="display:flex; gap:15px; flex-wrap:wrap; margin-bottom:14px;">
+        <label style="font-weight:600;"><input type="radio" name="reportScope" value="daily" checked onclick="toggleScopeInput()"> รายวัน (เจาะจงวัน)</label>
+        <label style="font-weight:600;"><input type="radio" name="reportScope" value="monthly" onclick="toggleScopeInput()"> รายเดือน (สรุปภาพรวมทั้งเดือน)</label>
       </div>
       
-      <div style="display:flex; gap:10px; align-items:center;">
-        <div id="div_daily"><input type="date" id="r_dateSelect"></div>
-        <div id="div_range" style="display:none; display:flex; gap:5px; align-items:center;">
-          <input type="date" id="r_startDate"> ถึง <input type="date" id="r_endDate">
+      <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+        <div id="div_dateInput" style="flex:1; min-width:200px;">
+          <input type="date" id="r_dateSelect">
         </div>
-        <button type="button" class="btn" style="width:auto;" onclick="buildQuickSummary()">⚡ ดึงรายงาน</button>
+        <div id="div_monthInput" style="flex:1; min-width:200px; display:none;">
+          <input type="month" id="r_monthSelect">
+        </div>
+        <button type="button" class="btn" style="width:auto; padding:0 24px;" onclick="buildQuickSummary()">⚡ ดึงรายงานภาพรวม</button>
       </div>
     </div>
 
     <div class="card" id="summaryOutputCard" style="display:none;">
-      <button type="button" class="btn no-print" onclick="window.print()">🖨️ พิมพ์ / Export PDF</button>
-      <div id="print-area"></div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
+        <h2 style="margin:0;"><span class="icon">📊</span> สรุปภาพรวมและรายละเอียดปัญหาประจำช่วงเวลา</h2>
+        <button type="button" class="btn secondary no-print" style="width:auto; padding:6px 14px; min-height:38px; font-size:14px;" onclick="window.print()">🖨️ พิมพ์ / Export PDF รายงานนี้</button>
+      </div>
+      
+      <div class="quick-summary-box">
+        <h4 id="summaryPeriodTitle">📅 ช่วงเวลา: -</h4>
+        <div class="quick-stats-row" id="quickStatsContainer"></div>
+      </div>
+
+      <div class="quick-summary-box" style="background:#fff3cd; border-color:#ffeeba;">
+        <h4 style="color:#856404;"><span class="icon">📝</span> รายละเอียดปัญหา และรายการสลับแผ่นป้ายทะเบียน</h4>
+        <div class="issue-text-list" id="quickDetailsContainer">- ไม่มีข้อมูลปัญหา -</div>
+      </div>
+    </div>
+
+    <div class="card no-print">
+      <h2><span class="icon">🕘</span> รายการประวัติบันทึกทั้งหมดในระบบ</h2>
+      <div id="historyContainer"><div class="empty-state">กรุณากดดึงรายงานภาพรวมด้านบน</div></div>
     </div>
   </section>
 </main>
 
+<div id="print-area"></div>
+
+<div class="toast" id="toast"></div>
+
+<div class="modal-overlay" id="confirmModalOverlay"><div class="modal" id="confirmModalBody"></div></div>
+
 <script>
+const XOR_KEY = 42;
+function xorDecode(encoded) {
+  try {
+    const raw = atob(encoded); let out = '';
+    for (let i = 0; i < raw.length; i++) out += String.fromCharCode(raw.charCodeAt(i) ^ XOR_KEY);
+    return out;
+  } catch (e) { return ''; }
+}
+const APPS_SCRIPT_URL_ENCODED = 'Ql5eWlkQBQVZSVhDWl4ETUVFTUZPBElFRwVHS0lYRVkFWQVrYUxTSUhdTVlcaGh1bmMdWUJHXkNPeB5CYG11YGVMYhsTWUVbbEBCQxlSa2FGTWteT3xsW21QYWVbGxxcYW5/X2JBfktTe0EFT1JPSQ==';
+const TOKEN = 'z0CPHpdf8xJmfbMbwxVE1t2ghIEOJY03';
+const APPS_SCRIPT_URL = xorDecode(APPS_SCRIPT_URL_ENCODED);
+
+// เดิมมี div คำเตือน #configWarning อยู่ในหน้าเว็บ แต่ไม่เคยมีโค้ดสั่งให้แสดงผลเลย
+// จึงเพิ่มการตรวจสอบว่าตั้งค่า URL ของ Apps Script ไว้ถูกต้องหรือไม่
+if (!APPS_SCRIPT_URL) {
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('configWarning').style.display = 'block';
+    document.getElementById('submitBtn').disabled = true;
+  });
+}
+
+// อัปเดตสถานะออนไลน์/ออฟไลน์ตามการเชื่อมต่อเครือข่ายจริง (เดิมค่านี้ถูก hardcode ไว้ว่า "ออนไลน์" เสมอ ไม่เคยอัปเดตตามจริง)
+function updateNetStatus() {
+  const el = document.getElementById('netStatus');
+  const txt = document.getElementById('netStatusText');
+  if (navigator.onLine) {
+    el.className = 'net-status online';
+    txt.textContent = 'ออนไลน์';
+  } else {
+    el.className = 'net-status offline';
+    txt.textContent = 'ออฟไลน์';
+  }
+}
+window.addEventListener('online', updateNetStatus);
+window.addEventListener('offline', updateNetStatus);
+updateNetStatus();
+
+let selectedShift = '';
+document.querySelectorAll('.shift-option').forEach(opt => {
+  const radio = opt.querySelector('input[type="radio"]');
+  opt.addEventListener('click', () => {
+    document.querySelectorAll('.shift-option').forEach(o => o.classList.remove('selected'));
+    opt.classList.add('selected'); radio.checked = true; selectedShift = radio.value;
+  });
+});
+
+document.querySelectorAll('.problem-item').forEach(item => {
+  const chk = item.querySelector('input[type=checkbox]');
+  chk.addEventListener('change', () => item.classList.toggle('checked', chk.checked));
+});
+
+function switchTab(tab) {
+  const isForm = tab === 'form';
+  document.getElementById('page-form').style.display = isForm ? '' : 'none';
+  document.getElementById('page-report').style.display = isForm ? 'none' : '';
+  document.getElementById('tabFormBtn').classList.toggle('active', isForm);
+  document.getElementById('tabReportBtn').classList.toggle('active', !isForm);
+}
+
 function toggleScopeInput() {
   const scope = document.querySelector('input[name="reportScope"]:checked').value;
-  document.getElementById('div_daily').style.display = scope === 'daily' ? 'block' : 'none';
-  document.getElementById('div_range').style.display = scope === 'range' ? 'flex' : 'none';
+  document.getElementById('div_dateInput').style.display = scope === 'daily' ? 'block' : 'none';
+  document.getElementById('div_monthInput').style.display = scope === 'monthly' ? 'block' : 'none';
 }
 
-// ฟังก์ชันดึงรายงานที่ปรับปรุงให้รองรับช่วงวันที่
+function showToast(msg, type) {
+  const t = document.getElementById('toast'); t.textContent = msg;
+  t.className = 'toast show ' + (type || ''); setTimeout(() => t.className = 'toast', 4000);
+}
+
+// ฟังก์ชันดึงข้อมูลมาคัดกรองและจัดกลุ่มหน้าจอรายงานสรุปตัวใหม่แบบเข้าใจง่าย
 async function buildQuickSummary() {
   const scope = document.querySelector('input[name="reportScope"]:checked').value;
-  let start, end, title;
+  let targetValue = scope === 'daily' ? document.getElementById('r_dateSelect').value : document.getElementById('r_monthSelect').value;
+  
+  if (!targetValue) { showToast('กรุณาเลือกวันที่หรือเดือนก่อนครับ', 'error'); return; }
+  
+  const container = document.getElementById('historyContainer');
+  container.innerHTML = '<div class="empty-state"><span class="spinner dark"></span> กำลังประมวลผลสรุปภาพรวม...</div>';
+  document.getElementById('summaryOutputCard').style.display = 'none';
+
+  try {
+    const body = { action: 'list', token: TOKEN, filters: { page: 1, pageSize: 500 } };
+    const res = await fetch(APPS_SCRIPT_URL, { method: 'POST', body: JSON.stringify(body) });
+    const json = await res.json();
+    
+    if (!json.success) throw new Error(json.error);
+    const records = json.records || [];
+    
+    let totalIssues = 0, overweight = 0, driver = 0, system = 0, wrongQueue = 0, wrongPlate = 0, wrongDelivery = 0, otherProblem = 0;
+    let detailsArr = [];
+    let matchRecords = [];
+
+    records.forEach(r => {
+      let isMatch = false;
+      if (scope === 'daily' && r.date === targetValue) isMatch = true;
+      if (scope === 'monthly' && r.date && r.date.substring(0, 7) === targetValue) isMatch = true;
+      
+      if (isMatch) {
+        matchRecords.push(r);
+        if (r.p_overweight) { overweight++; totalIssues++; }
+        if (r.p_driver_behavior) { driver++; totalIssues++; }
+        if (r.p_system) { system++; totalIssues++; }
+        if (r.p_wrong_queue) { wrongQueue++; totalIssues++; }
+        if (r.p_wrong_plate) { wrongPlate++; totalIssues++; }
+        if (r.p_wrong_delivery) { wrongDelivery++; totalIssues++; }
+        if (r.p_other) { otherProblem++; totalIssues++; }
+        
+        if (r.problems && r.problems.trim()) {
+          detailsArr.push(`[ทะเบียน ${r.licensePlate || 'ไม่ระบุ'} / กะ ${r.shift}]: ${r.problems.trim()}`);
+        }
+      }
+    });
+
+    // แสดงผลข้อมูลตัวเลขรวมเข้ากลุ่มแบบสวยงามในคลิกเดียว
+    document.getElementById('summaryPeriodTitle').innerText = `📅 สรุปรายงานภาพรวมประจำ: ${targetValue}`;
+    
+    document.getElementById('quickStatsContainer').innerHTML = `
+      <div class="quick-stat-badge ${totalIssues > 0 ? 'has-val' : ''}">🚨 รวมปัญหาทั้งหมด: ${totalIssues} รายการ</div>
+      <div class="quick-stat-badge">⚖️ น้ำหนักเกิน: ${overweight} ครั้ง</div>
+      <div class="quick-stat-badge">🙋 พฤติกรรมคนขับ: ${driver} ครั้ง</div>
+      <div class="quick-stat-badge">⚙️ ระบบ/อุปกรณ์: ${system} ครั้ง</div>
+      <div class="quick-stat-badge">⏱️ ผิดคิว: ${wrongQueue} ครั้ง</div>
+      <div class="quick-stat-badge ${wrongPlate > 0 ? 'has-val' : ''}">🆔 ทะเบียนผิด/สลับคัน: ${wrongPlate} ครั้ง</div>
+      <div class="quick-stat-badge ${wrongDelivery > 0 ? 'has-val' : ''}">📦 ส่งของผิดที่: ${wrongDelivery} ครั้ง</div>
+      <div class="quick-stat-badge">📌 อื่นๆ: ${otherProblem} ครั้ง</div>
+    `;
+
+    document.getElementById('quickDetailsContainer').innerHTML = detailsArr.length > 0 
+      ? detailsArr.map(txt => `• ${txt}`).join('\n\n') 
+      : '- ตรวจสอบแล้ว ไม่พบรายการแจ้งปัญหาใดๆ ในช่วงเวลานี้ -';
+
+    document.getElementById('summaryOutputCard').style.display = 'block';
+    renderSimpleTable(matchRecords);
+
+    // แทรกเพิ่มระบบแปลงหน้าเอกสารสำหรับการสั่งพิมพ์ (Print area) แยกไว้ โดยไม่กวนหน้าจอหลัก
+    generatePrintLayout(matchRecords, scope, targetValue);
+
+  } catch (err) {
+    container.innerHTML = `<div class="empty-state" style="color:var(--danger);">เกิดข้อผิดพลาดในการดึงข้อมูล: ${err.message}</div>`;
+  }
+}
+
+// ฟังก์ชันสร้างหน้าตาตารางสำหรับพิมพ์ออกเครื่องพิมพ์/เซฟ PDF
+function generatePrintLayout(records, scope, targetValue) {
+  const printArea = document.getElementById('print-area');
+  printArea.innerHTML = '';
 
   if (scope === 'daily') {
-    start = end = document.getElementById('r_dateSelect').value;
-    title = `วันที่ ${start}`;
+    let blocksHtml = '';
+    if(records.length === 0) {
+      blocksHtml = '<div class="empty-state">ไม่มีบันทึกข้อมูลรายงานในวันที่เลือก</div>';
+    } else {
+      records.forEach(r => {
+        const hasProblem = r.problems && String(r.problems).trim();
+        const problemBlockHtml = hasProblem
+          ? `<div style="font-size:14px; white-space:pre-wrap; background:#f9f9f9; padding:10px; border-left:3px solid #d93025;"><b>⚠️ รายงานรายละเอียดปัญหา:</b>\n${r.problems}</div>`
+          : `<div style="font-size:14px; color:#0f9d58;">✅ ไม่พบปัญหาในกะนี้</div>`;
+        blocksHtml += `
+          <div class="item-block">
+            <div class="print-meta">
+              <span><b>กะปฏิบัติงาน:</b> ${r.shift}</span>
+              <span><b>เจ้าหน้าที่เวรชั่ง:</b> ${r.weighmaster}</span>
+            </div>
+            <div style="font-size:14px; margin-bottom:10px;">
+              <b>📊 ยอดรวมจำนวนรถ:</b> วัตถุดิบออก ${r.veh_rawmat_out} คัน | อาหารออก ${r.veh_feed_out || 0} คัน | รถอาหารภายใน ${r.veh_feed_in} คัน | รถวัตถุดิบภายใน ${r.veh_rawmat_in} คัน${r.veh_other_type ? ' | อื่นๆ: ' + r.veh_other_type : ''}
+            </div>
+            ${problemBlockHtml}
+          </div>
+        `;
+      });
+    }
+    printArea.innerHTML = `
+      <div class="print-header"><h2>📋 รายงานสรุปห้องชั่งประจำวัน</h2><div><b>วันที่:</b> ${targetValue}</div></div>
+      <div class="print-section"><h3>รายการบันทึกจำแนกตามรายกะเวรประจำวัน</h3>${blocksHtml}</div>
+    `;
   } else {
-    start = document.getElementById('r_startDate').value;
-    end = document.getElementById('r_endDate').value;
-    title = `วันที่ ${start} ถึง ${end}`;
+    // สรุปยอดรวมทั้งเดือน (รถ + ปัญหา) เพื่อแสดงเป็นกล่องภาพรวมด้านบน เหมือนสไตล์หน้ารายวัน
+    let totalV = { rawmat_out: 0, feed_out: 0, feed_in: 0, rawmat_in: 0 };
+    let stats = { total: 0, overweight: 0, driver: 0, system: 0, wrongQueue: 0, wrongPlate: 0, wrongDelivery: 0, other: 0 };
+    let otherTypes = new Set();
+    let dayGroups = {};
+
+    records.forEach(r => {
+      totalV.rawmat_out += Number(r.veh_rawmat_out) || 0;
+      totalV.feed_out   += Number(r.veh_feed_out) || 0;
+      totalV.feed_in    += Number(r.veh_feed_in) || 0;
+      totalV.rawmat_in  += Number(r.veh_rawmat_in) || 0;
+      if (r.veh_other_type && String(r.veh_other_type).trim()) otherTypes.add(String(r.veh_other_type).trim());
+
+      if (r.p_overweight)      { stats.overweight++; stats.total++; }
+      if (r.p_driver_behavior) { stats.driver++; stats.total++; }
+      if (r.p_system)          { stats.system++; stats.total++; }
+      if (r.p_wrong_queue)     { stats.wrongQueue++; stats.total++; }
+      if (r.p_wrong_plate)     { stats.wrongPlate++; stats.total++; }
+      if (r.p_wrong_delivery)  { stats.wrongDelivery++; stats.total++; }
+      if (r.p_other)           { stats.other++; stats.total++; }
+
+      if (!dayGroups[r.date]) dayGroups[r.date] = [];
+      dayGroups[r.date].push(r);
+    });
+
+    const overviewHtml = `
+      <div class="item-block">
+        <div style="font-size:14px; margin-bottom:10px;">
+          <b>🚚 ยอดรวมจำนวนรถทั้งเดือน:</b> วัตถุดิบออก ${totalV.rawmat_out} คัน | อาหารออก ${totalV.feed_out} คัน | รถอาหารภายใน ${totalV.feed_in} คัน | รถวัตถุดิบภายใน ${totalV.rawmat_in} คัน${otherTypes.size ? ' | อื่นๆ: ' + Array.from(otherTypes).join(', ') : ''}
+        </div>
+        <div style="font-size:14px;">
+          <b>🚨 สรุปปัญหาทั้งเดือน:</b> รวม ${stats.total} รายการ &nbsp;(น้ำหนักเกิน ${stats.overweight} | พฤติกรรมคนขับ ${stats.driver} | ระบบ/อุปกรณ์ ${stats.system} | ผิดคิว ${stats.wrongQueue} | ทะเบียนผิด ${stats.wrongPlate} | ส่งผิดที่ ${stats.wrongDelivery} | อื่นๆ ${stats.other})
+        </div>
+      </div>
+    `;
+
+    let daysHtml = '';
+    if (records.length === 0) {
+      daysHtml = '<div class="empty-state">ไม่มีข้อมูลรายงานประวัติในเดือนนี้</div>';
+    } else {
+      Object.keys(dayGroups).sort().forEach(d => {
+        const dayRecords = dayGroups[d];
+        let shiftsHtml = '';
+        ['เช้า', 'บ่าย', 'ดึก'].forEach(shiftName => {
+          const rec = dayRecords.find(x => x.shift === shiftName);
+          if (!rec) return;
+          const hasProblem = rec.problems && String(rec.problems).trim();
+          const problemHtml = hasProblem
+            ? `<div style="font-size:13.5px; white-space:pre-wrap; background:#f9f9f9; padding:8px; border-left:3px solid #d93025; margin-top:6px;"><b class="text-danger">⚠️ รายละเอียดปัญหา:</b>\n${rec.problems}</div>`
+            : `<div class="text-success" style="font-size:13.5px; margin-top:6px;">✅ ไม่พบปัญหาในกะนี้</div>`;
+          shiftsHtml += `
+            <div style="padding:8px 0; border-top:1px dashed #ccc;">
+              <div style="font-size:14px;"><b>กะ${shiftName}</b> — เจ้าหน้าที่เวรชั่ง: ${rec.weighmaster || '-'}${rec.licensePlate ? ' | ทะเบียนที่เกี่ยวข้อง: ' + rec.licensePlate : ''}</div>
+              <div style="font-size:13.5px; color:#555; margin-top:2px;">📊 จำนวนรถ: วัตถุดิบออก ${rec.veh_rawmat_out || 0} | อาหารออก ${rec.veh_feed_out || 0} | อาหารภายใน ${rec.veh_feed_in || 0} | วัตถุดิบภายใน ${rec.veh_rawmat_in || 0}</div>
+              ${problemHtml}
+            </div>
+          `;
+        });
+        daysHtml += `
+          <div class="item-block">
+            <div class="print-meta"><span><b>📆 วันที่:</b> ${d}</span></div>
+            ${shiftsHtml}
+          </div>
+        `;
+      });
+    }
+
+    printArea.innerHTML = `
+      <div class="print-header"><h2>📅 รายงานสรุปห้องชั่งรายเดือน</h2><div><b>ประจำเดือน:</b> ${targetValue}</div></div>
+      <div class="print-section">
+        <h3>📊 สรุปภาพรวมทั้งเดือน</h3>
+        ${overviewHtml}
+      </div>
+      <div class="print-section">
+        <h3>รายการบันทึกจำแนกตามรายวันและกะปฏิบัติงาน</h3>
+        ${daysHtml}
+      </div>
+    `;
   }
-
-  // ดึงข้อมูลจาก API (คงตรรกะเดิมของคุณไว้)
-  const allRecords = await fetchRecordsFromGoogle(); // สมมติชื่อฟังก์ชันดึงข้อมูลเดิม
-  const filtered = allRecords.filter(r => r.date >= start && r.date <= end);
-  
-  generatePrintLayout(filtered, title);
-  document.getElementById('summaryOutputCard').style.display = 'block';
 }
 
-// ปรับปรุงฟังก์ชันให้แสดงผลเหมือนหน้า "รายวัน" ทุกประการ
-function generatePrintLayout(records, periodTitle) {
-  const printArea = document.getElementById('print-area');
+function renderSimpleTable(records) {
+  const container = document.getElementById('historyContainer');
+  if(!records.length) { container.innerHTML = '<div class="empty-state">ไม่พบประวัติการบันทึกในช่วงเวลานี้</div>'; return; }
   
-  let blocksHtml = records.sort((a,b) => a.date.localeCompare(b.date)).map(r => `
-    <div class="item-block">
-      <div class="print-meta">
-        <span>📅 วันที่: ${r.date}</span>
-        <span>🕒 กะ: ${r.shift}</span>
-        <span>👤 เวรชั่ง: ${r.weighmaster}</span>
-      </div>
-      <div style="font-size:14px; margin-bottom:5px;">
-        <b>📊 ยอดรถ:</b> วัตถุดิบออก ${r.veh_rawmat_out} | อาหารออก ${r.veh_feed_out} | อาหารใน ${r.veh_feed_in} | วัตถุดิบใน ${r.veh_rawmat_in}
-      </div>
-      <div style="font-size:14px; background:${r.problems ? '#fff3cd' : '#e6f4ea'}; padding:10px; border-radius:4px;">
-        <b>⚠️ รายละเอียดปัญหา:</b> ${r.problems ? r.problems.replace(/\n/g, '<br>') : 'ปกติ'}
-      </div>
-    </div>
-  `).join('');
-
-  printArea.innerHTML = `
-    <h2>รายงานสรุปห้องชั่ง SPM</h2>
-    <p><b>ช่วงเวลา:</b> ${periodTitle}</p>
-    ${blocksHtml}
-  `;
+  let html = '<table class="history"><thead><tr><th>วันที่</th><th>กะ</th><th>ผู้บันทึก</th><th>ทะเบียน</th><th>สถานะปัญหา</th></tr></thead><tbody>';
+  records.forEach(r => {
+    html += `<tr><td>${r.date}</td><td>${r.shift}</td><td>${r.weighmaster}</td><td>${r.licensePlate || '-'}</td><td>${r.problems ? '<span class="tag">พบปัญหา</span>' : 'ปกติ'}</td></tr>`;
+  });
+  html += '</tbody></table>';
+  container.innerHTML = html;
 }
 
-// ... โค้ดส่วนอื่นๆ คงเดิม ...
+function reviewForm() {
+  const date = document.getElementById('f_date').value;
+  const master = document.getElementById('f_weighmaster').value.trim();
+  if(!date || !master || !selectedShift) { showToast('กรุณากรอกข้อมูลช่องที่จำเป็น (*) ให้ครบถ้วน', 'error'); return; }
+  confirmAndSave();
+}
+
+async function confirmAndSave() {
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true; btn.textContent = 'กำลังบันทึก...';
+  
+  const p_overweight = document.querySelector('.problem-item[data-key="overweight"] input').checked;
+  const p_driver_behavior = document.querySelector('.problem-item[data-key="driver_behavior"] input').checked;
+  const p_system = document.querySelector('.problem-item[data-key="system"] input').checked;
+  const p_wrong_queue = document.querySelector('.problem-item[data-key="wrong_queue"] input').checked;
+  const p_wrong_plate = document.querySelector('.problem-item[data-key="wrong_plate"] input').checked;
+  const p_wrong_delivery = document.querySelector('.problem-item[data-key="wrong_delivery"] input').checked;
+  const p_other = document.querySelector('.problem-item[data-key="other"] input').checked;
+
+  let probTxt = [];
+  if(p_overweight) probTxt.push('น้ำหนักเกิน: ' + document.getElementById('pd_overweight').value);
+  if(p_driver_behavior) probTxt.push('พฤติกรรมคนขับ: ' + document.getElementById('pd_driver_behavior').value);
+  if(p_system) probTxt.push('ระบบ/อุปกรณ์: ' + document.getElementById('pd_system').value);
+  if(p_wrong_queue) probTxt.push('ชั่งผิดคิว: ' + document.getElementById('pd_wrong_queue').value);
+  if(p_wrong_plate) probTxt.push('ทะเบียนผิดสลับคัน: ' + document.getElementById('pd_wrong_plate').value);
+  if(p_wrong_delivery) probTxt.push('ส่งของผิดที่: ' + document.getElementById('pd_wrong_delivery').value);
+  if(p_other) probTxt.push('อื่นๆ: ' + document.getElementById('pd_other').value);
+
+  const payload = {
+    action: 'save', token: TOKEN,
+    data: {
+      date: document.getElementById('f_date').value,
+      weighmaster: document.getElementById('f_weighmaster').value.trim(),
+      licensePlate: document.getElementById('f_license_plate').value.trim(),
+      shift: selectedShift,
+      problems: probTxt.join('\n'),
+      p_overweight, p_driver_behavior, p_system, p_wrong_queue, p_wrong_plate, p_wrong_delivery, p_other,
+      veh_rawmat_out: document.getElementById('f_veh_rawmat_out').value,
+      veh_feed_out: document.getElementById('f_veh_feed_out').value,
+      veh_feed_in: document.getElementById('f_veh_feed_in').value,
+      veh_rawmat_in: document.getElementById('f_veh_rawmat_in').value,
+      veh_other_type: document.getElementById('f_veh_other_type').value,
+      corrective: document.getElementById('f_corrective').value,
+      suggestions: document.getElementById('f_suggestions').value
+    }
+  };
+
+  try {
+    const res = await fetch(APPS_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+    const json = await res.json();
+    if(!json.success) throw new Error(json.error);
+    showToast('บันทึกข้อมูลเรียบร้อยแล้วครับ', 'success');
+    location.reload();
+  } catch(e) {
+    showToast('บันทึกไม่สำเร็จ: ' + e.message, 'error');
+    btn.disabled = false; btn.textContent = 'บันทึกข้อมูล';
+  }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('f_date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('r_dateSelect').value = new Date().toISOString().split('T')[0];
+});
 </script>
 </body>
 </html>
