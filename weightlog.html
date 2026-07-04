@@ -101,7 +101,6 @@
   .toast.success{ background:var(--primary-dark); }
 
   .config-warning{ background:#fff8e1; border:1px solid #f9ab00; color:#7a5b00; padding:12px 16px; border-radius:8px; font-size:13px; margin-bottom:16px; }
-  .config-warning code{ word-break: break-all; }
   .spinner{ display:inline-block; width:16px; height:16px; border:2px solid rgba(255,255,255,0.5); border-top-color:#fff; border-radius:50%; animation:spin .7s linear infinite; vertical-align:middle; margin-right:6px; }
   .spinner.dark{ border-color:rgba(15,157,88,0.25); border-top-color:var(--primary); }
   @keyframes spin{ to{ transform:rotate(360deg); } }
@@ -127,6 +126,72 @@
     .net-status{ font-size:10.5px; padding:3px 8px; }
     nav.tabs button{ padding:8px 12px; font-size:13px; }
   }
+
+  /* ==========================================================
+     CSS FOR PRINTING / EXPORT PDF
+     ========================================================== */
+  @media print {
+    /* ซ่อนส่วนประกอบที่ไม่ต้องการให้ติดใน PDF */
+    .no-print, 
+    header.appbar, 
+    #configWarning,
+    #page-report .card:first-child,
+    #paginationControls,
+    .modal-overlay,
+    .toast,
+    #topLoadingBar,
+    button, 
+    .btn {
+      display: none !important;
+    }
+
+    body {
+      background: #fff !important;
+      color: #000 !important;
+      font-size: 14px;
+    }
+    
+    main {
+      max-width: 100% !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+
+    .card {
+      border: none !important;
+      box-shadow: none !important;
+      padding: 10px 0 !important;
+      margin-bottom: 20px !important;
+      page-break-inside: avoid;
+    }
+
+    /* ซ่อนการขีดเส้นหนาๆ ของกล่องข้อความ ให้เหลือแค่เส้นใต้ */
+    input[type=text], input[type=number], input[type=date], textarea, select {
+      border: none !important;
+      border-bottom: 1px dashed #666 !important;
+      padding: 5px 0 !important;
+      background: transparent !important;
+      min-height: auto !important;
+      border-radius: 0 !important;
+    }
+
+    /* จัดสไตล์ตารางประวัติในหน้า PDF */
+    table.history th, table.history td {
+      padding: 8px 4px !important;
+      border-bottom: 1px solid #333 !important;
+      white-space: normal !important;
+    }
+    
+    table.history td.row-arrow {
+      display: none !important;
+    }
+
+    /* บังคับเบราว์เซอร์ให้พิมพ์สีพื้นหลังของการ์ดสรุปและ Tag ต่างๆ */
+    * {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+  }
 </style>
 </head>
 <body>
@@ -149,7 +214,6 @@
     ⚠️ ยังไม่ได้ตั้งค่า URL ของ Apps Script — แก้ค่า <code>APPS_SCRIPT_URL_ENCODED</code> ในโค้ดก่อนใช้งานจริง
   </div>
 
-  <!-- ================= FORM PAGE ================= -->
   <section id="page-form">
     <div class="card">
       <h2><span class="icon">📋</span> ฟอร์มบันทึกข้อมูลห้องชั่ง</h2>
@@ -164,10 +228,9 @@
         <input type="text" id="f_weighmaster" maxlength="200" placeholder="ระบุชื่อ-นามสกุล">
       </div>
 
-      <!-- ปรับปรุงช่องกรอกทะเบียนรถตามคำขอตัดเงื่อนไขเรื่องปัญหาออก -->
       <div class="field">
-        <label>ทะเบียนรถ (License Plate)</label>
-        <input type="text" id="f_license_plate" maxlength="50" placeholder="ระบุทะเบียนรถ">
+        <label>ทะเบียนรถ (ถ้ามีปัญหาเกี่ยวข้อง)</label>
+        <input type="text" id="f_license_plate" maxlength="50" placeholder="ระบุถ้ามีรถคันใดคันหนึ่งเกี่ยวข้องกับปัญหาที่พบ (เว้นว่างได้)">
       </div>
 
       <div class="field">
@@ -194,7 +257,7 @@
 
     <div class="card" id="problemsCard">
       <h2><span class="icon">⚠️</span> ปัญหาที่พบ (เลือกหัวข้อเพื่อกรอกรายละเอียดเพิ่มเติม)</h2>
-      <div style="font-size:12.5px;color:var(--danger);margin-bottom:14px;">⚠️ ถ้าติ๊กหัวข้อใดไว้ รายการนี้จะไม่สามารถลบได้อีกในภายหลัง (เพื่อรักษาหลักฐานตรวจสอบย้อนหลัง)</div>
+      <div style="font-size:12.5px;color:var(--danger);margin-bottom:14px;" class="no-print">⚠️ ถ้าติ๊กหัวข้อใดไว้ รายการนี้จะไม่สามารถลบได้อีกในภายหลัง (เพื่อรักษาหลักฐานตรวจสอบย้อนหลัง)</div>
       <div class="problem-grid" id="problemGrid">
         <div class="problem-item" data-key="overweight">
           <label class="chk"><input type="checkbox"> ปัญหาน้ำหนักเกิน (Overweight)</label>
@@ -237,10 +300,10 @@
     <div class="card"><h2><span class="icon">🛠️</span> แนวทางการแก้ไข (Corrective Action)</h2><textarea id="f_corrective" maxlength="2000"></textarea><div class="char-counter" id="f_correctiveCounter"></div></div>
     <div class="card"><h2><span class="icon">💡</span> ข้อเสนอแนะ (Suggestions)</h2><textarea id="f_suggestions" maxlength="2000"></textarea><div class="char-counter" id="f_suggestionsCounter"></div></div>
 
-    <button type="button" class="btn" id="submitBtn" onclick="reviewForm()">บันทึกข้อมูล</button>
+    <button type="button" class="btn no-print" id="submitBtn" onclick="reviewForm()">บันทึกข้อมูล</button>
+    <button type="button" class="btn secondary no-print" style="margin-top:12px;" onclick="window.print()">🖨️ พิมพ์ / Export PDF หน้านี้</button>
   </section>
 
-  <!-- ================= REPORT PAGE ================= -->
   <section id="page-report" style="display:none;">
     <div class="card">
       <h2><span class="icon">🔍</span> ตัวกรองข้อมูล</h2>
@@ -252,17 +315,15 @@
           <select id="r_shift"><option value="">ทั้งหมด</option><option value="เช้า">เช้า</option><option value="บ่าย">บ่าย</option><option value="ดึก">ดึก</option></select>
         </div>
         <div class="field" style="flex:1;min-width:150px;margin-bottom:0;"><label>ทะเบียนรถ</label><input type="text" id="r_plate" maxlength="50" placeholder="ค้นหาทะเบียน"></div>
-        
-        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; width:100%;">
-          <button type="button" class="btn secondary" style="width:auto;padding:14px 22px;" onclick="loadHistory()">🔍 ค้นหา</button>
-          <button type="button" class="btn" style="width:auto;padding:14px 22px;background:#e67e22;" id="btnExportDaily" onclick="exportPDFReport('daily')">📄 Export PDF รายวัน</button>
-          <button type="button" class="btn" style="width:auto;padding:14px 22px;background:#2980b9;" id="btnExportMonthly" onclick="exportPDFReport('monthly')">📅 Export PDF รายเดือน</button>
-        </div>
+        <button type="button" class="btn secondary" style="width:auto;padding:14px 22px;" onclick="loadHistory()">ค้นหา</button>
       </div>
     </div>
 
     <div class="card">
-      <h2><span class="icon">📊</span> สรุปภาพรวม</h2>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
+        <h2 style="margin:0;"><span class="icon">📊</span> สรุปภาพรวมและรายงาน</h2>
+        <button type="button" class="btn secondary no-print" style="width:auto; padding:8px 16px; min-height:42px; border-radius:20px; font-size:14px;" onclick="window.print()">📥 Export PDF รายงาน</button>
+      </div>
       <div class="summary-cards" id="summaryCards"></div>
       <div id="problemBreakdown" style="margin-top:14px;display:flex;flex-wrap:wrap;gap:6px;"></div>
     </div>
@@ -795,7 +856,7 @@ function openEditModal(idx) {
     '<div class="field"><label>รถส่งวัตถุดิบ/เคมีภัณฑ์/บรรจุภัณฑ์ (คัน)</label><input type="number" min="0" max="500" inputmode="numeric" id="e_veh_rawmat_out"></div>' +
     '<div class="field"><label>รถส่งอาหาร (คัน)</label><input type="number" min="0" max="500" inputmode="numeric" id="e_veh_feed_out"></div>' +
     '<div class="field"><label>รถรับอาหาร (คัน)</label><input type="number" min="0" max="500" inputmode="numeric" id="e_veh_feed_in"></div>' +
-    '<div class="field"><label>รถรับวัตถิบ/เคมีภัณฑ์/บรรจุภัณฑ์ (คัน)</label><input type="number" min="0" max="500" inputmode="numeric" id="e_veh_rawmat_in"></div>' +
+    '<div class="field"><label>รถรับวัตถุดิบ/เคมีภัณฑ์/บรรจุภัณฑ์ (คัน)</label><input type="number" min="0" max="500" inputmode="numeric" id="e_veh_rawmat_in"></div>' +
     '<div class="field"><label>ระบุประเภทรถอื่นๆ</label><input type="text" id="e_veh_other_type" maxlength="200"></div>' +
     '<div class="field"><label>ปัญหาที่พบและรายละเอียด</label><textarea id="e_problems" maxlength="2000"></textarea></div>' +
     '<div class="field"><label>แนวทางการแก้ไข</label><textarea id="e_corrective" maxlength="2000"></textarea></div>' +
@@ -963,83 +1024,6 @@ function updateNetStatus_(showMsg) {
 }
 window.addEventListener('online', () => updateNetStatus_(true));
 window.addEventListener('offline', () => updateNetStatus_(true));
-
-/* ---------------- ฟังก์ชันส่งออกรายงาน PDF รวมทั้งหมดเหมือนหลังบ้าน ---------------- */
-async function exportPDFReport(type) {
-  if (navigator.onLine === false) { showToast('ไม่มีการเชื่อมต่ออินเทอร์เน็ต', 'error'); return; }
-  
-  let dateFrom = document.getElementById('r_dateFrom').value;
-  let dateTo = document.getElementById('r_dateTo').value;
-  let btnId = type === 'daily' ? 'btnExportDaily' : 'btnExportMonthly';
-  const originalBtn = document.getElementById(btnId);
-  const originalText = originalBtn.textContent;
-
-  if (type === 'daily') {
-    if (!dateFrom) {
-      const today = new Date().toISOString().split('T')[0];
-      document.getElementById('r_dateFrom').value = today;
-      document.getElementById('r_dateTo').value = today;
-      dateFrom = today;
-      dateTo = today;
-    } else {
-      document.getElementById('r_dateTo').value = dateFrom;
-      dateTo = dateFrom;
-    }
-  } else if (type === 'monthly') {
-    if (!dateFrom) {
-      showToast('กรุณาเลือกวันที่ในช่อง "จากวันที่" เพื่อระบุเดือนที่ต้องการส่งออกรายเดือน', 'error');
-      return;
-    }
-    const yearMonth = dateFrom.substring(0, 7);
-    dateFrom = yearMonth + "-01";
-    
-    const parts = yearMonth.split('-');
-    const lastDay = new Date(parts[0], parts[1], 0).getDate();
-    dateTo = yearMonth + "-" + String(lastDay).padStart(2, '0');
-    
-    document.getElementById('r_dateFrom').value = dateFrom;
-    document.getElementById('r_dateTo').value = dateTo;
-  }
-
-  const filters = {
-    dateFrom: dateFrom,
-    dateTo: dateTo,
-    shift: document.getElementById('r_shift').value || undefined,
-    plate: document.getElementById('r_plate').value.trim() || undefined
-  };
-
-  try {
-    originalBtn.disabled = true;
-    originalBtn.innerHTML = '<span class="spinner"></span> กำลังสร้าง PDF...';
-    showToast('ระบบกำลังรวบรวมข้อมูลหลังบ้านและสร้างไฟล์ PDF สักครู่ครับ...', 'success');
-
-    const json = await callApi('export_pdf', { filters: filters });
-    
-    if (json.pdfData) {
-      const byteCharacters = atob(json.pdfData);
-      const byteNumbers = new Array(byteCharacters.length);
-      for (let i = 0; i < byteCharacters.length; i++) {
-        byteNumbers[i] = byteCharacters.charCodeAt(i);
-      }
-      const byteArray = new Uint8Array(byteNumbers);
-      const blob = new Blob([byteArray], {type: 'application/pdf'});
-      
-      const link = document.createElement('a');
-      link.href = window.URL.createObjectURL(blob);
-      link.download = type === 'daily' ? `รายงานห้องชั่งรายวัน_${dateFrom}.pdf` : `รายงานห้องชั่งรายเดือน_${dateFrom.substring(0,7)}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-      showToast('ดาวน์โหลดไฟล์รายงาน PDF เรียบร้อยแล้ว!', 'success');
-    }
-  } catch (err) {
-    showToast('เกิดข้อผิดพลาดในการสร้างไฟล์: ' + err.message, 'error');
-  } finally {
-    originalBtn.disabled = false;
-    originalBtn.textContent = originalText;
-  }
-}
 
 /* ---------------- Init ---------------- */
 window.addEventListener('DOMContentLoaded', () => {
