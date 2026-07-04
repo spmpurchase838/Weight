@@ -163,7 +163,6 @@
       <h2><span class="icon">📋</span> ฟอร์มบันทึกข้อมูลห้องชั่ง</h2>
       <div class="field"><label>วันที่ (Date) <span class="req">*</span></label><input type="date" id="f_date"></div>
       <div class="field"><label>ผู้บันทึก/เวรหน้าที่เครื่องชั่ง <span class="req">*</span></label><input type="text" id="f_weighmaster" maxlength="200" placeholder="ระบุชื่อ-นามสกุล"></div>
-      <div class="field"><label>ทะเบียนรถ (ถ้ามีปัญหาเกี่ยวข้อง)</label><input type="text" id="f_license_plate" maxlength="50" placeholder="ระบุเลขทะเบียนรถ"></div>
       <div class="field"><label>กะปฏิบัติงาน (Shift) <span class="req">*</span></label>
         <div class="shift-group" id="shiftGroup">
           <label class="shift-option"><input type="radio" name="shift" value="เช้า" style="display:none;"><span class="shift-name">เช้า</span></label>
@@ -356,7 +355,7 @@ async function buildQuickSummary() {
         if (r.p_other) { otherProblem++; totalIssues++; }
         
         if (r.problems && r.problems.trim()) {
-          detailsArr.push(`[ทะเบียน ${r.licensePlate || 'ไม่ระบุ'} / กะ ${r.shift}]: ${r.problems.trim()}`);
+          detailsArr.push(`[กะ ${r.shift}${r.licensePlate ? ' / ทะเบียน ' + r.licensePlate : ''}]: ${r.problems.trim()}`);
         }
       }
     });
@@ -509,9 +508,9 @@ function renderSimpleTable(records) {
   const container = document.getElementById('historyContainer');
   if(!records.length) { container.innerHTML = '<div class="empty-state">ไม่พบประวัติการบันทึกในช่วงเวลานี้</div>'; return; }
   
-  let html = '<table class="history"><thead><tr><th>วันที่</th><th>กะ</th><th>ผู้บันทึก</th><th>ทะเบียน</th><th>สถานะปัญหา</th></tr></thead><tbody>';
+  let html = '<table class="history"><thead><tr><th>วันที่</th><th>กะ</th><th>ผู้บันทึก</th><th>สถานะปัญหา</th></tr></thead><tbody>';
   records.forEach(r => {
-    html += `<tr><td>${r.date}</td><td>${r.shift}</td><td>${r.weighmaster}</td><td>${r.licensePlate || '-'}</td><td>${r.problems ? '<span class="tag">พบปัญหา</span>' : 'ปกติ'}</td></tr>`;
+    html += `<tr><td>${r.date}</td><td>${r.shift}</td><td>${r.weighmaster}</td><td>${r.problems ? '<span class="tag">พบปัญหา</span>' : 'ปกติ'}</td></tr>`;
   });
   html += '</tbody></table>';
   container.innerHTML = html;
@@ -550,7 +549,6 @@ async function confirmAndSave() {
     data: {
       date: document.getElementById('f_date').value,
       weighmaster: document.getElementById('f_weighmaster').value.trim(),
-      licensePlate: document.getElementById('f_license_plate').value.trim(),
       shift: selectedShift,
       problems: probTxt.join('\n'),
       p_overweight, p_driver_behavior, p_system, p_wrong_queue, p_wrong_plate, p_wrong_delivery, p_other,
