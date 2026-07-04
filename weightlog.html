@@ -3,373 +3,524 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ระบบบันทึกข้อมูลห้องชั่ง - SPM Feed Mill</title>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; connect-src 'self' https://script.google.com https://script.googleusercontent.com https://fonts.googleapis.com https://fonts.gstatic.com;">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2=family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+<title>ระบบบันทึกข้อมูลห้องชั่ง - SPM Feed Mill</title>
 <style>
   :root{
     --primary:#0f9d58; --primary-dark:#0b7a43; --bg:#f3f6f4; --card:#ffffff; --border:#e0e4e2;
     --text:#202124; --muted:#5f6368; --danger:#d93025; --warn:#f9ab00; --radius:10px;
+    --navy:#104f75; --navy-dark:#0a3550;
   }
   *{box-sizing:border-box;}
-  body{
-    font-family:'Sarabun', sans-serif; background-color:var(--bg); color:var(--text); margin:0; padding:20px;
+  html{ overscroll-behavior-y:contain; }
+  body{ margin:0; font-family:'Sarabun','Segoe UI',Tahoma,sans-serif; background:var(--bg); color:var(--text); touch-action:manipulation; -webkit-tap-highlight-color:transparent; }
+  body.modal-open{ overflow:hidden; }
+  header.appbar{ background:var(--card); border-bottom:1px solid var(--border); padding:14px 20px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:20; flex-wrap:wrap; gap:10px; }
+  header.appbar h1{ font-size:18px; margin:0; }
+  .appbar-right{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  nav.tabs{ display:flex; gap:6px; flex-wrap:wrap; }
+  nav.tabs button{ border:none; background:transparent; padding:12px 18px; border-radius:20px; font-size:15px; cursor:pointer; color:var(--muted); font-weight:700; min-height:44px; }
+  nav.tabs button.active{ background:var(--primary); color:#fff; }
+  main{ max-width:820px; margin:20px auto; padding:0 14px 60px; }
+  .card{ background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:22px 24px; margin-bottom:18px; box-shadow:0 1px 2px rgba(0,0,0,0.04); }
+  .card h2{ font-size:16px; margin:0 0 16px; display:flex; align-items:center; gap:8px; }
+  .field{ margin-bottom:16px; }
+  .field > label{ display:block; font-size:15px; font-weight:600; margin-bottom:7px; }
+  .field > label .req{ color:var(--danger); }
+  
+  input[type=text], input[type=number], input[type=date], textarea, select, input[type=month]{
+    width:100%; padding:14px; border:1.5px solid var(--border); border-radius:8px; font-size:16px;
+    font-family:inherit; background:#fff; color:var(--text); min-height:48px;
   }
-  .container{ max-width:1200px; margin:0 auto; }
-  .header{ text-align:center; margin-bottom:30px; }
-  .header h1{ margin:0; color:var(--primary-dark); font-size:24px; }
-  .header p{ margin:5px 0 0 0; color:var(--muted); }
+  input:focus, textarea:focus, select:focus{ outline:none; border-color:var(--primary); box-shadow:0 0 0 3px rgba(15,157,88,0.12); }
+  textarea{ resize:vertical; min-height:80px; }
+
+  .shift-group{ display:flex; gap:10px; flex-wrap:wrap; }
+  .shift-option{ flex:1; min-width:100px; min-height:52px; display:flex; align-items:center; justify-content:center; border:1.5px solid var(--border); border-radius:8px; padding:14px; text-align:center; cursor:pointer; color:var(--muted); user-select:none; position:relative; }
+  .shift-option .shift-name{ font-size:16px; font-weight:700; }
+  .shift-option.selected{ border-color:var(--primary); background:rgba(15,157,88,0.08); color:var(--primary-dark); }
+
+  .veh-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 0; border-bottom:1px solid var(--border); }
+  .veh-row:last-child{ border-bottom:none; }
+  .veh-row .label{ font-size:15px; flex:1; }
+  .veh-row input{ width:100px; text-align:center; padding:12px 8px; }
+
+  .problem-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  @media (max-width:600px){ .problem-grid{ grid-template-columns:1fr; } }
+  .problem-item{ border:1.5px solid var(--border); border-radius:8px; padding:16px; }
+  .problem-item.checked{ border-color:var(--primary); }
+  .problem-item label.chk{ display:flex; align-items:center; gap:12px; font-size:15px; font-weight:600; cursor:pointer; min-height:32px; }
+  .problem-item input[type=checkbox]{ width:26px; height:26px; flex-shrink:0; accent-color:var(--primary); cursor:pointer; }
+  .problem-item textarea{ margin-top:10px; display:none; font-size:15px; }
+  .problem-item.checked textarea{ display:block; }
+
+  .btn{ background:var(--primary); color:#fff; border:none; padding:15px 24px; border-radius:26px; font-size:17px; font-weight:700; cursor:pointer; width:100%; min-height:52px; display:inline-flex; align-items:center; justify-content:center; gap:8px; }
+  .btn:hover{ background:var(--primary-dark); }
+  .btn:disabled{ background:#9aa0a6; cursor:not-allowed; }
+  .btn.navy{ background:var(--navy); }
+  .btn.navy:hover{ background:var(--navy-dark); }
+  .btn.secondary{ background:#fff; color:var(--text); border:1.5px solid var(--border); border-radius:8px; }
+
+  /* Export Modal (สไตล์ตามรูปภาพที่ 1) */
+  .exp-modal-overlay{ position:fixed; inset:0; background:rgba(0,0,0,0.4); display:none; align-items:center; justify-content:center; z-index:100; padding:16px; }
+  .exp-modal-overlay.show{ display:flex; }
+  .exp-modal{ background:#fff; border-radius:16px; max-width:480px; width:100%; padding:24px; box-shadow:0 10px 25px rgba(0,0,0,0.1); position:relative; }
+  .exp-modal-header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+  .exp-modal-header h3{ margin:0; font-size:18px; display:flex; align-items:center; gap:8px; color:var(--text); }
+  .exp-modal-close{ background:none; border:none; font-size:24px; cursor:pointer; color:var(--muted); }
   
-  /* Navigation Tabs */
-  .tabs{ display:flex; gap:10px; margin-bottom:20px; border-bottom:2px solid var(--border); padding-bottom:10px; }
-  .tab-btn{
-    padding:10px 20px; border:none; background:none; font-size:16px; font-weight:600; cursor:pointer; color:var(--muted); border-radius:5px;
-  }
-  .tab-btn.active{ background-color:var(--primary); color:white; }
+  .exp-field{ margin-bottom:16px; }
+  .exp-field label{ display:block; font-size:13px; font-weight:700; color:var(--muted); margin-bottom:6px; text-transform:uppercase; }
+  .exp-date-range{ display:flex; align-items:center; gap:10px; }
   
-  .card{ background-color:var(--card); border-radius:var(--radius); border:1px solid var(--border); padding:20px; margin-bottom:20px; }
-  .form-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:15px; margin-bottom:20px; }
-  .form-group{ display:flex; flex-direction:column; }
-  .form-group label{ font-weight:600; margin-bottom:5px; font-size:14px; }
-  .form-control{
-    padding:10px; border:1px solid var(--border); border-radius:6px; font-size:15px; font-family:inherit; outline:none;
-  }
-  .form-control:focus{ border-color:var(--primary); }
-  
-  /* Shift Selector */
-  .shift-container{ display:flex; gap:10px; }
-  .shift-btn{
-    flex:1; padding:10px; border:1px solid var(--border); border-radius:6px; background-color:white; cursor:pointer; font-weight:600; font-family:inherit; text-align:center;
-  }
-  .shift-btn.selected{ background-color:var(--primary-dark); color:white; border-color:var(--primary-dark); }
-  
-  /* Problem Checkboxes */
-  .prob-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:10px; margin-bottom:15px; }
-  .prob-item{ display:flex; align-items:center; gap:8px; font-size:14px; }
-  .prob-item input[type="checkbox"]{ width:18px; height:18px; cursor:pointer; }
-  
-  .btn{
-    padding:12px 24px; font-size:16px; font-weight:600; border:none; border-radius:6px; cursor:pointer; font-family:inherit; display:inline-flex; align-items:center; justify-content:center; gap:8px;
-  }
-  .btn-primary{ background-color:var(--primary); color:white; }
-  .btn-primary:hover{ background-color:var(--primary-dark); }
-  
-  /* Table styling */
-  table{ width:100%; border-collapse:collapse; text-align:left; font-size:14px; }
-  th, td{ padding:12px; border-bottom:1px solid var(--border); }
-  th{ background-color:#fafafa; font-weight:600; }
-  
-  /* Toast Alert */
-  #toast{
-    position:fixed; bottom:20px; right:20px; padding:15px 25px; border-radius:8px; color:white; font-weight:600; display:none; z-index:1000; box-shadow:0 4px 12px rgba(0,0,0,0.15);
+  /* Radio Cards For Format */
+  .fmt-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:6px; }
+  .fmt-card { border:1.5px solid var(--border); border-radius:8px; padding:12px; display:flex; align-items:center; gap:10px; cursor:pointer; font-size:14px; font-weight:600; }
+  .fmt-card input[type=radio] { width:18px; height:18px; accent-color:var(--navy); margin:0; }
+  .fmt-card.selected { border-color:var(--navy); background:rgba(16,79,117,0.05); }
+
+  /* History Table */
+  table.history{ width:100%; border-collapse:collapse; font-size:14px; margin-top:14px; }
+  table.history th, table.history td{ text-align:left; padding:14px 10px; border-bottom:1px solid var(--border); white-space:nowrap; }
+  table.history th{ color:var(--muted); font-weight:700; font-size:12.5px; }
+  .tag{ display:inline-block; background:#fce8e6; color:var(--danger); border-radius:10px; padding:2px 8px; font-size:11px; }
+  .empty-state{ text-align:center; color:var(--muted); padding:40px 10px; font-size:14px; }
+
+  .toast{ position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px); background:#323232; color:#fff; padding:12px 20px; border-radius:8px; font-size:14px; opacity:0; pointer-events:none; transition:all .25s ease; z-index:200; max-width:90vw; text-align:center; }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+  .toast.error{ background:var(--danger); }
+  .toast.success{ background:var(--primary-dark); }
+
+  .net-status{ display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:700; padding:4px 10px; border-radius:12px; }
+  .net-status .dot{ width:7px; height:7px; border-radius:50%; }
+  .net-status.online{ background:rgba(15,157,88,0.1); color:var(--primary-dark); }
+  .net-status.online .dot{ background:var(--primary); }
+
+  /* พื้นที่สำหรับการแสดงหน้า Print รายงานเปล่าๆ ตามรูปที่ 2 และ 3 */
+  #print-container { display: none; }
+
+  /* 🖨️ การตั้งค่าสำหรับการพิมพ์แยกหน้ารายงาน (Print CSS) */
+  @media print {
+    body * { visibility: hidden; }
+    #print-container, #print-container * { visibility: visible; }
+    #print-container { display: block !important; position: absolute; left: 0; top: 0; width: 100%; color: #000; font-family: 'Sarabun', sans-serif; padding: 20px; }
+    .print-header { display: flex; justify-content: space-between; margin-bottom: 30px; font-size: 16px; }
+    .print-title { font-weight: bold; font-size: 18px; }
+    .print-body-row { margin-bottom: 20px; font-size: 16px; }
+    .print-dotted { border-bottom: 1px dotted #000; display: inline-block; min-width: 150px; text-align: center; }
+    table.print-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    table.print-table th, table.print-table td { border: 1px solid #000; padding: 10px; text-align: left; font-size: 14px; }
+    table.print-table th { background: #f2f2f2 !important; -webkit-print-color-adjust: exact; }
   }
 </style>
 </head>
 <body>
 
-<div class="container">
-  <div class="header">
-    <h1>ระบบบันทึกข้อมูลห้องชั่ง - SPM Feed Mill</h1>
-    <p>ลงรายงานรวมกะ และตรวจสอบความผิดพลาดการชั่งน้ำหนัก</p>
+<header class="appbar">
+  <h1>⚖️ ห้องชั่ง SPM</h1>
+  <div class="appbar-right">
+    <span id="netStatus" class="net-status online"><span class="dot"></span><span id="netStatusText">ออนไลน์</span></span>
+    <nav class="tabs">
+      <button type="button" id="tabFormBtn" class="active" onclick="switchTab('form')">บันทึกข้อมูล</button>
+      <button type="button" id="tabReportBtn" onclick="switchTab('report')">ประวัติ &amp; รายงาน</button>
+    </nav>
   </div>
+</header>
 
-  <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab('form')">📝 บันทึกฟอร์ม / ประวัติ</button>
-    <button class="tab-btn" onclick="switchTab('dashboard')">📊 หน้าภาพรวมสรุปปัญหาประจำเดือน</button>
-  </div>
-
-  <div id="tab_form">
+<main>
+  <section id="page-form">
     <div class="card">
-      <h3 style="margin-top:0; color:var(--primary-dark);">กรอกข้อมูลยอดรถต่อกะประจำวัน</h3>
-      <div class="form-grid">
-        <div class="form-group">
-          <label>วันที่ปฏิบัติงาน</label>
-          <input type="date" id="f_date" class="form-control">
-        </div>
-        <div class="form-group">
-          <label>เลือกกะปฏิบัติงาน</label>
-          <div class="shift-container">
-            <div class="shift-btn" onclick="selectShift('เช้า')">เช้า</div>
-            <div class="shift-btn" onclick="selectShift('บ่าย')">บ่าย</div>
-            <div class="shift-btn" onclick="selectShift('ดึก')">ดึก</div>
-          </div>
-        </div>
-        <div class="form-group">
-          <label>ผู้บันทึกข้อมูล</label>
-          <input type="text" id="f_weighmaster" class="form-control" placeholder="ชื่อ-นามสกุล">
-        </div>
-        <div class="form-group">
-          <label>ทะเบียนรถ (กรณีมีปัญหา)</label>
-          <input type="text" id="f_license_plate" class="form-control" placeholder="เช่น 80-xxxx ราชบุรี">
+      <h2><span class="icon">📋</span> ฟอร์มบันทึกข้อมูลห้องชั่ง</h2>
+      <div class="field"><label>วันที่ (Date) <span class="req">*</span></label><input type="date" id="f_date"></div>
+      <div class="field"><label>ผู้บันทึก/เวรหน้าที่เครื่องชั่ง <span class="req">*</span></label><input type="text" id="f_weighmaster" maxlength="200" placeholder="ระบุชื่อ-นามสกุล"></div>
+      <div class="field"><label>ทะเบียนรถ (ถ้ามีปัญหาเกี่ยวข้อง)</label><input type="text" id="f_license_plate" maxlength="50" placeholder="ระบุเลขทะเบียนรถ"></div>
+      <div class="field"><label>กะปฏิบัติงาน (Shift) <span class="req">*</span></label>
+        <div class="shift-group" id="shiftGroup">
+          <label class="shift-option"><input type="radio" name="shift" value="เช้า" style="display:none;"><span class="shift-name">เช้า</span></label>
+          <label class="shift-option"><input type="radio" name="shift" value="บ่าย" style="display:none;"><span class="shift-name">บ่าย</span></label>
+          <label class="shift-option"><input type="radio" name="shift" value="ดึก" style="display:none;"><span class="shift-name">ดึก</span></label>
         </div>
       </div>
-
-      <h4 style="margin:10px 0;">📊 ยอดจำนวนรถรวมในกะ (คัน)</h4>
-      <div class="form-grid">
-        <div class="form-group">
-          <label>รถส่งวัตถุดิบ/เคมีภัณฑ์ (ออก)</label>
-          <input type="number" id="f_veh_rawmat_out" class="form-control" value="0" min="0">
-        </div>
-        <div class="form-group">
-          <label>รถส่งอาหาร (ออก)</label>
-          <input type="number" id="f_veh_feed_out" class="form-control" value="0" min="0">
-        </div>
-        <div class="form-group">
-          <label>รถรับอาหาร (ภายในเข้า)</label>
-          <input type="number" id="f_veh_feed_in" class="form-control" value="0" min="0">
-        </div>
-        <div class="form-group">
-          <label>รถรับวัตถุดิบ (ภายในเข้า)</label>
-          <input type="number" id="f_veh_rawmat_in" class="form-control" value="0" min="0">
-        </div>
-      </div>
-
-      <h4 style="margin:10px 0; color:var(--danger);">⚠️ รายงานปัญหาที่พบเฉพาะกะ (หากเลือกข้อใดไว้ รายการนี้จะล็อกลบไม่ได้)</h4>
-      <div class="prob-grid">
-        <div class="prob-item"><input type="checkbox" id="p_overweight"><label>ปัญหาน้ำหนักเกิน</label></div>
-        <div class="prob-item"><input type="checkbox" id="p_driver_behavior"><label>ปัญหาพฤติกรรมคนขับ</label></div>
-        <div class="prob-item"><input type="checkbox" id="p_system"><label>ปัญหาระบบ/อุปกรณ์</label></div>
-        <div class="prob-item"><input type="checkbox" id="p_wrong_queue"><label>ปัญหาชั่งผิดคิว</label></div>
-        <div class="prob-item"><input type="checkbox" id="p_wrong_plate"><label>ปัญหาทะเบียนรถผิด</label></div>
-        <div class="prob-item"><input type="checkbox" id="p_wrong_delivery"><label>ปัญหาส่งของผิดที่</label></div>
-        <div class="prob-item"><input type="checkbox" id="p_other"><label>ปัญหาอื่นๆ (ระบุด้านล่าง)</label></div>
-      </div>
-
-      <div class="form-group" style="margin-bottom:15px;">
-        <label>รายละเอียดปัญหาเพิ่มเติม / แนวทางแก้ไข</label>
-        <textarea id="f_problems" class="form-control" rows="3" placeholder="ระบุรายละเอียดเหตุการณ์หรือทะเบียนคันที่มีปัญหา..."></textarea>
-      </div>
-
-      <button id="submit_btn" onclick="saveData()" class="btn btn-primary" style="width:100%;">💾 บันทึกข้อมูลประจำกะ</button>
     </div>
-  </div>
-
-  <div id="tab_dashboard" style="display:none;">
     <div class="card">
-      <div style="display:flex; gap:15px; align-items:flex-end; flex-wrap:wrap;">
-        <div>
-          <label style="display:block; font-weight:bold; margin-bottom:5px;">📅 เลือกเดือน / ช่วงเวลาเพื่อตรวจสอบภาพรวม</label>
-          <input type="date" id="dash_date_from" class="form-control" style="width:160px; display:inline-block;"> ถึง
-          <input type="date" id="dash_date_to" class="form-control" style="width:160px; display:inline-block;">
+      <h2><span class="icon">🚚</span> สรุปจำนวนรถที่ชั่ง</h2>
+      <div class="veh-row"><div class="label">รถส่งวัตถุดิบ/เคมีภัณฑ์/บรรจุภัณฑ์ (คัน)</div><input type="number" min="0" value="0" id="f_veh_rawmat_out"></div>
+      <div class="veh-row"><div class="label">รถส่งอาหาร (คัน)</div><input type="number" min="0" value="0" id="f_veh_feed_out"></div>
+      <div class="veh-row"><div class="label">รถรับอาหาร (รถภายใน)</div><input type="number" min="0" value="0" id="f_veh_feed_in"></div>
+      <div class="veh-row"><div class="label">รถรับวัตถุดิบ/เคมีภัณฑ์/บรรจุภัณฑ์ (รถภายใน)</div><input type="number" min="0" value="0" id="f_veh_rawmat_in"></div>
+      <div class="field" style="margin-top:14px;"><label>ระบุประเภทรถอื่นๆ</label><input type="text" id="f_veh_other_type" placeholder="เว้นว่างได้ถ้าไม่มี"></div>
+    </div>
+    <div class="card" id="problemsCard">
+      <h2><span class="icon">⚠️</span> ปัญหาที่พบ (เลือกหัวข้อเพื่อกรอกรายละเอียดเพิ่มเติม)</h2>
+      <div class="problem-grid">
+        <div class="problem-item" data-key="overweight"><label class="chk"><input type="checkbox"> น้ำหนักเกิน</label><textarea id="pd_overweight" placeholder="ระบุรายละเอียด"></textarea></div>
+        <div class="problem-item" data-key="driver_behavior"><label class="chk"><input type="checkbox"> พฤติกรรมคนขับ</label><textarea id="pd_driver_behavior" placeholder="ระบุรายละเอียด"></textarea></div>
+        <div class="problem-item" data-key="system"><label class="chk"><input type="checkbox"> ระบบ/อุปกรณ์</label><textarea id="pd_system" placeholder="ระบุรายละเอียด"></textarea></div>
+        <div class="problem-item" data-key="wrong_queue"><label class="chk"><input type="checkbox"> ชั่งรถผิดคิว</label><textarea id="pd_wrong_queue" placeholder="ระบุรายละเอียด"></textarea></div>
+        <div class="problem-item" data-key="wrong_plate"><label class="chk"><input type="checkbox"> ทะเบียนผิด (สลับคัน)</label><textarea id="pd_wrong_plate" placeholder="กรอกข้อมูลรถคู่ที่สลับทะเบียนกัน"></textarea></div>
+        <div class="problem-item" data-key="wrong_delivery"><label class="chk"><input type="checkbox"> ส่งของผิดที่</label><textarea id="pd_wrong_delivery" placeholder="ระบุรายละเอียด"></textarea></div>
+        <div class="problem-item" data-key="other"><label class="chk"><input type="checkbox"> อื่นๆ</label><textarea id="pd_other" placeholder="ระบุรายละเอียด"></textarea></div>
+      </div>
+    </div>
+    <div class="card"><h2><span class="icon">🛠️</span> แนวทางการแก้ไข</h2><textarea id="f_corrective"></textarea></div>
+    <div class="card"><h2><span class="icon">💡</span> ข้อเสนอแนะ</h2><textarea id="f_suggestions"></textarea></div>
+    <button type="button" class="btn" id="submitBtn" onclick="reviewForm()">บันทึกข้อมูล</button>
+  </section>
+
+  <section id="page-report" style="display:none;">
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+        <h2><span class="icon">📊</span> รายงานสรุปและการส่งออกข้อมูล</h2>
+        <button type="button" class="btn navy" style="width:auto; padding:0 20px;" onclick="openExportModal()">📤 เปิดตัวเลือก Export Report</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><span class="icon">🕘</span> รายการประวัติบันทึกทั้งหมดในระบบ</h2>
+      <div id="historyContainer"><div class="empty-state">กำลังดึงข้อมูลประวัติย้อนหลัง...</div></div>
+    </div>
+  </section>
+</main>
+
+<div class="exp-modal-overlay" id="exportModal">
+  <div class="exp-modal">
+    <div class="exp-modal-header">
+      <h3>📥 ตัวเลือก Export</h3>
+      <button class="exp-modal-close" onclick="closeExportModal()">✕</button>
+    </div>
+    
+    <div class="exp-field">
+      <label>ประเภทช่วงรายงาน</label>
+      <select id="exp_scope" onchange="toggleModalDateInputs()" style="padding:10px; min-height:42px; font-size:14px;">
+        <option value="daily">รายวัน (ฟอร์มเดี่ยวประจำวัน)</option>
+        <option value="monthly">รายเดือน (สรุปภาพรวมแจกแจงวัน)</option>
+      </select>
+    </div>
+
+    <div class="exp-field">
+      <label>ช่วงวันที่</label>
+      <div class="exp-date-range" id="modal_day_inputs">
+        <input type="date" id="exp_date_from" style="padding:10px; min-height:42px; font-size:14px;"> 
+        <span style="color:var(--muted);">ถึง</span>
+        <input type="date" id="exp_date_to" style="padding:10px; min-height:42px; font-size:14px;">
+      </div>
+      <div id="modal_month_input" style="display:none;">
+        <input type="month" id="exp_month_select" style="padding:10px; min-height:42px; font-size:14px;">
+      </div>
+    </div>
+
+    <div class="exp-field">
+      <label>CODE / กลุ่มสินค้า</label>
+      <select id="exp_code" style="padding:10px; min-height:42px; font-size:14px;">
+        <option value="all">ทั้งหมด</option>
+        <option value="rawmat">วัตถุดิบ / เคมีภัณฑ์</option>
+        <option value="feed">อาหารสัตว์</option>
+      </select>
+    </div>
+
+    <div class="exp-field">
+      <label>LOCATION</label>
+      <select id="exp_location" style="padding:10px; min-height:42px; font-size:14px;">
+        <option value="all">ทุก Location</option>
+        <option value="internal">คลังภายใน</option>
+        <option value="external">คลังภายนอก</option>
+      </select>
+    </div>
+
+    <div class="exp-field">
+      <label>รูปแบบไฟล์</label>
+      <div class="fmt-grid">
+        <div class="fmt-card selected" id="fmt_csv_card" onclick="selectFormat('csv')">
+          <input type="radio" name="exp_format" value="csv" checked>
+          <span>📊 CSV / Excel</span>
         </div>
-        <button onclick="loadDashboard()" class="btn btn-primary">🔄 ค้นหาข้อมูล</button>
-        
-        <div style="margin-left:auto; display:flex; gap:10px;">
-          <button onclick="triggerExport('daily')" class="btn" style="background-color:#0b7a43; color:white;">⚡ Export รายวัน (CSV)</button>
-          <button onclick="triggerExport('monthly')" class="btn" style="background-color:#1a73e8; color:white;">📅 Export รายเดือน (CSV)</button>
+        <div class="fmt-card" id="fmt_pdf_card" onclick="selectFormat('pdf')">
+          <input type="radio" name="exp_format" value="pdf">
+          <span>📄 PDF / Print</span>
         </div>
       </div>
     </div>
 
-    <div class="card" style="overflow-x:auto; padding:0;">
-      <table id="dashboard_table">
-        <thead>
-          <tr style="background-color:#f1f3f4;">
-            <th style="padding:15px; width:120px;">วันที่</th>
-            <th style="text-align:center;">กะเช้า</th>
-            <th style="text-align:center;">กะบ่าย</th>
-            <th style="text-align:center;">กะดึก</th>
-            <th style="text-align:center;">รถวัตถุดิบ (ออก)</th>
-            <th style="text-align:center;">รถอาหาร (ออก)</th>
-            <th style="padding:15px;">สรุปปัญหาย้อนหลังประจำวัน / ทะเบียนรถ</th>
-          </tr>
-        </thead>
-        <tbody id="dashboard_tbody">
-          </tbody>
-      </table>
-    </div>
+    <button type="button" class="btn navy" style="margin-top:15px;" onclick="executeExport()">⬇️ Export เลย</button>
   </div>
 </div>
 
-<div id="toast"></div>
+<div id="print-container"></div>
+
+<div class="toast" id="toast"></div>
 
 <script>
-  // อัปเดต URL ล่าสุดที่คุณส่งมาให้เรียบร้อยแล้วครับ
-  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwWSYRrNRwHa27yHQ8Vdl2IDekin3fB1iMGkQQCTTIn-KfQJ1bdcaEa7dLdIH7snNkv/exec'; 
-  const TOKEN = 'z0CPHpdf8xJmfbMbwxVE1t2ghIEOJY03';
-  let selectedShift = '';
+const XOR_KEY = 42;
+function xorDecode(encoded) {
+  try {
+    const raw = atob(encoded); let out = '';
+    for (let i = 0; i < raw.length; i++) out += String.fromCharCode(raw.charCodeAt(i) ^ XOR_KEY);
+    return out;
+  } catch (e) { return ''; }
+}
+const APPS_SCRIPT_URL_ENCODED = 'Ql5eWlkQBQVZSVhDWl4ETUVFTUZPBElFRwVHS0lYRVkFWQVrYUxTSUhdTVlcaGh1bmMdWUJHXkNPeB5CYG11YGVMYhsTWUVbbEBCQxlSa2FGTWteT3xsW21QYWVbGxxcYW5/X2JBfktTe0EFT1JPSQ==';
+const TOKEN = 'z0CPHpdf8xJmfbMbwxVE1t2ghIEOJY03';
+const APPS_SCRIPT_URL = xorDecode(APPS_SCRIPT_URL_ENCODED);
 
-  // ตั้งค่าวันที่เริ่มต้นตอนเปิดเว็บ
-  document.addEventListener("DOMContentLoaded", () => {
-    const today = new Date();
-    document.getElementById('f_date').value = today.toISOString().split('T')[0];
+let selectedShift = '';
+let globalRecords = [];
+
+document.querySelectorAll('.shift-option').forEach(opt => {
+  const radio = opt.querySelector('input[type="radio"]');
+  opt.addEventListener('click', () => {
+    document.querySelectorAll('.shift-option').forEach(o => o.classList.remove('selected'));
+    opt.classList.add('selected'); radio.checked = true; selectedShift = radio.value;
+  });
+});
+
+document.querySelectorAll('.problem-item').forEach(item => {
+  const chk = item.querySelector('input[type=checkbox]');
+  chk.addEventListener('change', () => item.classList.toggle('checked', chk.checked));
+});
+
+function switchTab(tab) {
+  const isForm = tab === 'form';
+  document.getElementById('page-form').style.display = isForm ? '' : 'none';
+  document.getElementById('page-report').style.display = isForm ? 'none' : '';
+  document.getElementById('tabFormBtn').classList.toggle('active', isForm);
+  document.getElementById('tabReportBtn').classList.toggle('active', !isForm);
+  if(!isForm) fetchHistory();
+}
+
+function openExportModal() { document.getElementById('exportModal').classList.add('show'); }
+function closeExportModal() { document.getElementById('exportModal').classList.remove('show'); }
+
+function toggleModalDateInputs() {
+  const scope = document.getElementById('exp_scope').value;
+  document.getElementById('modal_day_inputs').style.display = scope === 'daily' ? 'flex' : 'none';
+  document.getElementById('modal_month_input').style.display = scope === 'monthly' ? 'block' : 'none';
+}
+
+function selectFormat(fmt) {
+  document.getElementById('fmt_csv_card').classList.toggle('selected', fmt === 'csv');
+  document.getElementById('fmt_pdf_card').classList.toggle('selected', fmt === 'pdf');
+  document.querySelector(`input[value="${fmt}"]`).checked = true;
+}
+
+function showToast(msg, type) {
+  const t = document.getElementById('toast'); t.textContent = msg;
+  t.className = 'toast show ' + (type || ''); setTimeout(() => t.className = 'toast', 4000);
+}
+
+// ฟังก์ชันโหลดข้อมูลประวัติจาก Apps Script หลังบ้านมาเก็บในตัวแปรเว็บ
+async function fetchHistory() {
+  const container = document.getElementById('historyContainer');
+  container.innerHTML = '<div class="empty-state">กำลังดึงข้อมูล...</div>';
+  try {
+    const res = await fetch(APPS_SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'list', token: TOKEN, filters: { page:1, pageSize:400 } }) });
+    const json = await res.json();
+    if (!json.success) throw new Error(json.error);
+    globalRecords = json.records || [];
+    renderHistoryTable(globalRecords);
+  } catch (err) {
+    container.innerHTML = `<div class="empty-state" style="color:var(--danger);">ดาวน์โหลดข้อมูลขัดข้อง: ${err.message}</div>`;
+  }
+}
+
+function renderHistoryTable(records) {
+  const container = document.getElementById('historyContainer');
+  if(!records.length) { container.innerHTML = '<div class="empty-state">ไม่พบประวัติข้อมูลในระบบ</div>'; return; }
+  let html = '<div style="overflow-x:auto;"><table class="history"><thead><tr><th>วันที่</th><th>กะ</th><th>ผู้บันทึก</th><th>ทะเบียนรถ</th><th>สถานะปัญหา</th></tr></thead><tbody>';
+  records.forEach(r => {
+    html += `<tr><td>${r.date}</td><td>${r.shift}</td><td>${r.weighmaster}</td><td>${r.licensePlate || '-'}</td><td>${r.problems ? '<span class="tag">พบปัญหา</span>' : '✔️ ปกติ'}</td></tr>`;
+  });
+  html += '</tbody></table></div>';
+  container.innerHTML = html;
+}
+
+// 🚀 ประมวลผลและส่งออกรายงานตามฟอร์มรูปภาพที่ 1, 2 และ 3
+function executeExport() {
+  const scope = document.getElementById('exp_scope').value;
+  const format = document.querySelector('input[name="exp_format"]:checked').value;
+  
+  // คัดกรองข้อมูลตามวันเวลาที่กำหนดในโมดอล
+  let filtered = [];
+  if (scope === 'daily') {
+    const from = document.getElementById('exp_date_from').value;
+    const to = document.getElementById('exp_date_to').value;
+    if(!from || !to) return alert('กรุณาระบุช่วงวันที่ให้ครบถ้วน');
+    filtered = globalRecords.filter(r => r.date >= from && r.date <= to);
+  } else {
+    const month = document.getElementById('exp_month_select').value;
+    if(!month) return alert('กรุณาเลือกเดือนที่ต้องการสรุป');
+    filtered = globalRecords.filter(r => r.date && r.date.substring(0, 7) === month);
+  }
+
+  // แยกการจัดการตามประเภทของรูปแบบไฟล์ที่เลือก (CSV หรือ Print PDF)
+  if (format === 'csv') {
+    exportCSV(filtered, scope);
+  } else {
+    generatePrintLayout(filtered, scope);
+  }
+  closeExportModal();
+}
+
+// ระบบดาวน์โหลดไฟล์รายงานรูปแบบ CSV / EXCEL
+function exportCSV(data, scope) {
+  if(!data.length) return alert('ไม่พบข้อมูลที่จะส่งออกในช่วงเวลาดังกล่าว');
+  let csv = "\uFEFF"; // ป้องกันภาษาไทยแสดงผลเพี้ยนใน Excel
+  
+  if (scope === 'daily') {
+    csv += "วันที่,กะ,ผู้บันทึก,ทะเบียนรถ,รถวัตถุดิบ(คัน),รถอาหาร(คัน),รถรับอาหารภายใน,รถวัตถุดิบภายใน,รายงานรายละเอียดปัญหาทั้งหมด\n";
+    data.forEach(r => {
+      csv += `"${r.date}","${r.shift}","${r.weighmaster}","${r.licensePlate || '-'}","${r.veh_rawmat_out}","${r.f_veh_feed_out || r.veh_feed_out || 0}","${r.veh_feed_in}","${r.veh_rawmat_in}","${r.problems ? r.problems.replace(/\n/g, ' ') : '-'}"\n`;
+    });
+  } else {
+    csv += "วันที่,รวมยอดรถส่งวัตถุดิบทั้งหมด,รวมยอดรถส่งอาหารทั้งหมด,สถานะสรุปปัญหาประจำวัน\n";
+    // รวมข้อมูลแบบรายวันสรุปยอด
+    let summary = {};
+    data.forEach(r => {
+      if(!summary[r.date]) summary[r.date] = { mat:0, feed:0, hasProb:false };
+      summary[r.date].mat += parseInt(r.veh_rawmat_out || 0);
+      summary[r.date].feed += parseInt(r.f_veh_feed_out || r.veh_feed_out || 0);
+      if(r.problems) summary[r.date].hasProb = true;
+    });
+    for(let d in summary) {
+      csv += `"${d}","${summary[d].mat}","${summary[d].feed}","${summary[d].hasProb ? 'พบปัญหาในวัน' : 'ปกติ'}"\n`;
+    }
+  }
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.setAttribute("download", `Weighbridge_${scope}_Report.csv`);
+  document.body.appendChild(link); link.click(); document.body.removeChild(link);
+}
+
+// 🖨️ สร้างโครงหน้ากระดาษพิมพ์ตามรูปฟอร์มที่ 2 และ 3
+function generatePrintLayout(data, scope) {
+  const printArea = document.getElementById('print-container');
+  printArea.innerHTML = ''; // เคลียร์หน้ากระดาษเก่า
+
+  if (scope === 'daily') {
+    // โครงสร้างพิมพ์ฟอร์มสรุปรายวันเดี่ยว (ตามแบบรูปที่ 2)
+    if(!data.length) {
+      printArea.innerHTML = `
+        <div class="print-header"><span class="print-title">รายงานสรุปห้องชั่ง</span> วันที่.............................. กะเข้า บ่าย ดึก</div>
+        <div class="print-body-row">ทะเบียน <span class="print-dotted" style="width:200px;"></span> ปัญหา <span class="print-dotted" style="width:400px;"></span></div>
+      `;
+    } else {
+      data.forEach(r => {
+        printArea.innerHTML += `
+          <div style="margin-bottom:40px; border-bottom:1px dashed #999; padding-bottom:20px;">
+            <div class="print-header">
+              <span class="print-title">รายงานสรุปห้องชั่ง</span> 
+              <span>วันที่: <b>${r.date}</b></span> 
+              <span>กะปฏิบัติงาน: <b>${r.shift}</b></span>
+            </div>
+            <div class="print-body-row"><b>เจ้าหน้าที่ผู้เวรชั่ง:</b> ${r.weighmaster}</div>
+            <div class="print-body-row"><b>ทะเบียนรถที่เกี่ยวข้อง:</b> ${r.licensePlate || '-'}</div>
+            <div class="print-body-row"><b>สรุปยอดรถชั่งในกะ:</b> วัตถุดิบออก ${r.veh_rawmat_out} คัน | ส่งอาหารออก ${r.f_veh_feed_out || r.veh_feed_out || 0} คัน</div>
+            <div class="print-body-row" style="margin-top:15px;">
+              <b>รายละเอียดรายงานปัญหาที่พบ:</b>
+              <div style="background:#f9f9f9; padding:10px; border:1px solid #ccc; margin-top:5px; white-space:pre-wrap;">${r.problems || '- ไม่มีรายงานปัญหากรณีพิเศษ -'}</div>
+            </div>
+          </div>
+        `;
+      });
+    }
+  } else {
+    // โครงสร้างพิมพ์ฟอร์มสรุปรายเดือนจัดแถว (ตามแบบรูปที่ 3)
+    const monthVal = document.getElementById('exp_month_select').value || '............';
+    let rowsHtml = '';
     
-    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-    document.getElementById('dash_date_from').value = firstDay.toISOString().split('T')[0];
-    document.getElementById('dash_date_to').value = today.toISOString().split('T')[0];
-    
-    loadDashboard();
+    if(!data.length) {
+      rowsHtml = `
+        <tr><td>วันที่..........</td><td>กะเช้า ( ) ปกติ ( ) ปัญหา</td><td>กะบ่าย ( ) ปกติ ( ) ปัญหา</td><td>กะดึก ( ) ปกติ ( ) ปัญหา</td></tr>
+        <tr><td>วันที่..........</td><td>กะเช้า ( ) ปกติ ( ) ปัญหา</td><td>กะบ่าย ( ) ปกติ ( ) ปัญหา</td><td>กะดึก ( ) ปกติ ( ) ปัญหา</td></tr>
+      `;
+    } else {
+      // จัดกลุ่มประวัติตามวันแสดงผล
+      let daysGroup = {};
+      data.forEach(r => {
+        if(!daysGroup[r.date]) daysGroup[r.date] = {เช้า:'-', บ่าย:'-', ดึก:'-'};
+        daysGroup[r.date][r.shift] = r.problems ? '⚠️ พบปัญหา' : '🟢 ปกติ';
+      });
+      for(let dateKey in daysGroup) {
+        rowsHtml += `<tr><td><b>${dateKey}</b></td><td>${daysGroup[dateKey]['เช้า']}</td><td>${daysGroup[dateKey]['บ่าย']}</td><td>${daysGroup[dateKey]['ดึก']}</td></tr>`;
+      }
+    }
+
+    printArea.innerHTML = `
+      <div class="print-header">
+        <span class="print-title">รายงานสรุปห้องชั่ง</span> 
+        <span>เดือน: <b>${monthVal}</b></span> 
+        <span><b>แบ่งกะ เช้า บ่าย ดึก</b></span>
+      </div>
+      <table class="print-table">
+        <thead><tr><th>วันที่ (Date)</th><th>สรุปสถานะกะเช้า</th><th>สรุปสถานะกะบ่าย</th><th>สรุปสถานะกะดึก</th></tr></thead>
+        <tbody>${rowsHtml}</tbody>
+      </table>
+    `;
+  }
+
+  // เรียกคำสั่งพิมพ์ของตัวเบราว์เซอร์ระบบปฏิบัติการทันที
+  setTimeout(() => { window.print(); }, 300);
+}
+
+async function reviewForm() {
+  const date = document.getElementById('f_date').value;
+  const master = document.getElementById('f_weighmaster').value.trim();
+  if(!date || !master || !selectedShift) { showToast('กรุณากรอกข้อมูลช่องที่จำเป็น (*) ให้ครบถ้วน', 'error'); return; }
+  
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true; btn.textContent = 'กำลังบันทึก...';
+  
+  let probTxt = [];
+  document.querySelectorAll('.problem-item.checked').forEach(item => {
+    const key = item.getAttribute('data-key');
+    const label = item.querySelector('label').innerText.trim();
+    const txt = item.querySelector('textarea').value.trim();
+    probTxt.push(`${label}: ${txt || 'ไม่ได้ระบุรายละเอียดเพิ่มเติม'}`);
   });
 
-  function switchTab(tab) {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    event.target.classList.add('active');
-    if (tab === 'form') {
-      document.getElementById('tab_form').style.display = 'block';
-      document.getElementById('tab_dashboard').style.display = 'none';
-    } else {
-      document.getElementById('tab_form').style.display = 'none';
-      document.getElementById('tab_dashboard').style.display = 'block';
-      loadDashboard();
+  const payload = {
+    action: 'save', token: TOKEN,
+    data: {
+      date, weighmaster: master,
+      licensePlate: document.getElementById('f_license_plate').value,
+      shift: selectedShift, problems: probTxt.join('\n'),
+      veh_rawmat_out: document.getElementById('f_veh_rawmat_out').value,
+      veh_feed_out: document.getElementById('f_veh_feed_out').value,
+      veh_feed_in: document.getElementById('f_veh_feed_in').value,
+      veh_rawmat_in: document.getElementById('f_veh_rawmat_in').value,
+      p_overweight: document.querySelector('.problem-item[data-key="overweight"] input').checked,
+      p_driver_behavior: document.querySelector('.problem-item[data-key="driver_behavior"] input').checked,
+      p_system: document.querySelector('.problem-item[data-key="system"] input').checked,
+      p_wrong_queue: document.querySelector('.problem-item[data-key="wrong_queue"] input').checked,
+      p_wrong_plate: document.querySelector('.problem-item[data-key="wrong_plate"] input').checked,
+      p_other: document.querySelector('.problem-item[data-key="other"] input').checked
     }
+  };
+
+  try {
+    const res = await fetch(APPS_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+    const json = await res.json();
+    if(!json.success) throw new Error(json.error);
+    showToast('บันทึกข้อมูลเรียบร้อยแล้วครับ', 'success');
+    setTimeout(() => location.reload(), 1000);
+  } catch(e) {
+    showToast('บันทึกไม่สำเร็จ: ' + e.message, 'error');
+    btn.disabled = false; btn.textContent = 'บันทึกข้อมูล';
   }
+}
 
-  function selectShift(shift) {
-    selectedShift = shift;
-    document.querySelectorAll('.shift-btn').forEach(b => b.classList.remove('selected'));
-    event.target.classList.add('selected');
-  }
-
-  function showToast(msg, type) {
-    const toast = document.getElementById('toast');
-    toast.textContent = msg;
-    toast.style.backgroundColor = type === 'success' ? '#0f9d58' : '#d93025';
-    toast.style.display = 'block';
-    setTimeout(() => { toast.style.display = 'none'; }, 4000);
-  }
-
-  async function saveData() {
-    if (!selectedShift) return alert('กรุณาเลือกกะปฏิบัติงาน');
-    if (!document.getElementById('f_weighmaster').value.trim()) return alert('กรุณาระบุชื่อผู้บันทึก');
-    
-    const btn = document.getElementById('submit_btn');
-    btn.disabled = true; btn.textContent = 'กำลังส่งข้อมูล...';
-
-    const payload = {
-      action: 'save', token: TOKEN,
-      data: {
-        date: document.getElementById('f_date').value,
-        shift: selectedShift,
-        weighmaster: document.getElementById('f_weighmaster').value,
-        licensePlate: document.getElementById('f_license_plate').value,
-        veh_rawmat_out: document.getElementById('f_veh_rawmat_out').value,
-        veh_feed_out: document.getElementById('f_veh_feed_out').value,
-        veh_feed_in: document.getElementById('f_veh_feed_in').value,
-        veh_rawmat_in: document.getElementById('f_veh_rawmat_in').value,
-        p_overweight: document.getElementById('p_overweight').checked,
-        p_driver_behavior: document.getElementById('p_driver_behavior').checked,
-        p_system: document.getElementById('p_system').checked,
-        p_wrong_queue: document.getElementById('p_wrong_queue').checked,
-        p_wrong_plate: document.getElementById('p_wrong_plate').checked,
-        p_wrong_delivery: document.getElementById('p_wrong_delivery').checked,
-        p_other: document.getElementById('p_other').checked,
-        problems: document.getElementById('f_problems').value
-      }
-    };
-
-    try {
-      const res = await fetch(APPS_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
-      const json = await res.json();
-      if (!json.success) throw new Error(json.error);
-      showToast('บันทึกข้อมูลสำเร็จเรียบร้อยครับ', 'success');
-      setTimeout(() => location.reload(), 1500);
-    } catch(e) {
-      showToast('เกิดข้อผิดพลาด: ' + e.message, 'error');
-      btn.disabled = false; btn.textContent = '💾 บันทึกข้อมูลประจำกะ';
-    }
-  }
-
-  let localRawRecords = []; 
-
-  // ฟังก์ชันโหลดข้อมูลมาสร้างตารางหน้าภาพรวมประจำเดือน
-  async function loadDashboard() {
-    const tbody = document.getElementById('dashboard_tbody');
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px; color:var(--muted);">กำลังประมวลผลข้อมูลภาพรวม...</td></tr>';
-    
-    const dateFrom = document.getElementById('dash_date_from').value;
-    const dateTo = document.getElementById('dash_date_to').value;
-
-    try {
-      const res = await fetch(APPS_SCRIPT_URL, {
-        method: 'POST',
-        body: JSON.stringify({ action: 'getDashboard', token: TOKEN, filters: { dateFrom, dateTo } })
-      });
-      const json = await res.json();
-      if (!json.success) throw new Error(json.error);
-      
-      localRawRecords = json.rawRecords || [];
-      tbody.innerHTML = '';
-
-      if (json.data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:20px;">ไม่พบประวัติในช่วงเวลาดังกล่าว</td></tr>';
-        return;
-      }
-
-      json.data.forEach(row => {
-        const tr = document.createElement('tr');
-        tr.style.borderBottom = '1px solid var(--border)';
-        
-        // ไฮไลต์พื้นหลังสีแดงอ่อนเมื่อพบความผิดพลาดในวันนั้นๆ
-        if (row.hasError) {
-          tr.style.backgroundColor = '#fdf2f2'; 
-        }
-
-        let problemCellHTML = '<span style="color:#0f9d58; font-weight:600;">✔️ ปกติ</span>';
-        if (row.hasError) {
-          // ใช้ตัวหนังสือสีแดงหนาแจ้งเตือนรายงานข้อผิดพลาดและทะเบียนรถ
-          problemCellHTML = `<div style="color:var(--danger); font-weight:bold;">⚠️ พบรายงานข้อผิดพลาด:</div>
-                             <div style="color:var(--danger); font-size:13px; font-weight:600; white-space:pre-line; margin-top:4px;">${row.errorDetails.join('\n')}</div>`;
-        }
-
-        tr.innerHTML = `
-          <td style="padding:15px; font-weight:bold;">${row.date}</td>
-          <td style="text-align:center;">${row.shifts['เช้า'] ? '🟢 มีข้อมูล' : '-'}</td>
-          <td style="text-align:center;">${row.shifts['บ่าย'] ? '🟢 มีข้อมูล' : '-'}</td>
-          <td style="text-align:center;">${row.shifts['ดึก'] ? '🟢 มีข้อมูล' : '-'}</td>
-          <td style="text-align:center; font-weight:600;">${row.veh_rawmat_out} คัน</td>
-          <td style="text-align:center; font-weight:600;">${row.feed_out} คัน</td>
-          <td style="padding:15px;">${problemCellHTML}</td>
-        `;
-        tbody.appendChild(tr);
-      });
-    } catch(e) {
-      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:20px; color:var(--danger);">ดาวน์โหลดหน้าภาพรวมไม่สำเร็จ: ${e.message}</td></tr>`;
-    }
-  }
-
-  // ระบบ Export แยกเป็นรายวัน (รายละเอียดแยกกะดิบ) หรือ รายเดือน (สรุปเหมาวัน)
-  function triggerExport(type) {
-    if (!localRawRecords || localRawRecords.length === 0) {
-      alert('ไม่มีข้อมูลสำหรับส่งออกรายงานในตารางปัจจุบัน');
-      return;
-    }
-
-    let csvContent = "\uFEFF"; // BOM ป้องกันภาษาไทยเพี้ยนใน Excel
-    const dateFrom = document.getElementById('dash_date_from').value;
-    const dateTo = document.getElementById('dash_date_to').value;
-
-    if (type === 'daily') {
-      csvContent += "วันที่ (Date),กะปฏิบัติงาน,เจ้าหน้าที่ผู้บันทึก,ทะเบียนรถ,รถวัตถุดิบออก(คัน),รถส่งอาหารออก(คัน),รถรับอาหารภายใน,รถวัตถุดิบภายใน,บันทึกข้อความปัญหาเพิ่มเติม\n";
-      localRawRecords.forEach(r => {
-        let cleanText = r.problems ? r.problems.replace(/"/g, '""') : '';
-        csvContent += `"${r.date}","${r.shift}","${r.weighmaster}","${r.licensePlate || '-'}","${r.veh_rawmat_out || 0}","${r.feed_out || 0}","${r.veh_feed_in || 0}","${r.veh_rawmat_in || 0}","${cleanText}"\n`;
-      });
-    } else {
-      csvContent += "รายงานรายเดือนประจำช่วง:, " + dateFrom + " ถึง " + dateTo + "\n";
-      csvContent += "วันที่ (Date),รวมยอดรถวัตถุดิบออกทั้งหมด (คัน),รวมยอดรถอาหารออกทั้งหมด (คัน),รวมสถานะตรวจสอบปัญหาในวัน\n";
-      
-      const tableRows = document.querySelectorAll("#dashboard_tbody tr");
-      tableRows.forEach(tr => {
-        const tds = tr.querySelectorAll("td");
-        if (tds.length >= 7) {
-          let dateStr = tds[0].innerText;
-          let matOut = tds[4].innerText.replace(' คัน','');
-          let feedOut = tds[5].innerText.replace(' คัน','');
-          let probText = tds[6].innerText.replace(/\n/g, ' ');
-          csvContent += `"${dateStr}","${matOut}","${feedOut}","${probText}"\n`;
-        }
-      });
-    }
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.setAttribute("download", `Weighbridge_${type}_Report_${dateFrom}_to_${dateTo}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  }
+window.addEventListener('DOMContentLoaded', () => {
+  const todayStr = new Date().toISOString().split('T')[0];
+  const curMonthStr = todayStr.substring(0,7);
+  document.getElementById('f_date').value = todayStr;
+  document.getElementById('exp_date_from').value = todayStr;
+  document.getElementById('exp_date_to').value = todayStr;
+  document.getElementById('exp_month_select').value = curMonthStr;
+});
 </script>
 </body>
 </html>
