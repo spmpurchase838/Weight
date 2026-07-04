@@ -201,12 +201,25 @@
       <h2><span class="icon">📅</span> 1. เลือกช่วงเวลาเพื่อ Export รายงานภาพรวม</h2>
       <div style="display:flex; gap:15px; flex-wrap:wrap; margin-bottom:14px;">
         <label style="font-weight:600;"><input type="radio" name="reportScope" value="daily" checked onclick="toggleScopeInput()"> รายวัน (เจาะจงวัน)</label>
+        <label style="font-weight:600;"><input type="radio" name="reportScope" value="range" onclick="toggleScopeInput()"> ช่วงวันที่ (เลือกวันเริ่มต้น-สิ้นสุด)</label>
         <label style="font-weight:600;"><input type="radio" name="reportScope" value="monthly" onclick="toggleScopeInput()"> รายเดือน (สรุปภาพรวมทั้งเดือน)</label>
       </div>
       
       <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
         <div id="div_dateInput" style="flex:1; min-width:200px;">
           <input type="date" id="r_dateSelect">
+        </div>
+        <div id="div_rangeInput" style="flex:1; min-width:280px; display:none; gap:10px; align-items:center;">
+          <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+            <div style="flex:1; min-width:120px;">
+              <label style="display:block; font-size:12.5px; color:var(--muted); margin-bottom:4px;">ตั้งแต่วันที่</label>
+              <input type="date" id="r_dateFrom">
+            </div>
+            <div style="flex:1; min-width:120px;">
+              <label style="display:block; font-size:12.5px; color:var(--muted); margin-bottom:4px;">ถึงวันที่</label>
+              <input type="date" id="r_dateTo">
+            </div>
+          </div>
         </div>
         <div id="div_monthInput" style="flex:1; min-width:200px; display:none;">
           <input type="month" id="r_monthSelect">
@@ -227,7 +240,7 @@
       </div>
 
       <div class="quick-summary-box" style="background:#fff3cd; border-color:#ffeeba;">
-        <h4 style="color:#856404;"><span class="icon">📝</span> รายละเอียดปัญหา และรายการสลับแผ่นป้ายทะเบียน</h4>
+        <h4 style="color:#856404;"><span class="icon">📝</span> รายละเอียดปัญหา</h4>
         <div class="issue-text-list" id="quickDetailsContainer">- ไม่มีข้อมูลปัญหา -</div>
       </div>
     </div>
@@ -308,6 +321,7 @@ function switchTab(tab) {
 function toggleScopeInput() {
   const scope = document.querySelector('input[name="reportScope"]:checked').value;
   document.getElementById('div_dateInput').style.display = scope === 'daily' ? 'block' : 'none';
+  document.getElementById('div_rangeInput').style.display = scope === 'range' ? 'flex' : 'none';
   document.getElementById('div_monthInput').style.display = scope === 'monthly' ? 'block' : 'none';
 }
 
@@ -320,8 +334,15 @@ function showToast(msg, type) {
 async function buildQuickSummary() {
   const scope = document.querySelector('input[name="reportScope"]:checked').value;
   let targetValue = scope === 'daily' ? document.getElementById('r_dateSelect').value : document.getElementById('r_monthSelect').value;
-  
-  if (!targetValue) { showToast('กรุณาเลือกวันที่หรือเดือนก่อนครับ', 'error'); return; }
+  let rangeFrom = document.getElementById('r_dateFrom').value;
+  let rangeTo = document.getElementById('r_dateTo').value;
+
+  if (scope === 'range') {
+    if (!rangeFrom || !rangeTo) { showToast('กรุณาเลือกวันเริ่มต้นและวันสิ้นสุดก่อนครับ', 'error'); return; }
+    if (rangeFrom > rangeTo) { showToast('วันเริ่มต้นต้องไม่มากกว่าวันสิ้นสุด', 'error'); return; }
+  } else if (!targetValue) {
+    showToast('กรุณาเลือกวันที่หรือเดือนก่อนครับ', 'error'); return;
+  }
   
   const container = document.getElementById('historyContainer');
   container.innerHTML = '<div class="empty-state"><span class="spinner dark"></span> กำลังประมวลผลสรุปภาพรวม...</div>';
@@ -342,6 +363,7 @@ async function buildQuickSummary() {
     records.forEach(r => {
       let isMatch = false;
       if (scope === 'daily' && r.date === targetValue) isMatch = true;
+      if (scope === 'range' && r.date && r.date >= rangeFrom && r.date <= rangeTo) isMatch = true;
       if (scope === 'monthly' && r.date && r.date.substring(0, 7) === targetValue) isMatch = true;
       
       if (isMatch) {
@@ -361,7 +383,8 @@ async function buildQuickSummary() {
     });
 
     // แสดงผลข้อมูลตัวเลขรวมเข้ากลุ่มแบบสวยงามในคลิกเดียว
-    document.getElementById('summaryPeriodTitle').innerText = `📅 สรุปรายงานภาพรวมประจำ: ${targetValue}`;
+    const periodLabel = scope === 'range' ? `${rangeFrom} ถึง ${rangeTo}` : targetValue;
+    document.getElementById('summaryPeriodTitle').innerText = `📅 สรุปรายงานภาพรวมประจำ: ${periodLabel}`;
     
     document.getElementById('quickStatsContainer').innerHTML = `
       <div class="quick-stat-badge ${totalIssues > 0 ? 'has-val' : ''}">🚨 รวมปัญหาทั้งหมด: ${totalIssues} รายการ</div>
@@ -382,7 +405,7 @@ async function buildQuickSummary() {
     renderSimpleTable(matchRecords);
 
     // แทรกเพิ่มระบบแปลงหน้าเอกสารสำหรับการสั่งพิมพ์ (Print area) แยกไว้ โดยไม่กวนหน้าจอหลัก
-    generatePrintLayout(matchRecords, scope, targetValue);
+    generatePrintLayout(matchRecords, scope, periodLabel);
 
   } catch (err) {
     container.innerHTML = `<div class="empty-state" style="color:var(--danger);">เกิดข้อผิดพลาดในการดึงข้อมูล: ${err.message}</div>`;
@@ -490,10 +513,11 @@ function generatePrintLayout(records, scope, targetValue) {
       });
     }
 
+    const isRange = scope === 'range';
     printArea.innerHTML = `
-      <div class="print-header"><h2>📅 รายงานสรุปห้องชั่งรายเดือน</h2><div><b>ประจำเดือน:</b> ${targetValue}</div></div>
+      <div class="print-header"><h2>📅 รายงานสรุปห้องชั่ง${isRange ? 'ตามช่วงวันที่' : 'รายเดือน'}</h2><div><b>${isRange ? 'ช่วงวันที่' : 'ประจำเดือน'}:</b> ${targetValue}</div></div>
       <div class="print-section">
-        <h3>📊 สรุปภาพรวมทั้งเดือน</h3>
+        <h3>📊 สรุปภาพรวม${isRange ? 'ของช่วงเวลาที่เลือก' : 'ทั้งเดือน'}</h3>
         ${overviewHtml}
       </div>
       <div class="print-section">
@@ -577,6 +601,9 @@ async function confirmAndSave() {
 window.addEventListener('DOMContentLoaded', () => {
   document.getElementById('f_date').value = new Date().toISOString().split('T')[0];
   document.getElementById('r_dateSelect').value = new Date().toISOString().split('T')[0];
+  const todayStr = new Date().toISOString().split('T')[0];
+  document.getElementById('r_dateFrom').value = todayStr;
+  document.getElementById('r_dateTo').value = todayStr;
 });
 </script>
 </body>
