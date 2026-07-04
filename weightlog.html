@@ -129,7 +129,7 @@
     .print-section { margin-bottom: 25px; }
     .print-section h3 { font-size: 16px; margin: 0 0 10px 0; border-bottom: 1px dashed #ccc; padding-bottom: 4px; }
     table.print-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-    table.print-table th, table.print-table td { border: 1px solid #000; padding: 10px; text-align: left; font-size: 13px; vertical-align: top; white-space: normal; word-break: break-word; }
+    table.print-table th, table.print-table td { border: 1px solid #000; padding: 10px; text-align: left; font-size: 13px; vertical-align: top; white-space: normal; word-break: break-word; line-height: 1.6; }
     table.print-table th { background: #f2f2f2 !important; -webkit-print-color-adjust: exact; font-weight: bold; }
     .item-block { border: 1px solid #000; padding: 12px; margin-bottom: 15px; border-radius: 4px; page-break-inside: avoid; }
     .text-danger { color: #d93025 !important; font-weight: bold; }
@@ -434,8 +434,9 @@ function generatePrintLayout(records, scope, targetValue) {
           monthlyGroup[r.date] = { 'เช้า': '<span class="text-success">ปกติ</span>', 'บ่าย': '<span class="text-success">ปกติ</span>', 'ดึก': '<span class="text-success">ปกติ</span>' };
         }
         if(r.problems && r.problems.trim()) {
-          let plateInfo = r.licensePlate ? `(รถ ${r.licensePlate}) ` : '';
-          monthlyGroup[r.date][r.shift] = `<span class="text-danger">⚠️ ${plateInfo}${r.problems.trim().replace(/\n/g, ', ')}</span>`;
+          let plateInfo = r.licensePlate ? `(รถ ${r.licensePlate})<br>` : '';
+          let linesHtml = r.problems.trim().split('\n').filter(line => line.trim()).map(line => '• ' + line.trim()).join('<br>');
+          monthlyGroup[r.date][r.shift] = `<span class="text-danger">⚠️<br>${plateInfo}${linesHtml}</span>`;
         }
       });
       Object.keys(monthlyGroup).sort().forEach(d => {
