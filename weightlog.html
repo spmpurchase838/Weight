@@ -10,464 +10,121 @@
 <title>ระบบบันทึกข้อมูลห้องชั่ง - SPM Feed Mill</title>
 <style>
   :root{
-    --primary:#0f9d58;
-    --primary-dark:#0b7a43;
-    --bg:#f3f6f4;
-    --card:#ffffff;
-    --border:#e0e4e2;
-    --text:#202124;
-    --muted:#5f6368;
-    --danger:#d93025;
-    --warn:#f9ab00;
-    --radius:10px;
+    --primary:#0f9d58; --primary-dark:#0b7a43; --bg:#f3f6f4; --card:#ffffff; --border:#e0e4e2;
+    --text:#202124; --muted:#5f6368; --danger:#d93025; --warn:#f9ab00; --radius:10px;
   }
   *{box-sizing:border-box;}
-  html{
-    /* กัน pull-to-refresh ของ Chrome มือถือลากแล้วรีเฟรชหน้าโดยไม่ตั้งใจ (ข้อมูลที่กรอกค้างอาจดูเหมือนหาย) */
-    overscroll-behavior-y:contain;
+  html{ overscroll-behavior-y:contain; }
+  body{ margin:0; font-family:'Sarabun','Segoe UI',Tahoma,sans-serif; background:var(--bg); color:var(--text); touch-action:manipulation; -webkit-tap-highlight-color:transparent; }
+  body.modal-open{ overflow:hidden; }
+  header.appbar{ background:var(--card); border-bottom:1px solid var(--border); padding:14px 20px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:20; flex-wrap:wrap; gap:10px; }
+  header.appbar h1{ font-size:18px; margin:0; }
+  .appbar-right{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  nav.tabs{ display:flex; gap:6px; flex-wrap:wrap; }
+  nav.tabs button{ border:none; background:transparent; padding:12px 18px; border-radius:20px; font-size:15px; cursor:pointer; color:var(--muted); font-weight:700; min-height:44px; }
+  nav.tabs button.active{ background:var(--primary); color:#fff; }
+  main{ max-width:820px; margin:20px auto; padding:0 14px 60px; }
+  .card{ background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:22px 24px; margin-bottom:18px; box-shadow:0 1px 2px rgba(0,0,0,0.04); }
+  .card h2{ font-size:16px; margin:0 0 16px; display:flex; align-items:center; gap:8px; }
+  .field{ margin-bottom:16px; }
+  .field > label{ display:block; font-size:15px; font-weight:600; margin-bottom:7px; }
+  .field > label .req{ color:var(--danger); }
+  input[type=text], input[type=number], input[type=date], textarea, select{
+    width:100%; padding:14px; border:1.5px solid var(--border); border-radius:8px; font-size:16px;
+    font-family:inherit; background:#fff; color:var(--text); min-height:48px;
   }
-  body{
-    margin:0;
-    font-family:'Sarabun', 'Segoe UI', Tahoma, sans-serif;
-    background:var(--bg);
-    color:var(--text);
-    /* ลดดีเลย์ ~300ms ก่อนปุ่ม/ลิงก์ตอบสนองบนมือถือ (browser รอเช็คว่าเป็น double-tap zoom ไหม) */
-    touch-action:manipulation;
-    -webkit-tap-highlight-color:transparent; /* กันสี่เหลี่ยมเทาๆ กระพริบตอนแตะใน Android/iOS Safari */
-  }
-  body.modal-open{
-    overflow:hidden; /* กันหน้าพื้นหลังเลื่อนตามตอนมี popup เปิดอยู่ (บั๊กมือถือที่พบบ่อย) */
-  }
-  header.appbar{
-    background:var(--card);
-    border-bottom:1px solid var(--border);
-    padding:14px 20px;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    position:sticky;
-    top:0;
-    z-index:20;
-  }
-  header.appbar h1{
-    font-size:18px;
-    margin:0;
-    display:flex;
-    align-items:center;
-    gap:8px;
-  }
-  nav.tabs{
-    display:flex;
-    gap:6px;
-  }
-  nav.tabs button{
-    border:none;
-    background:transparent;
-    padding:12px 18px;
-    border-radius:20px;
-    font-size:15px;
-    cursor:pointer;
-    color:var(--muted);
-    font-weight:700;
-    min-height:44px;
-  }
-  nav.tabs button.active{
-    background:var(--primary);
-    color:#fff;
-  }
-  main{
-    max-width:820px;
-    margin:20px auto;
-    padding:0 14px 60px;
-  }
-  .card{
-    background:var(--card);
-    border:1px solid var(--border);
-    border-radius:var(--radius);
-    padding:22px 24px;
-    margin-bottom:18px;
-    box-shadow:0 1px 2px rgba(0,0,0,0.04);
-  }
-  .card h2{
-    font-size:16px;
-    margin:0 0 16px;
-    display:flex;
-    align-items:center;
-    gap:8px;
-    color:var(--text);
-  }
-  .card h2 .icon{font-size:18px;}
-  .field{margin-bottom:16px;}
-  .field > label{
-    display:block;
-    font-size:15px;
-    font-weight:600;
-    color:var(--text);
-    margin-bottom:7px;
-  }
-  .field > label .req{color:var(--danger);}
-  input[type=text], input[type=date], input[type=number], textarea, select{
-    width:100%;
-    padding:14px 14px;
-    border:1.5px solid var(--border);
-    border-radius:8px;
-    font-size:16px; /* >=16px กัน iOS ซูมอัตโนมัติตอนโฟกัส + อ่านง่ายกลางแดด */
-    font-family:inherit;
-    background:#fff;
-    color:var(--text);
-    min-height:48px; /* ขนาดแตะขั้นต่ำตามคำแนะนำ Apple/Google (44-48px) */
-  }
-  input:focus, textarea:focus, select:focus{
-    outline:none;
-    border-color:var(--primary);
-    box-shadow:0 0 0 3px rgba(15,157,88,0.12);
-  }
-  textarea{resize:vertical; min-height:80px;}
-  .shift-group{
-    display:flex;
-    gap:10px;
-    flex-wrap:wrap;
-  }
-  .shift-option{
-    flex:1;
-    min-width:110px;
-    min-height:52px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    border:1.5px solid var(--border);
-    border-radius:8px;
-    padding:14px 16px;
-    text-align:center;
-    cursor:pointer;
-    color:var(--muted);
-    user-select:none;
-    position:relative;
-  }
-  .shift-option .shift-name{
-    font-size:16px;
-    font-weight:700;
-  }
-  .shift-option.selected{
-    border-color:var(--primary);
-    background:rgba(15,157,88,0.08);
-    color:var(--primary-dark);
-  }
-  /* ให้เห็น focus ring ตอน tab ด้วยคีย์บอร์ดมาที่ radio ที่ซ่อนอยู่ในนี้
-     ใช้ทั้ง :has() (เบราว์เซอร์ใหม่) และ class ที่ควบคุมด้วย JS (เบราว์เซอร์เก่า/รองรับน้อยกว่า) */
-  .shift-option:has(input:focus-visible),
-  .shift-option.kbd-focus{
-    outline:3px solid var(--primary);
-    outline-offset:2px;
-  }
-  /* ซ่อนด้วยสายตาแต่ยังอยู่ใน accessibility tree ให้ screen reader/คีย์บอร์ดเข้าถึงได้ */
-  .visually-hidden{
-    position:absolute;
-    width:1px;
-    height:1px;
-    padding:0;
-    margin:-1px;
-    overflow:hidden;
-    clip:rect(0,0,0,0);
-    white-space:nowrap;
-    border:0;
-  }
-  .veh-row{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:12px;
-    padding:12px 0;
-    border-bottom:1px solid var(--border);
-  }
-  .veh-row:last-child{border-bottom:none;}
-  .veh-row .label{font-size:15px; flex:1;}
-  .veh-row input{width:100px; text-align:center; padding:12px 8px;}
-  .problem-grid{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:12px;
-  }
-  @media (max-width:600px){ .problem-grid{grid-template-columns:1fr;} }
-  @media (max-width:480px){
-    header.appbar{ flex-wrap:wrap; gap:8px; padding:10px 14px; }
-    header.appbar h1{ font-size:16px; }
-    .appbar-right{ width:100%; justify-content:space-between; }
-    .net-status{ font-size:10.5px; padding:3px 8px; }
-    nav.tabs button{ padding:7px 12px; font-size:13px; }
-  }
-  .problem-item{
-    border:1.5px solid var(--border);
-    border-radius:8px;
-    padding:16px;
-  }
-  .problem-item.checked{border-color:var(--primary);}
-  .problem-item label.chk{
-    display:flex;
-    align-items:center;
-    gap:12px;
-    font-size:15.5px;
-    font-weight:600;
-    cursor:pointer;
-    margin-bottom:0;
-    min-height:32px; /* รวมกับ checkbox 26px + line-height ให้พื้นที่แตะรวมสูงพอ */
-  }
-  .problem-item input[type=checkbox]{
-    width:26px;
-    height:26px;
-    flex-shrink:0;
-    accent-color:var(--primary);
-    cursor:pointer;
-  }
-  .problem-item textarea{
-    margin-top:10px;
-    display:none;
-    font-size:15px;
-  }
-  .problem-item.checked textarea{display:block;}
-  .btn{
-    background:var(--primary);
-    color:#fff;
-    border:none;
-    padding:15px 24px;
-    border-radius:26px;
-    font-size:17px;
-    font-weight:700;
-    cursor:pointer;
-    width:100%;
-    min-height:52px;
-  }
-  .btn:hover{background:var(--primary-dark);}
-  .btn:disabled{background:#9aa0a6; cursor:not-allowed;}
-  .btn.secondary{
-    background:#fff;
-    color:var(--primary-dark);
-    border:1.5px solid var(--primary);
-  }
-  .btn.danger{
-    background:var(--danger);
-  }
-  .btn.danger:hover{
-    background:#a52714;
-  }
-  .modal .field{margin-bottom:12px;}
-  .modal .field label{font-size:12.5px;}
-  .modal textarea{min-height:56px;}
-  .char-counter{
-    font-size:11px;
-    color:var(--muted);
-    text-align:right;
-    margin-top:3px;
-  }
+  input:focus, textarea:focus, select:focus{ outline:none; border-color:var(--primary); box-shadow:0 0 0 3px rgba(15,157,88,0.12); }
+  textarea{ resize:vertical; min-height:80px; }
+  .validation-error{ outline:3px solid var(--danger) !important; outline-offset:2px; border-radius:8px; animation:shakeError .35s ease; }
+  @keyframes shakeError{ 0%,100%{transform:translateX(0);} 25%{transform:translateX(-4px);} 75%{transform:translateX(4px);} }
+
+  .shift-group{ display:flex; gap:10px; flex-wrap:wrap; }
+  .shift-option{ flex:1; min-width:100px; min-height:52px; display:flex; align-items:center; justify-content:center; border:1.5px solid var(--border); border-radius:8px; padding:14px; text-align:center; cursor:pointer; color:var(--muted); user-select:none; position:relative; }
+  .shift-option .shift-name{ font-size:16px; font-weight:700; }
+  .shift-option.selected{ border-color:var(--primary); background:rgba(15,157,88,0.08); color:var(--primary-dark); }
+  .shift-option:has(input:focus-visible), .shift-option.kbd-focus{ outline:3px solid var(--primary); outline-offset:2px; }
+  .visually-hidden{ position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+
+  .veh-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 0; border-bottom:1px solid var(--border); }
+  .veh-row:last-child{ border-bottom:none; }
+  .veh-row .label{ font-size:15px; flex:1; }
+  .veh-row input{ width:100px; text-align:center; padding:12px 8px; }
+
+  .problem-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  @media (max-width:600px){ .problem-grid{ grid-template-columns:1fr; } }
+  .problem-item{ border:1.5px solid var(--border); border-radius:8px; padding:16px; }
+  .problem-item.checked{ border-color:var(--primary); }
+  .problem-item label.chk{ display:flex; align-items:center; gap:12px; font-size:15px; font-weight:600; cursor:pointer; min-height:32px; }
+  .problem-item input[type=checkbox]{ width:26px; height:26px; flex-shrink:0; accent-color:var(--primary); cursor:pointer; }
+  .problem-item textarea{ margin-top:10px; display:none; font-size:15px; }
+  .problem-item.checked textarea{ display:block; }
+
+  .btn{ background:var(--primary); color:#fff; border:none; padding:15px 24px; border-radius:26px; font-size:17px; font-weight:700; cursor:pointer; width:100%; min-height:52px; }
+  .btn:hover{ background:var(--primary-dark); }
+  .btn:disabled{ background:#9aa0a6; cursor:not-allowed; }
+  .btn.secondary{ background:#fff; color:var(--primary-dark); border:1.5px solid var(--primary); }
+  .btn.danger{ background:var(--danger); }
+  .btn.danger:hover{ background:#a52714; }
+
+  .char-counter{ font-size:11px; color:var(--muted); text-align:right; margin-top:3px; }
   .char-counter.warn{ color:var(--warn); }
   .char-counter.danger{ color:var(--danger); font-weight:700; }
-  .toast{
-    position:fixed;
-    bottom:24px;
-    left:50%;
-    transform:translateX(-50%) translateY(20px);
-    background:#323232;
-    color:#fff;
-    padding:12px 20px;
-    border-radius:8px;
-    font-size:14px;
-    opacity:0;
-    pointer-events:none;
-    transition:all .25s ease;
-    z-index:100;
-    max-width:90vw;
-    text-align:center;
-  }
-  .toast.show{opacity:1; transform:translateX(-50%) translateY(0); pointer-events:auto; cursor:pointer;}
-  .toast.error{background:var(--danger);}
-  .toast.success{background:var(--primary-dark);}
 
-  /* --- report page --- */
-  .filters{
-    display:flex;
-    gap:10px;
-    flex-wrap:wrap;
-    align-items:end;
-  }
-  .filters .field{margin-bottom:0; flex:1; min-width:130px;}
-  .filters .btn{width:auto; padding:10px 18px;}
-  .summary-cards{
-    display:grid;
-    grid-template-columns:repeat(auto-fit, minmax(140px,1fr));
-    gap:12px;
-    margin-top:16px;
-  }
-  .summary-card{
-    background:#f8faf9;
-    border:1px solid var(--border);
-    border-radius:8px;
-    padding:14px;
-    text-align:center;
-  }
-  .summary-card .num{font-size:22px; font-weight:700; color:var(--primary-dark);}
-  .summary-card .lbl{font-size:12px; color:var(--muted); margin-top:4px;}
-  table.history{
-    width:100%;
-    border-collapse:collapse;
-    font-size:13.5px;
-    margin-top:14px;
-  }
-  table.history th, table.history td{
-    text-align:left;
-    padding:14px 10px;
-    border-bottom:1px solid var(--border);
-    white-space:nowrap;
-    font-size:14.5px;
-  }
-  table.history th{color:var(--muted); font-weight:700; font-size:13px;}
-  table.history tr{cursor:pointer;}
-  table.history tr:hover{background:#f8faf9;}
-  table.history td.row-arrow{
-    color:var(--muted);
-    font-size:18px;
-    font-weight:700;
-    text-align:center;
-    width:28px;
-  }
-  .tag{
-    display:inline-block;
-    background:#fce8e6;
-    color:var(--danger);
-    border-radius:10px;
-    padding:2px 8px;
-    font-size:11px;
-    margin:1px 2px 1px 0;
-  }
-  .empty-state{
-    text-align:center;
-    color:var(--muted);
-    padding:40px 10px;
-    font-size:14px;
-  }
-  .modal-overlay{
-    position:fixed; inset:0;
-    background:rgba(0,0,0,0.45);
-    display:none;
-    align-items:center;
-    justify-content:center;
-    z-index:50;
-    padding:16px;
-  }
-  .modal-overlay.show{display:flex;}
-  .modal{
-    background:#fff;
-    border-radius:12px;
-    max-width:520px;
-    width:100%;
-    max-height:85vh;
-    overflow-y:auto;
-    padding:22px 24px;
-  }
-  .modal h3{margin-top:0; font-size:18px;}
-  .modal-row{margin-bottom:12px; font-size:15px;}
-  .modal-row .k{color:var(--muted); font-weight:600; display:block; margin-bottom:3px; font-size:13px;}
-  .modal-close{
-    float:right;
-    background:none;
-    border:none;
-    font-size:28px;
-    cursor:pointer;
-    color:var(--muted);
-    padding:6px 10px;
-    line-height:1;
-    min-width:44px;
-    min-height:44px;
-  }
-  /* กรอบแดงเน้นฟิลด์ที่ validation ไม่ผ่าน ใช้ได้ทั้ง input เดี่ยวๆ และ container (เช่น shift-group, card) */
-  .validation-error{
-    outline:3px solid var(--danger) !important;
-    outline-offset:2px;
-    border-radius:8px;
-    animation:shakeError .35s ease;
-  }
-  @keyframes shakeError{
-    0%,100%{ transform:translateX(0); }
-    25%{ transform:translateX(-4px); }
-    75%{ transform:translateX(4px); }
-  }
-  .config-warning{
-    background:#fff8e1;
-    border:1px solid #f9ab00;
-    color:#7a5b00;
-    padding:12px 16px;
-    border-radius:8px;
-    font-size:13px;
-    margin-bottom:16px;
-  }
-  .spinner{
-    display:inline-block;
-    width:16px; height:16px;
-    border:2px solid rgba(255,255,255,0.5);
-    border-top-color:#fff;
-    border-radius:50%;
-    animation:spin .7s linear infinite;
-    vertical-align:middle;
-    margin-right:6px;
-  }
-  .spinner.dark{
-    border-color:rgba(15,157,88,0.25);
-    border-top-color:var(--primary);
-  }
-  @keyframes spin{to{transform:rotate(360deg);}}
+  .summary-cards{ display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px; margin-top:16px; }
+  .summary-card{ background:#f8faf9; border:1px solid var(--border); border-radius:8px; padding:14px; text-align:center; }
+  .summary-card .num{ font-size:20px; font-weight:700; color:var(--primary-dark); }
+  .summary-card .lbl{ font-size:12px; color:var(--muted); margin-top:4px; }
 
-  /* แถบโหลดด้านบนสุด: ขึ้นทุกครั้งที่กำลังติดต่อ server */
-  #topLoadingBar{
-    position:fixed;
-    top:0; left:0;
-    height:3px;
-    width:100%;
-    z-index:200;
-    overflow:hidden;
-    opacity:0;
-    pointer-events:none;
-    transition:opacity .2s ease;
-  }
+  table.history{ width:100%; border-collapse:collapse; font-size:14px; margin-top:14px; }
+  table.history th, table.history td{ text-align:left; padding:14px 10px; border-bottom:1px solid var(--border); white-space:nowrap; font-size:14px; }
+  table.history th{ color:var(--muted); font-weight:700; font-size:12.5px; }
+  table.history tr{ cursor:pointer; }
+  table.history tr:hover{ background:#f8faf9; }
+  table.history td.row-arrow{ color:var(--muted); font-size:18px; font-weight:700; text-align:center; width:28px; }
+
+  .tag{ display:inline-block; background:#fce8e6; color:var(--danger); border-radius:10px; padding:2px 8px; font-size:11px; margin:1px 2px 1px 0; }
+  .empty-state{ text-align:center; color:var(--muted); padding:40px 10px; font-size:14px; }
+
+  .modal-overlay{ position:fixed; inset:0; background:rgba(0,0,0,0.45); display:none; align-items:center; justify-content:center; z-index:50; padding:16px; }
+  .modal-overlay.show{ display:flex; }
+  .modal{ background:#fff; border-radius:12px; max-width:520px; width:100%; max-height:85vh; overflow-y:auto; padding:22px 24px; }
+  .modal h3{ margin-top:0; font-size:18px; }
+  .modal-row{ margin-bottom:12px; font-size:15px; }
+  .modal-row .k{ color:var(--muted); font-weight:600; display:block; margin-bottom:3px; font-size:13px; }
+  .modal .field{ margin-bottom:12px; }
+  .modal .field > label{ font-size:12.5px; }
+  .modal-close{ float:right; background:none; border:none; font-size:28px; cursor:pointer; color:var(--muted); padding:6px 10px; line-height:1; min-width:44px; min-height:44px; }
+
+  .toast{ position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px); background:#323232; color:#fff; padding:12px 20px; border-radius:8px; font-size:14px; opacity:0; pointer-events:none; transition:all .25s ease; z-index:100; max-width:90vw; text-align:center; }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); pointer-events:auto; cursor:pointer; }
+  .toast.error{ background:var(--danger); }
+  .toast.success{ background:var(--primary-dark); }
+
+  .config-warning{ background:#fff8e1; border:1px solid #f9ab00; color:#7a5b00; padding:12px 16px; border-radius:8px; font-size:13px; margin-bottom:16px; }
+  .spinner{ display:inline-block; width:16px; height:16px; border:2px solid rgba(255,255,255,0.5); border-top-color:#fff; border-radius:50%; animation:spin .7s linear infinite; vertical-align:middle; margin-right:6px; }
+  .spinner.dark{ border-color:rgba(15,157,88,0.25); border-top-color:var(--primary); }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  #topLoadingBar{ position:fixed; top:0; left:0; height:3px; width:100%; z-index:200; overflow:hidden; opacity:0; pointer-events:none; transition:opacity .2s ease; }
   #topLoadingBar.active{ opacity:1; }
-  #topLoadingBar::before{
-    content:'';
-    position:absolute;
-    top:0; left:0;
-    height:100%;
-    width:40%;
-    background:var(--primary);
-    animation:loadingBarSlide 1s ease-in-out infinite;
-  }
-  @keyframes loadingBarSlide{
-    0%{ left:-40%; }
-    100%{ left:100%; }
-  }
+  #topLoadingBar::before{ content:''; position:absolute; top:0; left:0; height:100%; width:40%; background:var(--primary); animation:loadingBarSlide 1s ease-in-out infinite; }
+  @keyframes loadingBarSlide{ 0%{left:-40%;} 100%{left:100%;} }
 
-  /* ไฟแสดงสถานะอินเทอร์เน็ต */
-  .net-status{
-    display:inline-flex;
-    align-items:center;
-    gap:5px;
-    font-size:11.5px;
-    font-weight:700;
-    padding:4px 10px;
-    border-radius:12px;
-    white-space:nowrap;
-  }
-  .net-status .dot{
-    width:7px; height:7px;
-    border-radius:50%;
-    flex-shrink:0;
-  }
+  .net-status{ display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:700; padding:4px 10px; border-radius:12px; white-space:nowrap; }
+  .net-status .dot{ width:7px; height:7px; border-radius:50%; flex-shrink:0; }
   .net-status.online{ background:rgba(15,157,88,0.1); color:var(--primary-dark); }
   .net-status.online .dot{ background:var(--primary); }
   .net-status.offline{ background:rgba(217,48,37,0.1); color:var(--danger); }
   .net-status.offline .dot{ background:var(--danger); animation:blinkDot 1s ease-in-out infinite; }
   @keyframes blinkDot{ 0%,100%{opacity:1;} 50%{opacity:.3;} }
 
-  .appbar-right{
-    display:flex;
-    align-items:center;
-    gap:12px;
+  .locked-note{ background:#fff8e1; border:1px solid var(--warn); color:#7a5b00; padding:10px 12px; border-radius:8px; font-size:13px; margin-top:10px; }
+
+  @media (max-width:480px){
+    header.appbar{ padding:10px 14px; }
+    header.appbar h1{ font-size:16px; }
+    .net-status{ font-size:10.5px; padding:3px 8px; }
+    nav.tabs button{ padding:8px 12px; font-size:13px; }
   }
 </style>
 </head>
@@ -487,24 +144,18 @@
 </header>
 
 <main>
-
   <div id="configWarning" class="config-warning" style="display:none;">
     ⚠️ ยังไม่ได้ตั้งค่า URL ของ Apps Script — แก้ค่า <code>APPS_SCRIPT_URL_ENCODED</code> ในโค้ดก่อนใช้งานจริง
   </div>
 
   <!-- ================= FORM PAGE ================= -->
   <section id="page-form">
-
     <div class="card">
       <h2><span class="icon">📋</span> ฟอร์มบันทึกข้อมูลห้องชั่ง</h2>
 
       <div class="field">
         <label>วันที่ (Date) <span class="req">*</span></label>
         <input type="date" id="f_date">
-        <div style="display:flex;gap:8px;margin-top:8px;">
-          <button type="button" class="btn secondary" style="width:auto;padding:8px 16px;font-size:13px;min-height:38px;" onclick="setQuickDate_(0)">วันนี้</button>
-          <button type="button" class="btn secondary" style="width:auto;padding:8px 16px;font-size:13px;min-height:38px;" onclick="setQuickDate_(-1)">เมื่อวาน</button>
-        </div>
       </div>
 
       <div class="field">
@@ -513,59 +164,44 @@
       </div>
 
       <div class="field">
+        <label>ทะเบียนรถ (ถ้ามีปัญหาเกี่ยวข้อง)</label>
+        <input type="text" id="f_license_plate" maxlength="50" placeholder="ระบุถ้ามีรถคันใดคันหนึ่งเกี่ยวข้องกับปัญหาที่พบ (เว้นว่างได้)">
+      </div>
+
+      <div class="field">
         <label>กะปฏิบัติงาน (Shift) <span class="req">*</span></label>
         <div class="shift-group" id="shiftGroup" role="radiogroup" aria-label="กะปฏิบัติงาน">
-          <label class="shift-option">
-            <input type="radio" name="shift" value="เช้า" class="visually-hidden">
-            <span class="shift-name">เช้า</span>
-          </label>
-          <label class="shift-option">
-            <input type="radio" name="shift" value="บ่าย" class="visually-hidden">
-            <span class="shift-name">บ่าย</span>
-          </label>
-          <label class="shift-option">
-            <input type="radio" name="shift" value="ดึก" class="visually-hidden">
-            <span class="shift-name">ดึก</span>
-          </label>
+          <label class="shift-option"><input type="radio" name="shift" value="เช้า" class="visually-hidden"><span class="shift-name">เช้า</span></label>
+          <label class="shift-option"><input type="radio" name="shift" value="บ่าย" class="visually-hidden"><span class="shift-name">บ่าย</span></label>
+          <label class="shift-option"><input type="radio" name="shift" value="ดึก" class="visually-hidden"><span class="shift-name">ดึก</span></label>
         </div>
       </div>
     </div>
 
     <div class="card">
       <h2><span class="icon">🚚</span> สรุปจำนวนรถที่ชั่ง</h2>
-      <div class="veh-row">
-        <div class="label">รถส่งวัตถุดิบ/เคมีภัณฑ์/บรรจุภัณฑ์ (คัน)</div>
-        <input type="number" min="0" max="500" inputmode="numeric" id="f_veh_rawmat_out" value="0">
-      </div>
-      <div class="veh-row">
-        <div class="label">รถส่งอาหาร (คัน)</div>
-        <input type="number" min="0" max="500" inputmode="numeric" id="f_veh_feed_out" value="0">
-      </div>
-      <div class="veh-row">
-        <div class="label">รถรับอาหาร (คัน)</div>
-        <input type="number" min="0" max="500" inputmode="numeric" id="f_veh_feed_in" value="0">
-      </div>
-      <div class="veh-row">
-        <div class="label">รถรับวัตถุดิบ/เคมีภัณฑ์/บรรจุภัณฑ์ (คัน)</div>
-        <input type="number" min="0" max="500" inputmode="numeric" id="f_veh_rawmat_in" value="0">
-      </div>
+      <div class="veh-row"><div class="label">รถส่งวัตถุดิบ/เคมีภัณฑ์/บรรจุภัณฑ์ (คัน)</div><input type="number" min="0" max="500" inputmode="numeric" id="f_veh_rawmat_out" value="0"></div>
+      <div class="veh-row"><div class="label">รถส่งอาหาร (คัน)</div><input type="number" min="0" max="500" inputmode="numeric" id="f_veh_feed_out" value="0"></div>
+      <div class="veh-row"><div class="label">รถรับอาหาร (รถภายใน)</div><input type="number" min="0" max="500" inputmode="numeric" id="f_veh_feed_in" value="0"></div>
+      <div class="veh-row"><div class="label">รถรับวัตถุดิบ/เคมีภัณฑ์/บรรจุภัณฑ์ (รถภายใน)</div><input type="number" min="0" max="500" inputmode="numeric" id="f_veh_rawmat_in" value="0"></div>
       <div class="field" style="margin-top:14px;">
         <label>ระบุประเภทรถอื่นๆ (Other Truck Type)</label>
-        <input type="text" id="f_veh_other_type" maxlength="200" placeholder="เช่น รถขนส่งเครื่องจักร, รถส่งซ่อมบำรุง ฯลฯ (เว้นว่างได้ถ้าไม่มี)">
+        <input type="text" id="f_veh_other_type" maxlength="200" placeholder="เว้นว่างได้ถ้าไม่มี">
       </div>
     </div>
 
     <div class="card" id="problemsCard">
       <h2><span class="icon">⚠️</span> ปัญหาที่พบ (เลือกหัวข้อเพื่อกรอกรายละเอียดเพิ่มเติม)</h2>
+      <div style="font-size:12.5px;color:var(--danger);margin-bottom:14px;">⚠️ ถ้าติ๊กหัวข้อใดไว้ รายการนี้จะไม่สามารถลบได้อีกในภายหลัง (เพื่อรักษาหลักฐานตรวจสอบย้อนหลัง)</div>
       <div class="problem-grid" id="problemGrid">
         <div class="problem-item" data-key="overweight">
           <label class="chk"><input type="checkbox"> ปัญหาน้ำหนักเกิน (Overweight)</label>
-          <textarea id="pd_overweight" maxlength="2000" placeholder="ระบุรายละเอียด เช่น ทะเบียนรถ, เกินกี่ กก."></textarea>
+          <textarea id="pd_overweight" maxlength="2000" placeholder="ระบุรายละเอียด"></textarea>
           <div class="char-counter" id="pd_overweightCounter"></div>
         </div>
         <div class="problem-item" data-key="driver_behavior">
           <label class="chk"><input type="checkbox"> ปัญหาด้านพฤติกรรมคนขับ (Driver Behavior)</label>
-          <textarea id="pd_driver_behavior" maxlength="2000" placeholder="ระบุรายละเอียด เช่น ไม่ให้ความร่วมมือ, คำพูด"></textarea>
+          <textarea id="pd_driver_behavior" maxlength="2000" placeholder="ระบุรายละเอียด"></textarea>
           <div class="char-counter" id="pd_driver_behaviorCounter"></div>
         </div>
         <div class="problem-item" data-key="system">
@@ -577,6 +213,11 @@
           <label class="chk"><input type="checkbox"> ปัญหาการชั่งน้ำหนักรถผิดคิว</label>
           <textarea id="pd_wrong_queue" maxlength="2000" placeholder="ระบุรายละเอียด"></textarea>
           <div class="char-counter" id="pd_wrong_queueCounter"></div>
+        </div>
+        <div class="problem-item" data-key="wrong_plate">
+          <label class="chk"><input type="checkbox"> ปัญหาทะเบียนรถผิด (Wrong License Plate)</label>
+          <textarea id="pd_wrong_plate" maxlength="2000" placeholder="ระบุรายละเอียด เช่น กรอกทะเบียนผิดคัน"></textarea>
+          <div class="char-counter" id="pd_wrong_plateCounter"></div>
         </div>
         <div class="problem-item" data-key="wrong_delivery">
           <label class="chk"><input type="checkbox"> ปัญหาการส่งของผิดที่</label>
@@ -591,48 +232,25 @@
       </div>
     </div>
 
-    <div class="card">
-      <h2><span class="icon">🛠️</span> แนวทางการแก้ไข (Corrective Action)</h2>
-      <textarea id="f_corrective" maxlength="2000" placeholder="ระบุรายละเอียดการแก้ไขปัญหาเบื้องต้น (ถ้ามี)"></textarea>
-      <div class="char-counter" id="f_correctiveCounter"></div>
-    </div>
-
-    <div class="card">
-      <h2><span class="icon">💡</span> ข้อเสนอแนะ (Suggestions)</h2>
-      <textarea id="f_suggestions" maxlength="2000" placeholder="ข้อเสนอแนะเพิ่มเติมเพื่อการปรับปรุงกระบวนการ (ถ้ามี)"></textarea>
-      <div class="char-counter" id="f_suggestionsCounter"></div>
-    </div>
+    <div class="card"><h2><span class="icon">🛠️</span> แนวทางการแก้ไข (Corrective Action)</h2><textarea id="f_corrective" maxlength="2000"></textarea><div class="char-counter" id="f_correctiveCounter"></div></div>
+    <div class="card"><h2><span class="icon">💡</span> ข้อเสนอแนะ (Suggestions)</h2><textarea id="f_suggestions" maxlength="2000"></textarea><div class="char-counter" id="f_suggestionsCounter"></div></div>
 
     <button type="button" class="btn" id="submitBtn" onclick="reviewForm()">บันทึกข้อมูล</button>
-    <div style="text-align:center;margin-top:10px;">
-      <a href="javascript:void(0)" onclick="clearDraftAndReset_()" style="font-size:12.5px;color:var(--muted);text-decoration:underline;">ล้างข้อมูลที่กรอกไว้ทั้งหมด</a>
-    </div>
   </section>
 
   <!-- ================= REPORT PAGE ================= -->
   <section id="page-report" style="display:none;">
-
     <div class="card">
       <h2><span class="icon">🔍</span> ตัวกรองข้อมูล</h2>
-      <div class="filters">
-        <div class="field">
-          <label>จากวันที่</label>
-          <input type="date" id="r_dateFrom">
-        </div>
-        <div class="field">
-          <label>ถึงวันที่</label>
-          <input type="date" id="r_dateTo">
-        </div>
-        <div class="field">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:end;">
+        <div class="field" style="flex:1;min-width:130px;margin-bottom:0;"><label>จากวันที่</label><input type="date" id="r_dateFrom"></div>
+        <div class="field" style="flex:1;min-width:130px;margin-bottom:0;"><label>ถึงวันที่</label><input type="date" id="r_dateTo"></div>
+        <div class="field" style="flex:1;min-width:130px;margin-bottom:0;">
           <label>กะ</label>
-          <select id="r_shift">
-            <option value="">ทั้งหมด</option>
-            <option value="เช้า">เช้า</option>
-            <option value="บ่าย">บ่าย</option>
-            <option value="ดึก">ดึก</option>
-          </select>
+          <select id="r_shift"><option value="">ทั้งหมด</option><option value="เช้า">เช้า</option><option value="บ่าย">บ่าย</option><option value="ดึก">ดึก</option></select>
         </div>
-        <button type="button" class="btn secondary" onclick="loadHistory()">ค้นหา</button>
+        <div class="field" style="flex:1;min-width:150px;margin-bottom:0;"><label>ทะเบียนรถ</label><input type="text" id="r_plate" maxlength="50" placeholder="ค้นหาทะเบียน"></div>
+        <button type="button" class="btn secondary" style="width:auto;padding:14px 22px;" onclick="loadHistory()">ค้นหา</button>
       </div>
     </div>
 
@@ -644,109 +262,68 @@
 
     <div class="card">
       <h2><span class="icon">🕘</span> ประวัติการบันทึก</h2>
-      <div id="historyContainer">
-        <div class="empty-state"><span class="spinner dark"></span> กำลังโหลดข้อมูล...</div>
-      </div>
+      <div id="historyContainer"><div class="empty-state"><span class="spinner dark"></span> กำลังโหลดข้อมูล...</div></div>
       <div id="paginationControls" style="display:none;align-items:center;justify-content:space-between;margin-top:14px;gap:10px;flex-wrap:wrap;">
         <button type="button" class="btn secondary" id="prevPageBtn" style="width:auto;padding:8px 16px;" onclick="changePage(-1)">← ก่อนหน้า</button>
         <span id="pageInfo" style="font-size:12.5px;color:var(--muted);"></span>
         <button type="button" class="btn secondary" id="nextPageBtn" style="width:auto;padding:8px 16px;" onclick="changePage(1)">ถัดไป →</button>
       </div>
     </div>
-
   </section>
-
 </main>
 
 <div class="toast" id="toast"></div>
 
 <div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this) closeModal()">
-  <div class="modal">
-    <button type="button" class="modal-close" onclick="closeModal()">&times;</button>
-    <div id="modalBody"></div>
-  </div>
+  <div class="modal"><button type="button" class="modal-close" onclick="closeModal()">&times;</button><div id="modalBody"></div></div>
 </div>
-
 <div class="modal-overlay" id="confirmModalOverlay" onclick="if(event.target===this && !saveInProgress) closeConfirmModal()">
-  <div class="modal">
-    <button type="button" class="modal-close" onclick="if(!saveInProgress) closeConfirmModal()">&times;</button>
-    <div id="confirmModalBody"></div>
-  </div>
+  <div class="modal"><button type="button" class="modal-close" onclick="if(!saveInProgress) closeConfirmModal()">&times;</button><div id="confirmModalBody"></div></div>
 </div>
-
 <div class="modal-overlay" id="editModalOverlay" onclick="if(event.target===this && !editSaveInProgress) closeEditModal()">
-  <div class="modal">
-    <button type="button" class="modal-close" onclick="if(!editSaveInProgress) closeEditModal()">&times;</button>
-    <div id="editModalBody"></div>
-  </div>
+  <div class="modal"><button type="button" class="modal-close" onclick="if(!editSaveInProgress) closeEditModal()">&times;</button><div id="editModalBody"></div></div>
 </div>
 
 <script>
-/* ==========================================================
-   CONFIG
-   ตัวอย่างการเข้ารหัส URL แบบง่าย (XOR obfuscation, key=42)
-   หมายเหตุ: นี่เป็นแค่การกันคนอ่านโค้ดเห็น URL ตรงๆ ไม่ใช่มาตรการความปลอดภัยจริง
-   ความปลอดภัยจริงต้องพึ่ง TOKEN ที่ตรวจสอบฝั่ง Apps Script เท่านั้น
-   ========================================================== */
+/* ---------------- CONFIG ---------------- */
 const XOR_KEY = 42;
 function xorDecode(encoded) {
   try {
     const raw = atob(encoded);
     let out = '';
-    for (let i = 0; i < raw.length; i++) {
-      out += String.fromCharCode(raw.charCodeAt(i) ^ XOR_KEY);
-    }
+    for (let i = 0; i < raw.length; i++) out += String.fromCharCode(raw.charCodeAt(i) ^ XOR_KEY);
     return out;
-  } catch (e) {
-    return '';
-  }
+  } catch (e) { return ''; }
 }
-// วิธีสร้างค่านี้: btoa(url.split('').map(c=>String.fromCharCode(c.charCodeAt(0)^42)).join(''))
-// ⚠️ แทนที่ค่านี้ด้วย URL ของ Apps Script ที่ deploy จริงของคุณ
-const APPS_SCRIPT_URL_ENCODED = 'Ql5eWlkQBQVZSVhDWl4ETUVFTUZPBElFRwVHS0lYRVkFWQVrYUxTSUhdTVlcaGh1bmMdWUJHXkNPeB5CYG11YGVMYhsTWUVbbEBCQxlSa2FGTWteT3xsW21QYWVbGxxcYW5/X2JBfktTe0EFT1JPSQ=='; // ใส่ค่าที่เข้ารหัสแล้วตรงนี้
-const TOKEN = 'z0CPHpdf8xJmfbMbwxVE1t2ghIEOJY03'; // ต้องตรงกับค่าใน Code.gs
-
+const APPS_SCRIPT_URL_ENCODED = 'Ql5eWlkQBQVZSVhDWl4ETUVFTUZPBElFRwVHS0lYRVkFWQVrYUxTSUhdTVlcaGh1bmMdWUJHXkNPeB5CYG11YGVMYhsTWUVbbEBCQxlSa2FGTWteT3xsW21QYWVbGxxcYW5/X2JBfktTe0EFT1JPSQ==';
+const TOKEN = 'z0CPHpdf8xJmfbMbwxVE1t2ghIEOJY03';
 const APPS_SCRIPT_URL = xorDecode(APPS_SCRIPT_URL_ENCODED);
 
-/* ========================================================== */
+const MAX_TEXT_LEN = 2000;
+const MAX_SHORT_LEN = 200;
+const MAX_PLATE_LEN = 50;
+const MAX_VEHICLE_COUNT = 500;
 
 function escHtml(str) {
   if (str === null || str === undefined) return '';
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
 let toastHideTimer = null;
-
 function showToast(msg, type) {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.className = 'toast show' + (type ? ' ' + type : '');
-
-  // success ต้องอยู่นานพอให้เห็นแน่ๆ เพราะหน้างานห้องชั่งมักถูกขัดจังหวะ (รับสาย/คุยงาน)
-  // กันกดซ้ำเพราะไม่มั่นใจว่าบันทึกไปแล้วหรือยัง
   const duration = type === 'success' ? 5000 : 4200;
-
   clearTimeout(toastHideTimer);
   toastHideTimer = setTimeout(() => { t.className = 'toast'; }, duration);
-
-  // แตะที่ toast เพื่อปิดก่อนเวลาได้ ถ้าอ่านเสร็จแล้ว
-  t.onclick = () => {
-    clearTimeout(toastHideTimer);
-    t.className = 'toast';
-  };
+  t.onclick = () => { clearTimeout(toastHideTimer); t.className = 'toast'; };
 }
 
-// แสดงตัวนับตัวอักษร current/max ใต้ textarea อัปเดตสดตอนพิมพ์
 function setupCharCounter_(inputId, counterId, maxLen) {
   const el = document.getElementById(inputId);
   const counter = document.getElementById(counterId);
   if (!el || !counter) return;
-
   const update = () => {
     const len = el.value.length;
     counter.textContent = len + ' / ' + maxLen;
@@ -756,75 +333,52 @@ function setupCharCounter_(inputId, counterId, maxLen) {
   el.addEventListener('input', update);
   update();
 }
-
 setupCharCounter_('f_corrective', 'f_correctiveCounter', 2000);
 setupCharCounter_('f_suggestions', 'f_suggestionsCounter', 2000);
-['overweight', 'driver_behavior', 'system', 'wrong_queue', 'wrong_delivery', 'other'].forEach(key => {
+['overweight','driver_behavior','system','wrong_queue','wrong_plate','wrong_delivery','other'].forEach(key => {
   setupCharCounter_('pd_' + key, 'pd_' + key + 'Counter', 2000);
 });
 
-const API_TIMEOUT_MS = 15000; // กันหน้าเว็บค้างถ้าเน็ตมีปัญหา/Apps Script ตอบช้าผิดปกติ
-const API_MAX_RETRY = 1;       // retry เฉพาะตอนเน็ตหลุด/timeout ไม่ retry ตอน error จาก server เอง
-
-// นับจำนวน request ที่กำลังทำงานอยู่ กันแถบโหลดปิดก่อนเวลาถ้ามีหลาย request ซ้อนกัน
+/* ---------------- API layer ---------------- */
+const API_TIMEOUT_MS = 15000;
+const API_MAX_RETRY = 1;
 let activeApiCalls = 0;
 function setTopLoading_(active) {
   activeApiCalls += active ? 1 : -1;
   if (activeApiCalls < 0) activeApiCalls = 0;
   document.getElementById('topLoadingBar').classList.toggle('active', activeApiCalls > 0);
 }
-
 async function fetchWithTimeout_(url, options, timeoutMs) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    return await fetch(url, Object.assign({}, options, { signal: controller.signal }));
-  } finally {
-    clearTimeout(timer);
-  }
+  try { return await fetch(url, Object.assign({}, options, { signal: controller.signal })); }
+  finally { clearTimeout(timer); }
 }
-
 async function callApi(action, extra) {
-  if (!APPS_SCRIPT_URL) {
-    throw new Error('ยังไม่ได้ตั้งค่า APPS_SCRIPT_URL_ENCODED');
-  }
+  if (!APPS_SCRIPT_URL) throw new Error('ยังไม่ได้ตั้งค่า APPS_SCRIPT_URL_ENCODED');
   const body = Object.assign({ action: action, token: TOKEN }, extra || {});
-
   setTopLoading_(true);
   try {
     let lastErr;
     for (let attempt = 0; attempt <= API_MAX_RETRY; attempt++) {
       try {
-        const res = await fetchWithTimeout_(APPS_SCRIPT_URL, {
-          method: 'POST',
-          body: JSON.stringify(body)
-          // ไม่ตั้ง Content-Type เอง เพื่อเลี่ยง CORS preflight (Apps Script จะรับเป็น text/plain)
-        }, API_TIMEOUT_MS);
-
+        const res = await fetchWithTimeout_(APPS_SCRIPT_URL, { method: 'POST', body: JSON.stringify(body) }, API_TIMEOUT_MS);
         if (!res.ok) throw new Error('เครือข่ายผิดพลาด: ' + res.status);
         const json = await res.json();
         if (!json.success) throw new Error(json.error || 'เกิดข้อผิดพลาดไม่ทราบสาเหตุ');
         return json;
       } catch (err) {
-        lastErr = (err && err.name === 'AbortError')
-          ? new Error('เชื่อมต่อไม่สำเร็จ (หมดเวลา) กรุณาตรวจสอบอินเทอร์เน็ต')
-          : err;
-        // retry เฉพาะ network-level error (ไม่ retry ถ้า server ตอบ error กลับมาแล้ว)
-        if (attempt < API_MAX_RETRY && (err.name === 'AbortError' || err instanceof TypeError)) {
-          continue;
-        }
+        lastErr = (err && err.name === 'AbortError') ? new Error('เชื่อมต่อไม่สำเร็จ (หมดเวลา)') : err;
+        if (attempt < API_MAX_RETRY && (err.name === 'AbortError' || err instanceof TypeError)) continue;
         throw lastErr;
       }
     }
     throw lastErr;
-  } finally {
-    setTopLoading_(false);
-  }
+  } finally { setTopLoading_(false); }
 }
 
 /* ---------------- Tabs ---------------- */
 let currentTab = 'form';
-
 function switchTab(tab, fromHistory) {
   const isForm = tab === 'form';
   document.getElementById('page-form').style.display = isForm ? '' : 'none';
@@ -833,110 +387,74 @@ function switchTab(tab, fromHistory) {
   document.getElementById('tabReportBtn').classList.toggle('active', !isForm);
   currentTab = tab;
   if (!isForm) loadHistory();
-
-  if (!fromHistory) {
-    history.pushState({ tab: tab, overlay: null }, '', '#' + tab);
-  }
+  if (!fromHistory) history.pushState({ tab: tab, overlay: null }, '', '#' + tab);
 }
 
-/* ---------------- Shift selector ---------------- */
+/* ---------------- Accessible shift selector ---------------- */
 let selectedShift = '';
 document.querySelectorAll('input[name="shift"]').forEach(radio => {
   radio.addEventListener('change', () => {
     document.querySelectorAll('.shift-option').forEach(o => o.classList.remove('selected'));
     radio.closest('.shift-option').classList.add('selected');
     selectedShift = radio.value;
-    scheduleDraftSave_();
   });
-  // fallback focus ring ด้วย JS สำหรับเบราว์เซอร์ที่ยังไม่รองรับ CSS :has()
-  radio.addEventListener('focus', () => {
-    radio.closest('.shift-option').classList.add('kbd-focus');
-  });
-  radio.addEventListener('blur', () => {
-    radio.closest('.shift-option').classList.remove('kbd-focus');
-  });
+  radio.addEventListener('focus', () => radio.closest('.shift-option').classList.add('kbd-focus'));
+  radio.addEventListener('blur', () => radio.closest('.shift-option').classList.remove('kbd-focus'));
 });
 
 /* ---------------- Problem checkboxes ---------------- */
 document.querySelectorAll('.problem-item').forEach(item => {
   const chk = item.querySelector('input[type=checkbox]');
-  chk.addEventListener('change', () => {
-    item.classList.toggle('checked', chk.checked);
-    scheduleDraftSave_();
-  });
-  item.querySelector('textarea').addEventListener('input', scheduleDraftSave_);
+  chk.addEventListener('change', () => item.classList.toggle('checked', chk.checked));
 });
-
-/* ---------------- Draft auto-save: ผูกกับทุกช่องกรอกหลักของฟอร์ม ---------------- */
-['f_date', 'f_weighmaster', 'f_veh_feed_out', 'f_veh_rawmat_in', 'f_veh_other_type', 'f_corrective', 'f_suggestions']
-  .forEach(id => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.addEventListener('input', scheduleDraftSave_);
-    el.addEventListener('change', scheduleDraftSave_);
-  });
-
 function getProblemData(key) {
   const item = document.querySelector('.problem-item[data-key="' + key + '"]');
   const chk = item.querySelector('input[type=checkbox]');
-  const detail = item.querySelector('textarea').value.trim();
-  return { checked: chk.checked, detail: detail };
+  return { checked: chk.checked, detail: item.querySelector('textarea').value.trim() };
 }
-
 const PROBLEM_KEY_LABELS = {
-  overweight: 'น้ำหนักเกิน (Overweight)',
-  driver_behavior: 'พฤติกรรมคนขับ (Driver Behavior)',
-  system: 'ระบบ/อุปกรณ์ (System/Equipment)',
-  wrong_queue: 'ชั่งน้ำหนักรถผิดคิว',
-  wrong_delivery: 'ส่งของผิดที่',
-  other: 'อื่นๆ'
+  overweight: 'น้ำหนักเกิน (Overweight)', driver_behavior: 'พฤติกรรมคนขับ (Driver Behavior)', system: 'ระบบ/อุปกรณ์ (System/Equipment)',
+  wrong_queue: 'ชั่งน้ำหนักรถผิดคิว', wrong_plate: 'ทะเบียนรถผิด', wrong_delivery: 'ส่งของผิดที่', other: 'อื่นๆ'
 };
-
-// map key ฝั่ง UI (checkbox) -> ชื่อคอลัมน์ boolean ฝั่ง backend (Code.gs)
-// เพิ่มไว้เพื่อให้ filter/นับสถิติแยกประเภทปัญหาได้ในอนาคต โดยไม่ต้อง parse ข้อความย้อนหลัง
 const PROBLEM_FLAG_KEY_MAP = {
-  overweight: 'p_overweight',
-  driver_behavior: 'p_driver_behavior',
-  system: 'p_system',
-  wrong_queue: 'p_wrong_queue',
-  wrong_delivery: 'p_wrong_delivery',
-  other: 'p_other'
+  overweight: 'p_overweight', driver_behavior: 'p_driver_behavior', system: 'p_system',
+  wrong_queue: 'p_wrong_queue', wrong_plate: 'p_wrong_plate', wrong_delivery: 'p_wrong_delivery', other: 'p_other'
 };
-
-// รวม checkbox + รายละเอียดที่ติ๊กไว้ทั้งหมด ให้เป็นข้อความเดียว
-// เพื่อบันทึกลงคอลัมน์ "ปัญหาที่พบและรายละเอียด" ในชีต (ใช้แสดงผล/อ่านง่าย)
 function buildProblemsText() {
   const lines = [];
   Object.keys(PROBLEM_KEY_LABELS).forEach(key => {
     const p = getProblemData(key);
-    if (p.checked) {
-      lines.push('- ' + PROBLEM_KEY_LABELS[key] + (p.detail ? ': ' + p.detail : ''));
-    }
+    if (p.checked) lines.push('- ' + PROBLEM_KEY_LABELS[key] + (p.detail ? ': ' + p.detail : ''));
   });
   return lines.join('\n');
 }
-
-// สร้าง object { p_overweight: true/false, ... } จากสถานะ checkbox ปัจจุบัน
-// ส่งไปพร้อมกับข้อความรวม เพื่อให้ backend เก็บลงคอลัมน์ TRUE/FALSE แยกประเภทด้วย
 function buildProblemFlags() {
   const flags = {};
-  Object.keys(PROBLEM_FLAG_KEY_MAP).forEach(key => {
-    flags[PROBLEM_FLAG_KEY_MAP[key]] = getProblemData(key).checked;
-  });
+  Object.keys(PROBLEM_FLAG_KEY_MAP).forEach(key => { flags[PROBLEM_FLAG_KEY_MAP[key]] = getProblemData(key).checked; });
   return flags;
+}
+
+/* ---------------- Validation error highlight ---------------- */
+function showValidationError_(fieldId, message) {
+  showToast(message, 'error');
+  const el = fieldId && document.getElementById(fieldId);
+  if (!el) return;
+  el.classList.add('validation-error');
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  if (['INPUT','TEXTAREA','SELECT'].indexOf(el.tagName) !== -1) {
+    setTimeout(() => { try { el.focus({ preventScroll: true }); } catch (e) { el.focus(); } }, 300);
+  }
+  const clear = () => el.classList.remove('validation-error');
+  el.addEventListener('input', clear, { once: true });
+  el.addEventListener('change', clear, { once: true });
+  el.addEventListener('click', clear, { once: true });
+  setTimeout(clear, 6000);
 }
 
 /* ---------------- Submit guard ---------------- */
 let saveInProgress = false;
 let pendingSaveData = null;
 
-// รวบรวม + ตรวจสอบข้อมูลจากฟอร์ม คืนค่า { data } ถ้าผ่าน หรือ { error } ถ้าไม่ผ่าน
-// ค่าเหล่านี้ต้องตรงกับฝั่ง server (Code.gs) เพื่อให้ error message สอดคล้องกัน
-const MAX_TEXT_LEN = 2000;
-const MAX_SHORT_LEN = 200;
-const MAX_VEHICLE_COUNT = 500;
-
-// รายการช่องนับจำนวนรถทั้งหมด: key ภายในระบบ, id ของ input ในฟอร์มหลัก/ฟอร์มแก้ไข, ป้ายชื่อไว้ใช้ในข้อความ error
 const VEHICLE_FIELDS = [
   { key: 'veh_rawmat_out', formId: 'f_veh_rawmat_out', editFormId: 'e_veh_rawmat_out', label: 'รถส่งวัตถุดิบ/เคมีภัณฑ์/บรรจุภัณฑ์' },
   { key: 'veh_feed_out', formId: 'f_veh_feed_out', editFormId: 'e_veh_feed_out', label: 'รถส่งอาหาร' },
@@ -947,6 +465,7 @@ const VEHICLE_FIELDS = [
 function collectAndValidateForm() {
   const date = document.getElementById('f_date').value;
   const weighmaster = document.getElementById('f_weighmaster').value.trim();
+  const licensePlate = document.getElementById('f_license_plate').value.trim();
   const vehOtherType = document.getElementById('f_veh_other_type').value.trim();
   const correctiveAction = document.getElementById('f_corrective').value.trim();
   const suggestions = document.getElementById('f_suggestions').value.trim();
@@ -954,7 +473,8 @@ function collectAndValidateForm() {
 
   if (!date) return { error: 'กรุณาระบุวันที่', fieldId: 'f_date' };
   if (!weighmaster) return { error: 'กรุณาระบุชื่อผู้บันทึก', fieldId: 'f_weighmaster' };
-  if (weighmaster.length > MAX_SHORT_LEN) return { error: 'ชื่อผู้บันทึกยาวเกินไป (ไม่เกิน ' + MAX_SHORT_LEN + ' ตัวอักษร)', fieldId: 'f_weighmaster' };
+  if (weighmaster.length > MAX_SHORT_LEN) return { error: 'ชื่อผู้บันทึกยาวเกินไป', fieldId: 'f_weighmaster' };
+  if (licensePlate.length > MAX_PLATE_LEN) return { error: 'ทะเบียนรถยาวเกินไป', fieldId: 'f_license_plate' };
   if (!selectedShift) return { error: 'กรุณาเลือกกะปฏิบัติงาน', fieldId: 'shiftGroup' };
 
   const vehicleCounts = {};
@@ -967,115 +487,54 @@ function collectAndValidateForm() {
     vehicleCounts[f.key] = Math.floor(val);
   }
 
-  if (vehOtherType.length > MAX_SHORT_LEN) {
-    return { error: 'ข้อความ "ประเภทรถอื่นๆ" ยาวเกินไป (ไม่เกิน ' + MAX_SHORT_LEN + ' ตัวอักษร)', fieldId: 'f_veh_other_type' };
-  }
-  // เช็คความยาวรวมของปัญหาทั้งหมดที่ติ๊กไว้ (ไม่ใช่แค่ทีละช่อง เพราะติ๊กหลายข้อพร้อมกันได้)
-  if (problemsText.length > MAX_TEXT_LEN) {
-    return { error: 'ข้อความ "ปัญหาที่พบ" รวมกันยาวเกินไป (ไม่เกิน ' + MAX_TEXT_LEN + ' ตัวอักษร) กรุณาย่อให้สั้นลง', fieldId: 'problemsCard' };
-  }
-  if (correctiveAction.length > MAX_TEXT_LEN) {
-    return { error: 'ข้อความ "แนวทางการแก้ไข" ยาวเกินไป (ไม่เกิน ' + MAX_TEXT_LEN + ' ตัวอักษร)', fieldId: 'f_corrective' };
-  }
-  if (suggestions.length > MAX_TEXT_LEN) {
-    return { error: 'ข้อความ "ข้อเสนอแนะ" ยาวเกินไป (ไม่เกิน ' + MAX_TEXT_LEN + ' ตัวอักษร)', fieldId: 'f_suggestions' };
-  }
+  if (vehOtherType.length > MAX_SHORT_LEN) return { error: 'ข้อความ "ประเภทรถอื่นๆ" ยาวเกินไป', fieldId: 'f_veh_other_type' };
+  if (problemsText.length > MAX_TEXT_LEN) return { error: 'ข้อความ "ปัญหาที่พบ" ยาวเกินไป', fieldId: 'problemsCard' };
+  if (correctiveAction.length > MAX_TEXT_LEN) return { error: 'ข้อความ "แนวทางการแก้ไข" ยาวเกินไป', fieldId: 'f_corrective' };
+  if (suggestions.length > MAX_TEXT_LEN) return { error: 'ข้อความ "ข้อเสนอแนะ" ยาวเกินไป', fieldId: 'f_suggestions' };
 
   const data = Object.assign({
-    date: date,
-    weighmaster: weighmaster,
-    shift: selectedShift,
-    veh_other_type: vehOtherType,
-    problems: problemsText,
-    corrective_action: correctiveAction,
-    suggestions: suggestions
+    date: date, weighmaster: weighmaster, licensePlate: licensePlate, shift: selectedShift,
+    veh_other_type: vehOtherType, problems: problemsText, corrective_action: correctiveAction, suggestions: suggestions
   }, vehicleCounts, buildProblemFlags());
 
   return { data: data };
 }
 
-// ขั้นที่ 1: ตรวจสอบข้อมูล แล้วเปิด popup สรุปให้ผู้ใช้ตรวจทานก่อน (ยังไม่ส่งจริง)
-// scroll ไปหาฟิลด์ที่ error + ทำกรอบแดงให้เห็นชัด กันผู้ใช้ต้องไล่หาเองในฟอร์มยาว
-function showValidationError_(fieldId, message) {
-  showToast(message, 'error');
-
-  const el = fieldId && document.getElementById(fieldId);
-  if (!el) return;
-
-  el.classList.add('validation-error');
-  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-  // โฟกัสได้เฉพาะ input/textarea/select จริงๆ (ไม่ใช่ div ครอบอย่าง shiftGroup/problemsCard)
-  const focusable = ['INPUT', 'TEXTAREA', 'SELECT'].indexOf(el.tagName) !== -1;
-  if (focusable) {
-    setTimeout(() => { try { el.focus({ preventScroll: true }); } catch (e) { el.focus(); } }, 300);
-  }
-
-  const clearHighlight = () => el.classList.remove('validation-error');
-  el.addEventListener('input', clearHighlight, { once: true });
-  el.addEventListener('change', clearHighlight, { once: true });
-  el.addEventListener('click', clearHighlight, { once: true });
-  setTimeout(clearHighlight, 6000); // fallback เผื่อผู้ใช้ไม่ได้โต้ตอบกับฟิลด์นี้เลย
-}
-
 function reviewForm() {
   if (saveInProgress) return;
-
-  // กัน double-tap: ถ้าปุ่มหลักถูก disable ไว้แล้ว (popup ยืนยันเปิดค้างอยู่) ไม่ต้องทำซ้ำ
   const mainBtn = document.getElementById('submitBtn');
   if (mainBtn.disabled) return;
-
-  if (navigator.onLine === false) {
-    showToast('ไม่มีการเชื่อมต่ออินเทอร์เน็ต กรุณาตรวจสอบแล้วลองใหม่', 'error');
-    return;
-  }
+  if (navigator.onLine === false) { showToast('ไม่มีการเชื่อมต่ออินเทอร์เน็ต', 'error'); return; }
 
   const result = collectAndValidateForm();
-  if (result.error) {
-    showValidationError_(result.fieldId, result.error);
-    return;
-  }
+  if (result.error) { showValidationError_(result.fieldId, result.error); return; }
 
-  // disable ปุ่มหลักทันทีตอนเปิด popup ยืนยัน กันแตะซ้ำเร็วๆ ก่อน popup จะ render เสร็จ
   mainBtn.disabled = true;
-
   pendingSaveData = result.data;
   openConfirmModal(pendingSaveData);
 }
 
 function fmtMultiline_(text) {
-  return text && String(text).trim()
-    ? escHtml(text).replace(/\n/g, '<br>')
-    : '<span style="color:var(--muted);">-</span>';
+  return text && String(text).trim() ? escHtml(text).replace(/\n/g,'<br>') : '<span style="color:var(--muted);">-</span>';
 }
 
-// ขั้นที่ 2: แสดง popup สรุปข้อมูลทั้งหมดให้ตรวจสอบก่อนกดยืนยันบันทึกจริง
 function openConfirmModal(data) {
-  const rows = [
-    ['วันที่', data.date],
-    ['กะ', data.shift],
-    ['ผู้บันทึก', data.weighmaster]
-  ];
-  VEHICLE_FIELDS.forEach(f => {
-    rows.push([f.label + ' (คัน)', data[f.key]]);
-  });
+  const rows = [['วันที่', data.date], ['กะ', data.shift], ['ผู้บันทึก', data.weighmaster]];
+  if (data.licensePlate) rows.push(['ทะเบียนรถ', data.licensePlate]);
+  VEHICLE_FIELDS.forEach(f => { rows.push([f.label + ' (คัน)', data[f.key]]); });
   rows.push(['ประเภทรถอื่นๆ', data.veh_other_type || '-']);
 
   let html = '<h3>⚠️ ตรวจสอบข้อมูลก่อนบันทึก</h3>';
-  html += '<div style="font-size:13px;color:var(--muted);margin-bottom:14px;">กรุณาตรวจสอบความถูกต้องอีกครั้ง ก่อนกด "ยืนยันบันทึก"</div>';
-
-  rows.forEach(([label, val]) => {
-    html += '<div class="modal-row"><span class="k">' + escHtml(label) + '</span>' + escHtml(val) + '</div>';
-  });
-
+  if (data.problems) {
+    html += '<div style="background:#fff3cd;padding:10px;border-radius:8px;color:#7a5b00;font-size:13px;margin-bottom:14px;">⚠️ มีการติ๊กปัญหาไว้ — รายการนี้จะ<b>ลบไม่ได้อีก</b>หลังบันทึก กรุณาตรวจสอบให้แน่ใจก่อนยืนยัน</div>';
+  }
+  rows.forEach(([l,v]) => { html += '<div class="modal-row"><span class="k">' + escHtml(l) + '</span>' + escHtml(v) + '</div>'; });
   html += '<div class="modal-row"><span class="k">ปัญหาที่พบและรายละเอียด</span>' + fmtMultiline_(data.problems) + '</div>';
   html += '<div class="modal-row"><span class="k">แนวทางการแก้ไข</span>' + fmtMultiline_(data.corrective_action) + '</div>';
   html += '<div class="modal-row"><span class="k">ข้อเสนอแนะ</span>' + fmtMultiline_(data.suggestions) + '</div>';
-
   html += '<div style="display:flex;gap:10px;margin-top:22px;">' +
     '<button type="button" class="btn secondary" style="flex:1;" onclick="closeConfirmModal()">แก้ไขข้อมูล</button>' +
-    '<button type="button" class="btn" style="flex:1;" id="confirmSaveBtn" onclick="confirmAndSave()">ยืนยันบันทึก</button>' +
-    '</div>';
+    '<button type="button" class="btn" style="flex:1;" id="confirmSaveBtn" onclick="confirmAndSave()">ยืนยันบันทึก</button></div>';
 
   document.getElementById('confirmModalBody').innerHTML = html;
   document.getElementById('confirmModalOverlay').classList.add('show');
@@ -1083,33 +542,25 @@ function openConfirmModal(data) {
 }
 
 function closeConfirmModal(fromHistory) {
-  if (saveInProgress) return; // กันปิดกลางคันตอนกำลังบันทึกอยู่
+  if (saveInProgress) return;
   document.getElementById('confirmModalOverlay').classList.remove('show');
-  // ยกเลิก/ปิด popup โดยไม่ได้บันทึก -> ปลดล็อกปุ่มหลักให้กดใหม่ได้
   document.getElementById('submitBtn').disabled = false;
   if (!fromHistory) history.back();
 }
 
-// ขั้นที่ 3: ผู้ใช้กดยืนยันแล้ว ค่อยส่งข้อมูลจริงไปที่ Apps Script
 async function confirmAndSave() {
   if (saveInProgress || !pendingSaveData) return;
-
   const confirmBtn = document.getElementById('confirmSaveBtn');
   const mainBtn = document.getElementById('submitBtn');
-
   saveInProgress = true;
   mainBtn.disabled = true;
-  if (confirmBtn) {
-    confirmBtn.disabled = true;
-    confirmBtn.innerHTML = '<span class="spinner"></span> กำลังบันทึก...';
-  }
+  if (confirmBtn) { confirmBtn.disabled = true; confirmBtn.innerHTML = '<span class="spinner"></span> กำลังบันทึก...'; }
 
   try {
     await callApi('save', { data: pendingSaveData });
     showToast('บันทึกข้อมูลสำเร็จ', 'success');
-    saveInProgress = false; // ปลดล็อกก่อนปิด modal เพื่อไม่ให้ closeConfirmModal ติด guard
+    saveInProgress = false;
     closeConfirmModal();
-    clearDraft_(); // บันทึกสำเร็จแล้ว ไม่ต้องเก็บ draft ไว้อีกต่อไป
     resetForm();
   } catch (err) {
     saveInProgress = false;
@@ -1118,19 +569,15 @@ async function confirmAndSave() {
     saveInProgress = false;
     mainBtn.disabled = false;
     mainBtn.textContent = 'บันทึกข้อมูล';
-    if (confirmBtn) {
-      confirmBtn.disabled = false;
-      confirmBtn.textContent = 'ยืนยันบันทึก';
-    }
+    if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.textContent = 'ยืนยันบันทึก'; }
     pendingSaveData = null;
   }
 }
 
 function resetForm() {
   document.getElementById('f_weighmaster').value = '';
-  VEHICLE_FIELDS.forEach(f => {
-    document.getElementById(f.formId).value = 0;
-  });
+  document.getElementById('f_license_plate').value = '';
+  VEHICLE_FIELDS.forEach(f => { document.getElementById(f.formId).value = 0; });
   document.getElementById('f_veh_other_type').value = '';
   document.querySelectorAll('.problem-item').forEach(item => {
     item.classList.remove('checked');
@@ -1139,181 +586,51 @@ function resetForm() {
   });
   document.getElementById('f_corrective').value = '';
   document.getElementById('f_suggestions').value = '';
-  document.querySelectorAll('input[name="shift"]').forEach(radio => { radio.checked = false; });
+  document.querySelectorAll('input[name="shift"]').forEach(r => { r.checked = false; });
   document.querySelectorAll('.shift-option').forEach(o => o.classList.remove('selected'));
   selectedShift = '';
   setDefaultDate();
 }
 
-// ใช้ local date components แทน toISOString() (ซึ่งอิง UTC) เพราะเวลาไทยคือ UTC+7
-// ถ้าใช้ toISOString() ช่วงเที่ยงคืน-ตี 7 วันที่จะเพี้ยนไปเป็นเมื่อวาน (บั๊กที่พบตอนแก้ feature นี้)
 function formatLocalDateYYYYMMDD_(date) {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, '0');
   const d = String(date.getDate()).padStart(2, '0');
   return y + '-' + m + '-' + d;
 }
-
 function setDefaultDate() {
   document.getElementById('f_date').value = formatLocalDateYYYYMMDD_(new Date());
 }
 
-// ปุ่มลัดเลือกวันที่ "วันนี้ / เมื่อวาน" สำหรับกะดึกที่มาบันทึกข้อมูลหลังเที่ยงคืน
-// แต่ต้องการบันทึกของเมื่อวาน (offsetDays: 0 = วันนี้, -1 = เมื่อวาน)
-function setQuickDate_(offsetDays) {
-  const d = new Date();
-  d.setDate(d.getDate() + offsetDays);
-  const dateInput = document.getElementById('f_date');
-  dateInput.value = formatLocalDateYYYYMMDD_(d);
-  dateInput.classList.remove('validation-error');
-  scheduleDraftSave_();
-}
-
 /* ==========================================================
-   Draft auto-save (localStorage)
-   เก็บข้อมูลที่กรอกในฟอร์มไว้อัตโนมัติ กันข้อมูลหายถ้าเน็ตหลุด/ปิดแท็บ/รีเฟรชโดยไม่ตั้งใจ
-   ก่อนกด "ยืนยันบันทึก" สำเร็จ — ใช้ localStorage ได้ปกติเพราะไฟล์นี้ deploy จริงบน
-   GitHub Pages (คนละ context กับ Claude artifact ที่ localStorage ใช้ไม่ได้)
+   REPORT PAGE
    ========================================================== */
-const DRAFT_KEY = 'spm_weighlog_draft_v1';
-const DRAFT_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000; // ทิ้ง draft ที่เก่าเกิน 7 วันไปเลย กันความสับสน
-let draftSaveTimer = null;
-
-function scheduleDraftSave_() {
-  clearTimeout(draftSaveTimer);
-  draftSaveTimer = setTimeout(saveDraftToLocalStorage_, 400);
-}
-
-function saveDraftToLocalStorage_() {
-  try {
-    const draft = {
-      date: document.getElementById('f_date').value,
-      weighmaster: document.getElementById('f_weighmaster').value,
-      shift: selectedShift,
-      vehicles: {},
-      veh_other_type: document.getElementById('f_veh_other_type').value,
-      problems: {},
-      corrective_action: document.getElementById('f_corrective').value,
-      suggestions: document.getElementById('f_suggestions').value,
-      savedAt: Date.now()
-    };
-    VEHICLE_FIELDS.forEach(f => {
-      draft.vehicles[f.key] = document.getElementById(f.formId).value;
-    });
-    Object.keys(PROBLEM_KEY_LABELS).forEach(key => {
-      const p = getProblemData(key);
-      draft.problems[key] = { checked: p.checked, detail: p.detail };
-    });
-    localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
-  } catch (e) {
-    // localStorage อาจใช้ไม่ได้ (โหมดส่วนตัว/ปิดไว้) ไม่ต้องหยุดการทำงานหลักของฟอร์ม
-  }
-}
-
-function clearDraft_() {
-  try { localStorage.removeItem(DRAFT_KEY); } catch (e) { /* ignore */ }
-}
-
-function restoreDraftIfExists_() {
-  let raw;
-  try {
-    raw = localStorage.getItem(DRAFT_KEY);
-  } catch (e) {
-    return;
-  }
-  if (!raw) return;
-
-  let draft;
-  try {
-    draft = JSON.parse(raw);
-  } catch (e) {
-    clearDraft_();
-    return;
-  }
-
-  if (!draft.savedAt || (Date.now() - draft.savedAt) > DRAFT_MAX_AGE_MS) {
-    clearDraft_();
-    return;
-  }
-
-  const vehicles = draft.vehicles || {};
-  const hasAnyVehicleCount = VEHICLE_FIELDS.some(f => Number(vehicles[f.key]) > 0);
-  const hasContent = draft.weighmaster || draft.veh_other_type ||
-    draft.corrective_action || draft.suggestions || hasAnyVehicleCount ||
-    Object.values(draft.problems || {}).some(p => p && p.checked);
-  if (!hasContent) return;
-
-  if (draft.date) document.getElementById('f_date').value = draft.date;
-  document.getElementById('f_weighmaster').value = draft.weighmaster || '';
-  VEHICLE_FIELDS.forEach(f => {
-    document.getElementById(f.formId).value = vehicles[f.key] || 0;
-  });
-  document.getElementById('f_veh_other_type').value = draft.veh_other_type || '';
-  document.getElementById('f_corrective').value = draft.corrective_action || '';
-  document.getElementById('f_suggestions').value = draft.suggestions || '';
-
-  if (draft.shift) {
-    document.querySelectorAll('input[name="shift"]').forEach(radio => {
-      radio.checked = (radio.value === draft.shift);
-      radio.closest('.shift-option').classList.toggle('selected', radio.value === draft.shift);
-    });
-    selectedShift = draft.shift;
-  }
-
-  Object.keys(draft.problems || {}).forEach(key => {
-    const p = draft.problems[key];
-    const item = document.querySelector('.problem-item[data-key="' + key + '"]');
-    if (!item || !p) return;
-    const chk = item.querySelector('input[type=checkbox]');
-    chk.checked = !!p.checked;
-    item.classList.toggle('checked', !!p.checked);
-    item.querySelector('textarea').value = p.detail || '';
-  });
-
-  showToast('กู้คืนข้อมูลที่กรอกค้างไว้ (ยังไม่ได้บันทึก) ให้อัตโนมัติแล้ว', 'success');
-}
-
-function clearDraftAndReset_() {
-  const confirmed = window.confirm('ล้างข้อมูลที่กรอกไว้ทั้งหมดในฟอร์มนี้หรือไม่?');
-  if (!confirmed) return;
-  clearDraft_();
-  resetForm();
-  showToast('ล้างข้อมูลแล้ว', 'success');
-}
-
-/* ---------------- Report page ---------------- */
 let currentRecords = [];
 let isLoadingHistory = false;
-let historyRequestSeq = 0; // กันผลลัพธ์ของ request เก่ามาทับผลลัพธ์ของ request ใหม่กว่า
-
+let historyRequestSeq = 0;
 const PAGE_SIZE = 20;
 let currentPage = 1;
 let totalRecordsCount = 0;
 
-// resetPage=true (ค่าเริ่มต้น) ใช้ตอนกดค้นหา/เข้าแท็บใหม่ -> กลับไปหน้า 1 เสมอ
-// resetPage=false ใช้ตอนกดปุ่มเปลี่ยนหน้า (ก่อนหน้า/ถัดไป) -> คงหน้าปัจจุบันไว้
 async function loadHistory(resetPage) {
   if (resetPage !== false) currentPage = 1;
-
   const container = document.getElementById('historyContainer');
-
-  if (isLoadingHistory) return; // กันกดค้นหาซ้ำซ้อนระหว่างรอผลลัพธ์เดิม
+  if (isLoadingHistory) return;
   isLoadingHistory = true;
   const mySeq = ++historyRequestSeq;
-
   container.innerHTML = '<div class="empty-state"><span class="spinner dark"></span> กำลังโหลดข้อมูล...</div>';
 
   const filters = {
     dateFrom: document.getElementById('r_dateFrom').value || undefined,
     dateTo: document.getElementById('r_dateTo').value || undefined,
     shift: document.getElementById('r_shift').value || undefined,
-    page: currentPage,
-    pageSize: PAGE_SIZE
+    plate: document.getElementById('r_plate').value.trim() || undefined,
+    page: currentPage, pageSize: PAGE_SIZE
   };
 
   try {
     const json = await callApi('list', { filters: filters });
-    if (mySeq !== historyRequestSeq) return; // มี request ใหม่กว่าเข้ามาแล้ว ทิ้งผลลัพธ์นี้
+    if (mySeq !== historyRequestSeq) return;
     currentRecords = json.records || [];
     totalRecordsCount = json.totalCount || 0;
     currentPage = json.page || currentPage;
@@ -1325,7 +642,6 @@ async function loadHistory(resetPage) {
     container.innerHTML = '<div class="empty-state">โหลดข้อมูลไม่สำเร็จ: ' + escHtml(err.message) +
       '<br><button type="button" class="btn secondary" style="width:auto;margin-top:10px;" onclick="loadHistory()">ลองใหม่</button></div>';
     document.getElementById('summaryCards').innerHTML = '';
-    document.getElementById('paginationControls').style.display = 'none';
   } finally {
     if (mySeq === historyRequestSeq) isLoadingHistory = false;
   }
@@ -1343,33 +659,21 @@ function changePage(delta) {
 function renderPaginationControls() {
   const container = document.getElementById('paginationControls');
   const maxPage = Math.max(1, Math.ceil(totalRecordsCount / PAGE_SIZE));
-
-  if (totalRecordsCount === 0) {
-    container.style.display = 'none';
-    return;
-  }
-
+  if (totalRecordsCount === 0) { container.style.display = 'none'; return; }
   container.style.display = 'flex';
-  document.getElementById('pageInfo').textContent =
-    'หน้า ' + currentPage + ' จาก ' + maxPage + ' (ทั้งหมด ' + totalRecordsCount + ' รายการ)';
+  document.getElementById('pageInfo').textContent = 'หน้า ' + currentPage + ' จาก ' + maxPage + ' (ทั้งหมด ' + totalRecordsCount + ' รายการ)';
   document.getElementById('prevPageBtn').disabled = currentPage <= 1;
   document.getElementById('nextPageBtn').disabled = currentPage >= maxPage;
 }
 
-// label ภาษาไทยสำหรับแสดงผล breakdown (key ต้องตรงกับ PROBLEM_FLAG_KEY_MAP ฝั่ง backend)
 const PROBLEM_BREAKDOWN_LABELS = {
-  p_overweight: 'น้ำหนักเกิน',
-  p_driver_behavior: 'พฤติกรรมคนขับ',
-  p_system: 'ระบบ/อุปกรณ์',
-  p_wrong_queue: 'ชั่งผิดคิว',
-  p_wrong_delivery: 'ส่งของผิดที่',
-  p_other: 'อื่นๆ'
+  p_overweight: 'น้ำหนักเกิน', p_driver_behavior: 'พฤติกรรมคนขับ', p_system: 'ระบบ/อุปกรณ์',
+  p_wrong_queue: 'ชั่งผิดคิว', p_wrong_plate: 'ทะเบียนผิด', p_wrong_delivery: 'ส่งของผิดที่', p_other: 'อื่นๆ'
 };
 
 function renderSummary(summary, totalCount) {
   const vt = summary.vehicleTotals || {};
   const totalVehicles = VEHICLE_FIELDS.reduce((s, f) => s + (vt[f.key] || 0), 0);
-
   const cards = [
     { num: totalCount || 0, lbl: 'จำนวนรอบที่บันทึก (ตามตัวกรอง)' },
     { num: totalVehicles, lbl: 'รถทั้งหมด (คัน)' },
@@ -1379,65 +683,48 @@ function renderSummary(summary, totalCount) {
     { num: vt.veh_rawmat_in || 0, lbl: 'รถรับวัตถุดิบ/เคมี/บรรจุภัณฑ์ (คัน)' },
     { num: summary.problemCount || 0, lbl: 'รอบที่พบปัญหา' }
   ];
-
   document.getElementById('summaryCards').innerHTML = cards.map(c =>
     '<div class="summary-card"><div class="num">' + escHtml(c.num) + '</div><div class="lbl">' + escHtml(c.lbl) + '</div></div>'
   ).join('');
-
   renderProblemBreakdown_(summary.problemBreakdown || {});
 }
 
-// แสดงสถิติแยกตามประเภทปัญหา (มาจากคอลัมน์ TRUE/FALSE แยกประเภทในชีต)
 function renderProblemBreakdown_(breakdown) {
   const container = document.getElementById('problemBreakdown');
-  if (!container) return;
-
-  const items = Object.keys(PROBLEM_BREAKDOWN_LABELS)
-    .map(k => ({ label: PROBLEM_BREAKDOWN_LABELS[k], count: breakdown[k] || 0 }))
-    .filter(item => item.count > 0)
-    .sort((a, b) => b.count - a.count);
-
-  if (!items.length) {
-    container.innerHTML = '<div style="font-size:12.5px;color:var(--muted);">ไม่พบปัญหาในช่วงที่เลือก</div>';
-    return;
-  }
-
-  container.innerHTML = items.map(item =>
-    '<span class="tag" style="font-size:12px;padding:4px 10px;">' + escHtml(item.label) + ': ' + escHtml(item.count) + ' ครั้ง</span>'
-  ).join(' ');
+  const items = Object.keys(PROBLEM_BREAKDOWN_LABELS).map(k => ({ label: PROBLEM_BREAKDOWN_LABELS[k], count: breakdown[k] || 0 })).filter(i => i.count > 0).sort((a,b) => b.count - a.count);
+  if (!items.length) { container.innerHTML = '<div style="font-size:12.5px;color:var(--muted);">ไม่พบปัญหาในช่วงที่เลือก</div>'; return; }
+  container.innerHTML = items.map(i => '<span class="tag" style="font-size:12px;padding:4px 10px;">' + escHtml(i.label) + ': ' + escHtml(i.count) + ' ครั้ง</span>').join(' ');
 }
 
 function renderHistoryTable(records) {
   const container = document.getElementById('historyContainer');
-  if (!records.length) {
-    container.innerHTML = '<div class="empty-state">ไม่พบข้อมูลตามเงื่อนไขที่เลือก</div>';
-    return;
-  }
+  if (!records.length) { container.innerHTML = '<div class="empty-state">ไม่พบข้อมูลตามเงื่อนไขที่เลือก</div>'; return; }
 
-  let html = '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">' +
-    '<table class="history"><thead><tr>' +
-    '<th>วันที่</th><th>กะ</th><th>ผู้บันทึก</th><th>รวมรถ (คัน)</th><th>ปัญหา</th><th></th>' +
+  let html = '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;"><table class="history"><thead><tr>' +
+    '<th>วันที่</th><th>กะ</th><th>ผู้บันทึก</th><th>ทะเบียนรถ</th><th>รวมรถ (คัน)</th><th>ปัญหา</th><th></th>' +
     '</tr></thead><tbody>';
 
   records.forEach((r, idx) => {
     const hasProblem = r.problems && String(r.problems).trim();
-    const tag = hasProblem
-      ? '<span class="tag">มีปัญหา</span>'
-      : '<span style="color:#5f6368;font-size:12px;">-</span>';
+    const tag = hasProblem ? '<span class="tag">มีปัญหา</span>' : '<span style="color:#5f6368;font-size:12px;">-</span>';
     const totalVeh = VEHICLE_FIELDS.reduce((s, f) => s + (Number(r[f.key]) || 0), 0);
 
     html += '<tr onclick="showDetail(' + idx + ')">' +
       '<td>' + escHtml(r.date) + '</td>' +
       '<td>' + escHtml(r.shift) + '</td>' +
       '<td>' + escHtml(r.weighmaster) + '</td>' +
+      '<td>' + escHtml(r.licensePlate || '-') + '</td>' +
       '<td>' + escHtml(totalVeh) + '</td>' +
       '<td>' + tag + '</td>' +
-      '<td class="row-arrow">›</td>' +
-      '</tr>';
+      '<td class="row-arrow">›</td></tr>';
   });
-
   html += '</tbody></table></div>';
   container.innerHTML = html;
+}
+
+function hasAnyProblem_(r) {
+  if (r.problems && String(r.problems).trim()) return true;
+  return Object.values(PROBLEM_FLAG_KEY_MAP).some(k => r[k] === true);
 }
 
 function showDetail(idx) {
@@ -1445,39 +732,35 @@ function showDetail(idx) {
   if (!r) return;
 
   const rows = [
-    ['วันที่', r.date],
-    ['กะ', r.shift],
-    ['ผู้บันทึก', r.weighmaster],
+    ['วันที่', r.date], ['กะ', r.shift], ['ผู้บันทึก', r.weighmaster], ['ทะเบียนรถ', r.licensePlate || '-'],
     ['รถส่งวัตถุดิบ/เคมีภัณฑ์/บรรจุภัณฑ์ (คัน)', r.veh_rawmat_out],
     ['รถส่งอาหาร (คัน)', r.veh_feed_out],
     ['รถรับอาหาร (คัน)', r.veh_feed_in],
     ['รถรับวัตถุดิบ/เคมีภัณฑ์/บรรจุภัณฑ์ (คัน)', r.veh_rawmat_in],
     ['ประเภทรถอื่นๆ', r.veh_other_type || '-']
   ];
-
   let html = '<h3>รายละเอียดการบันทึก</h3>';
-  rows.forEach(([label, val]) => {
-    html += '<div class="modal-row"><span class="k">' + escHtml(label) + '</span>' + escHtml(val) + '</div>';
-  });
+  rows.forEach(([l,v]) => { html += '<div class="modal-row"><span class="k">' + escHtml(l) + '</span>' + escHtml(v) + '</div>'; });
 
-  const problemsHtml = r.problems && String(r.problems).trim()
-    ? escHtml(r.problems).replace(/\n/g, '<br>')
-    : '<span style="color:#5f6368;">ไม่พบปัญหา</span>';
+  const problemsHtml = r.problems && String(r.problems).trim() ? escHtml(r.problems).replace(/\n/g,'<br>') : '<span style="color:var(--muted);">ไม่พบปัญหา</span>';
   html += '<div class="modal-row"><span class="k">ปัญหาที่พบและรายละเอียด</span>' + problemsHtml + '</div>';
-  html += '<div class="modal-row"><span class="k">แนวทางการแก้ไข</span>' + (r.corrective_action ? escHtml(r.corrective_action).replace(/\n/g, '<br>') : '-') + '</div>';
-  html += '<div class="modal-row"><span class="k">ข้อเสนอแนะ</span>' + (r.suggestions ? escHtml(r.suggestions).replace(/\n/g, '<br>') : '-') + '</div>';
+  html += '<div class="modal-row"><span class="k">แนวทางการแก้ไข</span>' + (r.corrective_action ? escHtml(r.corrective_action).replace(/\n/g,'<br>') : '-') + '</div>';
+  html += '<div class="modal-row"><span class="k">ข้อเสนอแนะ</span>' + (r.suggestions ? escHtml(r.suggestions).replace(/\n/g,'<br>') : '-') + '</div>';
 
   if (r.lastEditedBy) {
-    const editedAtStr = r.lastEditedAt ? new Date(r.lastEditedAt).toLocaleString('th-TH') : '-';
-    html += '<div class="modal-row" style="background:#f8faf9;padding:8px 10px;border-radius:6px;font-size:12px;color:var(--muted);">' +
-      '✏️ แก้ไขล่าสุดโดย ' + escHtml(r.lastEditedBy) + ' เมื่อ ' + escHtml(editedAtStr) +
-      '</div>';
+    html += '<div class="modal-row" style="background:#f8faf9;padding:8px 10px;border-radius:6px;font-size:12px;color:var(--muted);">✏️ แก้ไขล่าสุดโดย ' + escHtml(r.lastEditedBy) + ' เมื่อ ' + escHtml(r.lastEditedAt ? new Date(r.lastEditedAt).toLocaleString('th-TH') : '') + '</div>';
   }
 
+  const locked = hasAnyProblem_(r);
   html += '<div style="display:flex;gap:10px;margin-top:20px;">' +
-    '<button type="button" class="btn secondary" style="flex:1;" onclick="openEditModal(' + idx + ')">แก้ไขข้อมูล</button>' +
-    '<button type="button" class="btn danger" style="flex:1;" onclick="deleteRecord(' + idx + ')">ลบรายการนี้</button>' +
-    '</div>';
+    '<button type="button" class="btn secondary" style="flex:1;" onclick="openEditModal(' + idx + ')">แก้ไขข้อมูล</button>';
+  if (locked) {
+    html += '<button type="button" class="btn" style="flex:1;background:#9aa0a6;cursor:not-allowed;" disabled title="รายการนี้มีปัญหาบันทึกไว้ ลบไม่ได้">🔒 ลบไม่ได้</button>';
+  } else {
+    html += '<button type="button" class="btn danger" style="flex:1;" onclick="deleteRecord(' + idx + ')">ลบรายการนี้</button>';
+  }
+  html += '</div>';
+  if (locked) html += '<div class="locked-note">🔒 รายการนี้มีการบันทึกปัญหาไว้ จึงลบไม่ได้ เพื่อรักษาหลักฐานไว้ตรวจสอบย้อนหลัง (ยังแก้ไขข้อมูลได้ตามปกติ)</div>';
 
   document.getElementById('modalBody').innerHTML = html;
   document.getElementById('modalOverlay').classList.add('show');
@@ -1486,142 +769,84 @@ function showDetail(idx) {
 
 function closeModal(fromHistory) {
   document.getElementById('modalOverlay').classList.remove('show');
-  if (!fromHistory) {
-    // ให้ปุ่ม back ของเบราว์เซอร์ "เดินไปข้างหน้า" มาเจอ state ที่ overlay:null เอง
-    history.back();
-  }
+  if (!fromHistory) history.back();
 }
 
-/* ---------------- Edit record ---------------- */
-let currentEditEntryId = null;
 let editSaveInProgress = false;
-
 function openEditModal(idx) {
   const r = currentRecords[idx];
-  if (!r || !r.entryId) {
-    showToast('ไม่พบรหัสอ้างอิงของรายการนี้ แก้ไขไม่ได้', 'error');
-    return;
-  }
-  currentEditEntryId = r.entryId;
+  if (!r || !r.entryId) { showToast('ไม่พบรหัสอ้างอิงของรายการนี้', 'error'); return; }
+  window.currentEditEntryId = r.entryId;
 
   const html =
     '<h3>แก้ไขข้อมูล</h3>' +
-    (r.lastEditedBy
-      ? '<div style="font-size:12px;color:var(--muted);margin-bottom:12px;background:#f8faf9;padding:8px 10px;border-radius:6px;">' +
-        'แก้ไขล่าสุดโดย: ' + escHtml(r.lastEditedBy) +
-        (r.lastEditedAt ? ' เมื่อ ' + escHtml(new Date(r.lastEditedAt).toLocaleString('th-TH')) : '') +
-        '</div>'
-      : '') +
-    '<div class="field" style="background:#fff8e1;padding:10px;border-radius:8px;">' +
-      '<label>ชื่อผู้แก้ไขข้อมูลนี้ <span class="req">*</span></label>' +
-      '<input type="text" id="e_editedBy" maxlength="200" placeholder="ระบุชื่อ-นามสกุลผู้ทำการแก้ไข (จำเป็นต้องกรอก)">' +
-    '</div>' +
+    '<div class="field" style="background:#fff8e1;padding:10px;border-radius:8px;"><label>ชื่อผู้แก้ไขข้อมูลนี้ <span class="req">*</span></label><input type="text" id="e_editedBy" maxlength="200"></div>' +
     '<div class="field"><label>วันที่</label><input type="date" id="e_date"></div>' +
     '<div class="field"><label>ผู้บันทึก/เจ้าหน้าที่เครื่องชั่ง</label><input type="text" id="e_weighmaster" maxlength="200"></div>' +
-    '<div class="field"><label>กะปฏิบัติงาน</label>' +
-      '<select id="e_shift">' +
-        '<option value="เช้า">เช้า</option>' +
-        '<option value="บ่าย">บ่าย</option>' +
-        '<option value="ดึก">ดึก</option>' +
-      '</select>' +
-    '</div>' +
+    '<div class="field"><label>ทะเบียนรถ</label><input type="text" id="e_license_plate" maxlength="50"></div>' +
+    '<div class="field"><label>กะปฏิบัติงาน</label><select id="e_shift"><option value="เช้า">เช้า</option><option value="บ่าย">บ่าย</option><option value="ดึก">ดึก</option></select></div>' +
     '<div class="field"><label>รถส่งวัตถุดิบ/เคมีภัณฑ์/บรรจุภัณฑ์ (คัน)</label><input type="number" min="0" max="500" inputmode="numeric" id="e_veh_rawmat_out"></div>' +
     '<div class="field"><label>รถส่งอาหาร (คัน)</label><input type="number" min="0" max="500" inputmode="numeric" id="e_veh_feed_out"></div>' +
     '<div class="field"><label>รถรับอาหาร (คัน)</label><input type="number" min="0" max="500" inputmode="numeric" id="e_veh_feed_in"></div>' +
     '<div class="field"><label>รถรับวัตถุดิบ/เคมีภัณฑ์/บรรจุภัณฑ์ (คัน)</label><input type="number" min="0" max="500" inputmode="numeric" id="e_veh_rawmat_in"></div>' +
     '<div class="field"><label>ระบุประเภทรถอื่นๆ</label><input type="text" id="e_veh_other_type" maxlength="200"></div>' +
-    '<div class="field"><label>ปัญหาที่พบและรายละเอียด</label><textarea id="e_problems" maxlength="2000" placeholder="ไม่มีปัญหาให้เว้นว่างไว้"></textarea><div class="char-counter" id="e_problemsCounter"></div></div>' +
-    '<div class="field"><label>แนวทางการแก้ไข</label><textarea id="e_corrective" maxlength="2000"></textarea><div class="char-counter" id="e_correctiveCounter"></div></div>' +
-    '<div class="field"><label>ข้อเสนอแนะ</label><textarea id="e_suggestions" maxlength="2000"></textarea><div class="char-counter" id="e_suggestionsCounter"></div></div>' +
+    '<div class="field"><label>ปัญหาที่พบและรายละเอียด</label><textarea id="e_problems" maxlength="2000"></textarea></div>' +
+    '<div class="field"><label>แนวทางการแก้ไข</label><textarea id="e_corrective" maxlength="2000"></textarea></div>' +
+    '<div class="field"><label>ข้อเสนอแนะ</label><textarea id="e_suggestions" maxlength="2000"></textarea></div>' +
     '<div style="display:flex;gap:10px;margin-top:16px;">' +
-      '<button type="button" class="btn secondary" style="flex:1;" onclick="closeEditModal()">ยกเลิก</button>' +
-      '<button type="button" class="btn" style="flex:1;" id="editSaveBtn" onclick="saveEdit()">บันทึกการแก้ไข</button>' +
-    '</div>';
+    '<button type="button" class="btn secondary" style="flex:1;" onclick="closeEditModal()">ยกเลิก</button>' +
+    '<button type="button" class="btn" style="flex:1;" id="editSaveBtn" onclick="saveEdit()">บันทึกการแก้ไข</button></div>';
 
   document.getElementById('editModalBody').innerHTML = html;
-
-  // เติมค่าปัจจุบันหลังสร้าง element แล้ว (ปลอดภัยกว่าฝังผ่าน string ตรงๆ)
   document.getElementById('e_date').value = r.date || '';
   document.getElementById('e_weighmaster').value = r.weighmaster || '';
+  document.getElementById('e_license_plate').value = r.licensePlate || '';
   document.getElementById('e_shift').value = r.shift || 'เช้า';
-  VEHICLE_FIELDS.forEach(f => {
-    document.getElementById(f.editFormId).value = r[f.key] || 0;
-  });
+  VEHICLE_FIELDS.forEach(f => { document.getElementById(f.editFormId).value = r[f.key] || 0; });
   document.getElementById('e_veh_other_type').value = r.veh_other_type || '';
   document.getElementById('e_problems').value = r.problems || '';
   document.getElementById('e_corrective').value = r.corrective_action || '';
   document.getElementById('e_suggestions').value = r.suggestions || '';
-
-  setupCharCounter_('e_problems', 'e_problemsCounter', 2000);
-  setupCharCounter_('e_corrective', 'e_correctiveCounter', 2000);
-  setupCharCounter_('e_suggestions', 'e_suggestionsCounter', 2000);
 
   document.getElementById('editModalOverlay').classList.add('show');
   history.pushState({ tab: currentTab, overlay: 'edit' }, '', '#edit');
 }
 
 function closeEditModal(fromHistory) {
-  if (editSaveInProgress) return; // กันปิดกลางคันตอนกำลังบันทึกอยู่
+  if (editSaveInProgress) return;
   document.getElementById('editModalOverlay').classList.remove('show');
   if (!fromHistory) history.back();
 }
 
 async function saveEdit() {
-  if (editSaveInProgress || !currentEditEntryId) return;
-
-  if (navigator.onLine === false) {
-    showToast('ไม่มีการเชื่อมต่ออินเทอร์เน็ต กรุณาตรวจสอบแล้วลองใหม่', 'error');
-    return;
-  }
-
+  if (editSaveInProgress || !window.currentEditEntryId) return;
   const editedBy = document.getElementById('e_editedBy').value.trim();
   const date = document.getElementById('e_date').value;
   const weighmaster = document.getElementById('e_weighmaster').value.trim();
   const shift = document.getElementById('e_shift').value;
+  const licensePlate = document.getElementById('e_license_plate').value.trim();
   const vehOtherType = document.getElementById('e_veh_other_type').value.trim();
   const problemsText = document.getElementById('e_problems').value.trim();
   const correctiveAction = document.getElementById('e_corrective').value.trim();
   const suggestions = document.getElementById('e_suggestions').value.trim();
 
   if (!editedBy) { showToast('กรุณาระบุชื่อผู้แก้ไขข้อมูล', 'error'); return; }
-  if (editedBy.length > MAX_SHORT_LEN) { showToast('ชื่อผู้แก้ไขยาวเกินไป (ไม่เกิน ' + MAX_SHORT_LEN + ' ตัวอักษร)', 'error'); return; }
   if (!date) { showToast('กรุณาระบุวันที่', 'error'); return; }
   if (!weighmaster) { showToast('กรุณาระบุชื่อผู้บันทึก', 'error'); return; }
-  if (weighmaster.length > MAX_SHORT_LEN) { showToast('ชื่อผู้บันทึกยาวเกินไป (ไม่เกิน ' + MAX_SHORT_LEN + ' ตัวอักษร)', 'error'); return; }
 
   const vehicleCounts = {};
   for (let i = 0; i < VEHICLE_FIELDS.length; i++) {
     const f = VEHICLE_FIELDS[i];
     const val = Number(document.getElementById(f.editFormId).value);
     if (!Number.isFinite(val) || val < 0 || val > MAX_VEHICLE_COUNT) {
-      showToast('จำนวน "' + f.label + '" ไม่ถูกต้อง (ต้องอยู่ระหว่าง 0-' + MAX_VEHICLE_COUNT + ' คัน)', 'error');
-      return;
+      showToast('จำนวน "' + f.label + '" ไม่ถูกต้อง', 'error'); return;
     }
     vehicleCounts[f.key] = Math.floor(val);
   }
 
-  if (vehOtherType.length > MAX_SHORT_LEN) {
-    showToast('ข้อความ "ประเภทรถอื่นๆ" ยาวเกินไป (ไม่เกิน ' + MAX_SHORT_LEN + ' ตัวอักษร)', 'error'); return;
-  }
-  if (problemsText.length > MAX_TEXT_LEN) {
-    showToast('ข้อความ "ปัญหาที่พบ" ยาวเกินไป (ไม่เกิน ' + MAX_TEXT_LEN + ' ตัวอักษร)', 'error'); return;
-  }
-  if (correctiveAction.length > MAX_TEXT_LEN) {
-    showToast('ข้อความ "แนวทางการแก้ไข" ยาวเกินไป (ไม่เกิน ' + MAX_TEXT_LEN + ' ตัวอักษร)', 'error'); return;
-  }
-  if (suggestions.length > MAX_TEXT_LEN) {
-    showToast('ข้อความ "ข้อเสนอแนะ" ยาวเกินไป (ไม่เกิน ' + MAX_TEXT_LEN + ' ตัวอักษร)', 'error'); return;
-  }
-
   const data = Object.assign({
-    editedBy: editedBy,
-    date: date,
-    weighmaster: weighmaster,
-    shift: shift,
-    veh_other_type: vehOtherType,
-    problems: problemsText,
-    corrective_action: correctiveAction,
-    suggestions: suggestions
+    editedBy: editedBy, date: date, weighmaster: weighmaster, shift: shift, licensePlate: licensePlate,
+    veh_other_type: vehOtherType, problems: problemsText, corrective_action: correctiveAction, suggestions: suggestions
   }, vehicleCounts);
 
   const btn = document.getElementById('editSaveBtn');
@@ -1629,14 +854,13 @@ async function saveEdit() {
   if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> กำลังบันทึก...'; }
 
   try {
-    await callApi('update', { entryId: currentEditEntryId, data: data });
+    await callApi('update', { entryId: window.currentEditEntryId, data: data });
     showToast('แก้ไขข้อมูลสำเร็จ', 'success');
     editSaveInProgress = false;
-    // ปิด edit modal + detail modal ที่ซ้อนอยู่ด้านหลัง แล้วกลับ history ทีเดียว 2 ระดับ
     document.getElementById('editModalOverlay').classList.remove('show');
     document.getElementById('modalOverlay').classList.remove('show');
     history.go(-2);
-    currentEditEntryId = null;
+    window.currentEditEntryId = null;
     loadHistory();
   } catch (err) {
     editSaveInProgress = false;
@@ -1647,151 +871,99 @@ async function saveEdit() {
   }
 }
 
-/* ---------------- Delete record ---------------- */
 async function deleteRecord(idx) {
   const r = currentRecords[idx];
-  if (!r || !r.entryId) {
-    showToast('ไม่พบรหัสอ้างอิงของรายการนี้ ลบไม่ได้', 'error');
-    return;
-  }
+  if (!r || !r.entryId) { showToast('ไม่พบรหัสอ้างอิงของรายการนี้', 'error'); return; }
+  if (hasAnyProblem_(r)) { showToast('รายการนี้มีปัญหาบันทึกไว้ ลบไม่ได้', 'error'); return; }
 
-  const deletedBy = window.prompt(
-    'กรุณาระบุชื่อ-นามสกุลผู้ทำการลบข้อมูลนี้ (เพื่อบันทึกไว้เป็นหลักฐาน):',
-    ''
-  );
-  if (deletedBy === null) return; // กดยกเลิก
-  if (!deletedBy.trim()) {
-    showToast('กรุณาระบุชื่อผู้ทำการลบ', 'error');
-    return;
-  }
+  const deletedBy = window.prompt('กรุณาระบุชื่อผู้ทำการลบข้อมูลนี้ (เพื่อบันทึกไว้เป็นหลักฐาน):', '');
+  if (deletedBy === null) return;
+  if (!deletedBy.trim()) { showToast('กรุณาระบุชื่อผู้ทำการลบ', 'error'); return; }
 
-  const confirmed = window.confirm(
-    'ยืนยันการลบข้อมูลนี้หรือไม่?\n\n' +
-    'วันที่: ' + r.date + '\nกะ: ' + r.shift + '\nผู้บันทึก: ' + r.weighmaster +
-    '\nผู้ทำการลบ: ' + deletedBy.trim() +
-    '\n\nข้อมูลจะถูกย้ายไปเก็บในแท็บ "ประวัติการลบ" ไม่แสดงในระบบอีก'
-  );
+  const confirmed = window.confirm('ยืนยันการลบข้อมูลนี้หรือไม่?\nวันที่: ' + r.date + ' กะ: ' + r.shift + ' ผู้บันทึก: ' + r.weighmaster + '\nผู้ทำการลบ: ' + deletedBy.trim());
   if (!confirmed) return;
-
-  if (navigator.onLine === false) {
-    showToast('ไม่มีการเชื่อมต่ออินเทอร์เน็ต กรุณาตรวจสอบแล้วลองใหม่', 'error');
-    return;
-  }
 
   try {
     await callApi('delete', { entryId: r.entryId, deletedBy: deletedBy.trim() });
     showToast('ลบข้อมูลสำเร็จ', 'success');
     document.getElementById('modalOverlay').classList.remove('show');
-    history.back(); // กลับจาก state 'detail' ไป state ของแท็บรายงาน
+    history.back();
     loadHistory();
   } catch (err) {
     showToast('ลบไม่สำเร็จ: ' + err.message, 'error');
   }
 }
 
+/* ---------------- Overlay + history + Esc handling ---------------- */
 function getOpenOverlay_() {
   if (document.getElementById('editModalOverlay').classList.contains('show')) return 'edit';
   if (document.getElementById('confirmModalOverlay').classList.contains('show')) return 'confirm';
   if (document.getElementById('modalOverlay').classList.contains('show')) return 'detail';
   return null;
 }
-
-/* ---------------- Browser back/forward handling ---------------- */
-// กันปัญหากดย้อนกลับแล้วหลุดออกจากเว็บทันที:
-// ให้ back ปิด popup ที่เปิดอยู่ก่อน (ตรวจสอบข้อมูล/รายละเอียด) แล้วค่อยสลับกลับไปแท็บฟอร์ม แล้วค่อยออกจากเว็บจริงๆ
 window.addEventListener('popstate', (event) => {
   const state = event.state || { tab: 'form', overlay: null };
   const openOverlay = getOpenOverlay_();
-
   if (openOverlay && openOverlay !== state.overlay) {
     if (openOverlay === 'edit') closeEditModal(true);
     if (openOverlay === 'confirm') closeConfirmModal(true);
     if (openOverlay === 'detail') closeModal(true);
   }
-  if (state.tab && state.tab !== currentTab) {
-    switchTab(state.tab, true);
-  }
+  if (state.tab && state.tab !== currentTab) switchTab(state.tab, true);
 });
-
-// ปิด popup ด้วยปุ่ม Esc เพื่อความสะดวก/เสถียรบนเดสก์ท็อป
 window.addEventListener('keydown', (event) => {
   if (event.key !== 'Escape') return;
-  const openOverlay = getOpenOverlay_();
-  if (openOverlay === 'edit') closeEditModal();
-  if (openOverlay === 'confirm') closeConfirmModal();
-  if (openOverlay === 'detail') closeModal();
+  const o = getOpenOverlay_();
+  if (o === 'edit') closeEditModal();
+  if (o === 'confirm') closeConfirmModal();
+  if (o === 'detail') closeModal();
 });
 
-/* ---------------- เตือนก่อนปิด/รีเฟรชหน้าถ้ามีข้อมูลกรอกค้างไว้ ---------------- */
-// ใช้เกณฑ์เดียวกับตอนเช็ค draft (hasContent) เพื่อไม่ให้เตือนพร่ำเพรื่อตอนฟอร์มว่างเปล่า
+function setupModalScrollLock_() {
+  const overlayIds = ['modalOverlay','confirmModalOverlay','editModalOverlay'];
+  const update = () => {
+    const anyOpen = overlayIds.some(id => document.getElementById(id).classList.contains('show'));
+    document.body.classList.toggle('modal-open', anyOpen);
+  };
+  overlayIds.forEach(id => new MutationObserver(update).observe(document.getElementById(id), { attributes: true, attributeFilter: ['class'] }));
+  update();
+}
+
+/* ---------------- beforeunload ---------------- */
 function hasUnsavedFormData_() {
   const weighmaster = document.getElementById('f_weighmaster').value.trim();
+  const licensePlate = document.getElementById('f_license_plate').value.trim();
   const vehOtherType = document.getElementById('f_veh_other_type').value.trim();
   const corrective = document.getElementById('f_corrective').value.trim();
   const suggestions = document.getElementById('f_suggestions').value.trim();
   const anyVehicleCount = VEHICLE_FIELDS.some(f => (Number(document.getElementById(f.formId).value) || 0) > 0);
   const anyProblemChecked = Object.keys(PROBLEM_KEY_LABELS).some(key => getProblemData(key).checked);
-
-  return !!(weighmaster || vehOtherType || corrective || suggestions ||
-    anyVehicleCount || anyProblemChecked);
+  return !!(weighmaster || licensePlate || vehOtherType || corrective || suggestions || anyVehicleCount || anyProblemChecked);
 }
-
 window.addEventListener('beforeunload', (event) => {
-  // ไม่เตือนตอนกำลังบันทึกอยู่ (ป้องกันเตือนซ้ำซ้อนตอนกด "ยืนยันบันทึก" ที่ทำให้หน้าเปลี่ยน state)
   if (saveInProgress) return;
-  if (hasUnsavedFormData_()) {
-    event.preventDefault();
-    event.returnValue = ''; // ข้อความจริงจะถูกกำหนดโดยเบราว์เซอร์เอง (ข้อจำกัดของ browser API)
-  }
+  if (hasUnsavedFormData_()) { event.preventDefault(); event.returnValue = ''; }
 });
 
-/* ---------------- Network status indicator ---------------- */
-function updateNetStatus_(showToastMsg) {
+/* ---------------- Network status ---------------- */
+function updateNetStatus_(showMsg) {
   const el = document.getElementById('netStatus');
   const textEl = document.getElementById('netStatusText');
   const isOnline = navigator.onLine !== false;
-
   el.className = 'net-status ' + (isOnline ? 'online' : 'offline');
   textEl.textContent = isOnline ? 'ออนไลน์' : 'ออฟไลน์';
-
-  if (showToastMsg) {
-    showToast(isOnline ? 'กลับมาเชื่อมต่ออินเทอร์เน็ตแล้ว' : 'ขาดการเชื่อมต่ออินเทอร์เน็ต', isOnline ? 'success' : 'error');
-  }
+  if (showMsg) showToast(isOnline ? 'กลับมาเชื่อมต่ออินเทอร์เน็ตแล้ว' : 'ขาดการเชื่อมต่ออินเทอร์เน็ต', isOnline ? 'success' : 'error');
 }
-
 window.addEventListener('online', () => updateNetStatus_(true));
 window.addEventListener('offline', () => updateNetStatus_(true));
-
-/* ---------------- กันหน้าพื้นหลังเลื่อนตามตอนมี popup เปิดอยู่ (บั๊กมือถือที่พบบ่อย) ---------------- */
-// ใช้ MutationObserver คอยดู class ของทั้ง 3 overlay แทนการเขียนโค้ดเพิ่มทุกจุดที่เปิด/ปิด popup
-// กันพลาดจุดใดจุดหนึ่งไป และให้ทำงานถูกต้องแม้จะมีการเพิ่ม popup ใหม่ในอนาคต
-function setupModalScrollLock_() {
-  const overlayIds = ['modalOverlay', 'confirmModalOverlay', 'editModalOverlay'];
-  const update = () => {
-    const anyOpen = overlayIds.some(id => {
-      const el = document.getElementById(id);
-      return el && el.classList.contains('show');
-    });
-    document.body.classList.toggle('modal-open', anyOpen);
-  };
-  overlayIds.forEach(id => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    new MutationObserver(update).observe(el, { attributes: true, attributeFilter: ['class'] });
-  });
-  update();
-}
 
 /* ---------------- Init ---------------- */
 window.addEventListener('DOMContentLoaded', () => {
   setDefaultDate();
-  restoreDraftIfExists_();
   history.replaceState({ tab: 'form', overlay: null }, '', '#form');
   updateNetStatus_(false);
   setupModalScrollLock_();
-  if (!APPS_SCRIPT_URL) {
-    document.getElementById('configWarning').style.display = 'block';
-  }
+  if (!APPS_SCRIPT_URL) document.getElementById('configWarning').style.display = 'block';
 });
 </script>
 </body>
