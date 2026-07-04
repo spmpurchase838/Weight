@@ -401,6 +401,10 @@ function generatePrintLayout(records, scope, targetValue) {
       blocksHtml = '<div class="empty-state">ไม่มีบันทึกข้อมูลรายงานในวันที่เลือก</div>';
     } else {
       records.forEach(r => {
+        const hasProblem = r.problems && String(r.problems).trim();
+        const problemBlockHtml = hasProblem
+          ? `<div style="font-size:14px; white-space:pre-wrap; background:#f9f9f9; padding:10px; border-left:3px solid #d93025;"><b>⚠️ รายงานรายละเอียดปัญหา:</b>\n${r.problems}</div>`
+          : `<div style="font-size:14px; color:#0f9d58;">✅ ไม่พบปัญหาในกะนี้</div>`;
         blocksHtml += `
           <div class="item-block">
             <div class="print-meta">
@@ -410,7 +414,7 @@ function generatePrintLayout(records, scope, targetValue) {
             <div style="font-size:14px; margin-bottom:10px;">
               <b>📊 ยอดรวมจำนวนรถ:</b> วัตถุดิบออก ${r.veh_rawmat_out} คัน | อาหารออก ${r.veh_feed_out || 0} คัน | รถอาหารภายใน ${r.veh_feed_in} คัน | รถวัตถุดิบภายใน ${r.veh_rawmat_in} คัน${r.veh_other_type ? ' | อื่นๆ: ' + r.veh_other_type : ''}
             </div>
-            <div style="font-size:14px; white-space:pre-wrap; background:#f9f9f9; padding:10px; border-left:3px solid #d93025;"><b>⚠️ รายงานรายละเอียดปัญหา:</b>\n${r.problems || '- ไม่มีรายงานปัญหา -'}</div>
+            ${problemBlockHtml}
           </div>
         `;
       });
