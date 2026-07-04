@@ -29,7 +29,7 @@
   .field{ margin-bottom:16px; }
   .field > label{ display:block; font-size:15px; font-weight:600; margin-bottom:7px; }
   .field > label .req{ color:var(--danger); }
-  input[type=text], input[type=number], input[type=date], textarea, select{
+  input[type=text], input[type=number], input[type=date], textarea, select, input[type=month]{
     width:100%; padding:14px; border:1.5px solid var(--border); border-radius:8px; font-size:16px;
     font-family:inherit; background:#fff; color:var(--text); min-height:48px;
   }
@@ -42,8 +42,6 @@
   .shift-option{ flex:1; min-width:100px; min-height:52px; display:flex; align-items:center; justify-content:center; border:1.5px solid var(--border); border-radius:8px; padding:14px; text-align:center; cursor:pointer; color:var(--muted); user-select:none; position:relative; }
   .shift-option .shift-name{ font-size:16px; font-weight:700; }
   .shift-option.selected{ border-color:var(--primary); background:rgba(15,157,88,0.08); color:var(--primary-dark); }
-  .shift-option:has(input:focus-visible), .shift-option.kbd-focus{ outline:3px solid var(--primary); outline-offset:2px; }
-  .visually-hidden{ position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
 
   .veh-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 0; border-bottom:1px solid var(--border); }
   .veh-row:last-child{ border-bottom:none; }
@@ -64,19 +62,19 @@
   .btn:disabled{ background:#9aa0a6; cursor:not-allowed; }
   .btn.secondary{ background:#fff; color:var(--primary-dark); border:1.5px solid var(--primary); }
   .btn.danger{ background:var(--danger); }
-  .btn.danger:hover{ background:#a52714; }
 
   .char-counter{ font-size:11px; color:var(--muted); text-align:right; margin-top:3px; }
-  .char-counter.warn{ color:var(--warn); }
-  .char-counter.danger{ color:var(--danger); font-weight:700; }
 
-  .summary-cards{ display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px; margin-top:16px; }
-  .summary-card{ background:#f8faf9; border:1px solid var(--border); border-radius:8px; padding:14px; text-align:center; }
-  .summary-card .num{ font-size:20px; font-weight:700; color:var(--primary-dark); }
-  .summary-card .lbl{ font-size:12px; color:var(--muted); margin-top:4px; }
+  /* ปรับปรุงหน้าสรุปแบบใหม่ให้อ่านง่าย */
+  .quick-summary-box { background:#f8faf9; border:1px solid var(--border); border-radius:8px; padding:16px; margin-bottom:16px; }
+  .quick-summary-box h4 { margin:0 0 10px 0; font-size:15px; color:var(--primary-dark); display:flex; align-items:center; gap:6px; }
+  .quick-stats-row { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
+  .quick-stat-badge { background:#fff; border:1px solid var(--border); padding:8px 12px; border-radius:6px; font-size:13.5px; font-weight:600; display:flex; align-items:center; gap:6px; }
+  .quick-stat-badge.has-val { background:#fce8e6; color:var(--danger); border-color:#fad2cf; }
+  .issue-text-list { background:#fff; border:1px solid var(--border); border-radius:6px; padding:12px; font-size:14px; line-height:1.6; max-height:200px; overflow-y:auto; white-space:pre-wrap; }
 
   table.history{ width:100%; border-collapse:collapse; font-size:14px; margin-top:14px; }
-  table.history th, table.history td{ text-align:left; padding:14px 10px; border-bottom:1px solid var(--border); white-space:nowrap; font-size:14px; }
+  table.history th, table.history td{ text-align:left; padding:14px 10px; border-bottom:1px solid var(--border); white-space:nowrap; }
   table.history th{ color:var(--muted); font-weight:700; font-size:12.5px; }
   table.history tr{ cursor:pointer; }
   table.history tr:hover{ background:#f8faf9; }
@@ -91,12 +89,10 @@
   .modal h3{ margin-top:0; font-size:18px; }
   .modal-row{ margin-bottom:12px; font-size:15px; }
   .modal-row .k{ color:var(--muted); font-weight:600; display:block; margin-bottom:3px; font-size:13px; }
-  .modal .field{ margin-bottom:12px; }
-  .modal .field > label{ font-size:12.5px; }
-  .modal-close{ float:right; background:none; border:none; font-size:28px; cursor:pointer; color:var(--muted); padding:6px 10px; line-height:1; min-width:44px; min-height:44px; }
+  .modal-close{ float:right; background:none; border:none; font-size:28px; cursor:pointer; color:var(--muted); padding:6px 10px; line-height:1; }
 
   .toast{ position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px); background:#323232; color:#fff; padding:12px 20px; border-radius:8px; font-size:14px; opacity:0; pointer-events:none; transition:all .25s ease; z-index:100; max-width:90vw; text-align:center; }
-  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); pointer-events:auto; cursor:pointer; }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
   .toast.error{ background:var(--danger); }
   .toast.success{ background:var(--primary-dark); }
 
@@ -110,87 +106,30 @@
   #topLoadingBar::before{ content:''; position:absolute; top:0; left:0; height:100%; width:40%; background:var(--primary); animation:loadingBarSlide 1s ease-in-out infinite; }
   @keyframes loadingBarSlide{ 0%{left:-40%;} 100%{left:100%;} }
 
-  .net-status{ display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:700; padding:4px 10px; border-radius:12px; white-space:nowrap; }
-  .net-status .dot{ width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+  .net-status{ display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:700; padding:4px 10px; border-radius:12px; }
+  .net-status .dot{ width:7px; height:7px; border-radius:50%; }
   .net-status.online{ background:rgba(15,157,88,0.1); color:var(--primary-dark); }
   .net-status.online .dot{ background:var(--primary); }
   .net-status.offline{ background:rgba(217,48,37,0.1); color:var(--danger); }
-  .net-status.offline .dot{ background:var(--danger); animation:blinkDot 1s ease-in-out infinite; }
-  @keyframes blinkDot{ 0%,100%{opacity:1;} 50%{opacity:.3;} }
+  .net-status.offline .dot{ background:var(--danger); }
 
   .locked-note{ background:#fff8e1; border:1px solid var(--warn); color:#7a5b00; padding:10px 12px; border-radius:8px; font-size:13px; margin-top:10px; }
 
   @media (max-width:480px){
     header.appbar{ padding:10px 14px; }
     header.appbar h1{ font-size:16px; }
-    .net-status{ font-size:10.5px; padding:3px 8px; }
     nav.tabs button{ padding:8px 12px; font-size:13px; }
   }
 
-  /* ==========================================================
-     CSS FOR PRINTING / EXPORT PDF
-     ========================================================== */
+  /* ตกแต่งเมื่อสั่งพิมพ์รายงานสรุป */
   @media print {
-    /* ซ่อนส่วนประกอบที่ไม่ต้องการให้ติดใน PDF */
-    .no-print, 
-    header.appbar, 
-    #configWarning,
-    #page-report .card:first-child,
-    #paginationControls,
-    .modal-overlay,
-    .toast,
-    #topLoadingBar,
-    button, 
-    .btn {
-      display: none !important;
-    }
-
-    body {
-      background: #fff !important;
-      color: #000 !important;
-      font-size: 14px;
-    }
-    
-    main {
-      max-width: 100% !important;
-      margin: 0 !important;
-      padding: 0 !important;
-    }
-
-    .card {
-      border: none !important;
-      box-shadow: none !important;
-      padding: 10px 0 !important;
-      margin-bottom: 20px !important;
-      page-break-inside: avoid;
-    }
-
-    /* ซ่อนการขีดเส้นหนาๆ ของกล่องข้อความ ให้เหลือแค่เส้นใต้ */
-    input[type=text], input[type=number], input[type=date], textarea, select {
-      border: none !important;
-      border-bottom: 1px dashed #666 !important;
-      padding: 5px 0 !important;
-      background: transparent !important;
-      min-height: auto !important;
-      border-radius: 0 !important;
-    }
-
-    /* จัดสไตล์ตารางประวัติในหน้า PDF */
-    table.history th, table.history td {
-      padding: 8px 4px !important;
-      border-bottom: 1px solid #333 !important;
-      white-space: normal !important;
-    }
-    
-    table.history td.row-arrow {
-      display: none !important;
-    }
-
-    /* บังคับเบราว์เซอร์ให้พิมพ์สีพื้นหลังของการ์ดสรุปและ Tag ต่างๆ */
-    * {
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-    }
+    .no-print, header.appbar, #configWarning, .modal-overlay, .toast, #topLoadingBar, button, .btn { display: none !important; }
+    body { background: #fff !important; color: #000 !important; font-size: 14px; }
+    main { max-width: 100% !important; margin: 0 !important; padding: 0 !important; }
+    .card { border: 1px solid #ddd !important; box-shadow: none !important; margin-bottom: 15px !important; padding: 15px !important; }
+    .quick-summary-box { border: 1px solid #aaa !important; background: #fff !important; }
+    .issue-text-list { max-height: none !important; overflow: visible !important; }
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
   }
 </style>
 </head>
@@ -217,148 +156,94 @@
   <section id="page-form">
     <div class="card">
       <h2><span class="icon">📋</span> ฟอร์มบันทึกข้อมูลห้องชั่ง</h2>
-
-      <div class="field">
-        <label>วันที่ (Date) <span class="req">*</span></label>
-        <input type="date" id="f_date">
-      </div>
-
-      <div class="field">
-        <label>ผู้บันทึก/เวรหน้าที่เครื่องชั่ง (Weighmaster) <span class="req">*</span></label>
-        <input type="text" id="f_weighmaster" maxlength="200" placeholder="ระบุชื่อ-นามสกุล">
-      </div>
-
-      <div class="field">
-        <label>ทะเบียนรถ (ถ้ามีปัญหาเกี่ยวข้อง)</label>
-        <input type="text" id="f_license_plate" maxlength="50" placeholder="ระบุถ้ามีรถคันใดคันหนึ่งเกี่ยวข้องกับปัญหาที่พบ (เว้นว่างได้)">
-      </div>
-
-      <div class="field">
-        <label>กะปฏิบัติงาน (Shift) <span class="req">*</span></label>
-        <div class="shift-group" id="shiftGroup" role="radiogroup" aria-label="กะปฏิบัติงาน">
-          <label class="shift-option"><input type="radio" name="shift" value="เช้า" class="visually-hidden"><span class="shift-name">เช้า</span></label>
-          <label class="shift-option"><input type="radio" name="shift" value="บ่าย" class="visually-hidden"><span class="shift-name">บ่าย</span></label>
-          <label class="shift-option"><input type="radio" name="shift" value="ดึก" class="visually-hidden"><span class="shift-name">ดึก</span></label>
+      <div class="field"><label>วันที่ (Date) <span class="req">*</span></label><input type="date" id="f_date"></div>
+      <div class="field"><label>ผู้บันทึก/เวรหน้าที่เครื่องชั่ง <span class="req">*</span></label><input type="text" id="f_weighmaster" maxlength="200" placeholder="ระบุชื่อ-นามสกุล"></div>
+      <div class="field"><label>ทะเบียนรถ (ถ้ามีปัญหาเกี่ยวข้อง)</label><input type="text" id="f_license_plate" maxlength="50" placeholder="ระบุเลขทะเบียนรถ"></div>
+      <div class="field"><label>กะปฏิบัติงาน (Shift) <span class="req">*</span></label>
+        <div class="shift-group" id="shiftGroup">
+          <label class="shift-option"><input type="radio" name="shift" value="เช้า" style="display:none;"><span class="shift-name">เช้า</span></label>
+          <label class="shift-option"><input type="radio" name="shift" value="บ่าย" style="display:none;"><span class="shift-name">บ่าย</span></label>
+          <label class="shift-option"><input type="radio" name="shift" value="ดึก" style="display:none;"><span class="shift-name">ดึก</span></label>
         </div>
       </div>
     </div>
-
     <div class="card">
       <h2><span class="icon">🚚</span> สรุปจำนวนรถที่ชั่ง</h2>
-      <div class="veh-row"><div class="label">รถส่งวัตถุดิบ/เคมีภัณฑ์/บรรจุภัณฑ์ (คัน)</div><input type="number" min="0" max="500" inputmode="numeric" id="f_veh_rawmat_out" value="0"></div>
-      <div class="veh-row"><div class="label">รถส่งอาหาร (คัน)</div><input type="number" min="0" max="500" inputmode="numeric" id="f_veh_feed_out" value="0"></div>
-      <div class="veh-row"><div class="label">รถรับอาหาร (รถภายใน)</div><input type="number" min="0" max="500" inputmode="numeric" id="f_veh_feed_in" value="0"></div>
-      <div class="veh-row"><div class="label">รถรับวัตถุดิบ/เคมีภัณฑ์/บรรจุภัณฑ์ (รถภายใน)</div><input type="number" min="0" max="500" inputmode="numeric" id="f_veh_rawmat_in" value="0"></div>
-      <div class="field" style="margin-top:14px;">
-        <label>ระบุประเภทรถอื่นๆ (Other Truck Type)</label>
-        <input type="text" id="f_veh_other_type" maxlength="200" placeholder="เว้นว่างได้ถ้าไม่มี">
-      </div>
+      <div class="veh-row"><div class="label">รถส่งวัตถุดิบ/เคมีภัณฑ์/บรรจุภัณฑ์ (คัน)</div><input type="number" min="0" value="0" id="f_veh_rawmat_out"></div>
+      <div class="veh-row"><div class="label">รถส่งอาหาร (คัน)</div><input type="number" min="0" value="0" id="f_veh_feed_out"></div>
+      <div class="veh-row"><div class="label">รถรับอาหาร (รถภายใน)</div><input type="number" min="0" value="0" id="f_veh_feed_in"></div>
+      <div class="veh-row"><div class="label">รถรับวัตถุดิบ/เคมีภัณฑ์/บรรจุภัณฑ์ (รถภายใน)</div><input type="number" min="0" value="0" id="f_veh_rawmat_in"></div>
+      <div class="field" style="margin-top:14px;"><label>ระบุประเภทรถอื่นๆ</label><input type="text" id="f_veh_other_type" placeholder="เว้นว่างได้ถ้าไม่มี"></div>
     </div>
-
     <div class="card" id="problemsCard">
       <h2><span class="icon">⚠️</span> ปัญหาที่พบ (เลือกหัวข้อเพื่อกรอกรายละเอียดเพิ่มเติม)</h2>
-      <div style="font-size:12.5px;color:var(--danger);margin-bottom:14px;" class="no-print">⚠️ ถ้าติ๊กหัวข้อใดไว้ รายการนี้จะไม่สามารถลบได้อีกในภายหลัง (เพื่อรักษาหลักฐานตรวจสอบย้อนหลัง)</div>
-      <div class="problem-grid" id="problemGrid">
-        <div class="problem-item" data-key="overweight">
-          <label class="chk"><input type="checkbox"> ปัญหาน้ำหนักเกิน (Overweight)</label>
-          <textarea id="pd_overweight" maxlength="2000" placeholder="ระบุรายละเอียด"></textarea>
-          <div class="char-counter" id="pd_overweightCounter"></div>
-        </div>
-        <div class="problem-item" data-key="driver_behavior">
-          <label class="chk"><input type="checkbox"> ปัญหาด้านพฤติกรรมคนขับ (Driver Behavior)</label>
-          <textarea id="pd_driver_behavior" maxlength="2000" placeholder="ระบุรายละเอียด"></textarea>
-          <div class="char-counter" id="pd_driver_behaviorCounter"></div>
-        </div>
-        <div class="problem-item" data-key="system">
-          <label class="chk"><input type="checkbox"> ปัญหาด้านระบบ/อุปกรณ์ (System/Equipment)</label>
-          <textarea id="pd_system" maxlength="2000" placeholder="ระบุรายละเอียด"></textarea>
-          <div class="char-counter" id="pd_systemCounter"></div>
-        </div>
-        <div class="problem-item" data-key="wrong_queue">
-          <label class="chk"><input type="checkbox"> ปัญหาการชั่งน้ำหนักรถผิดคิว</label>
-          <textarea id="pd_wrong_queue" maxlength="2000" placeholder="ระบุรายละเอียด"></textarea>
-          <div class="char-counter" id="pd_wrong_queueCounter"></div>
-        </div>
-        <div class="problem-item" data-key="wrong_plate">
-          <label class="chk"><input type="checkbox"> ปัญหาทะเบียนรถผิด (Wrong License Plate)</label>
-          <textarea id="pd_wrong_plate" maxlength="2000" placeholder="ระบุรายละเอียด เช่น กรอกทะเบียนผิดคัน"></textarea>
-          <div class="char-counter" id="pd_wrong_plateCounter"></div>
-        </div>
-        <div class="problem-item" data-key="wrong_delivery">
-          <label class="chk"><input type="checkbox"> ปัญหาการส่งของผิดที่</label>
-          <textarea id="pd_wrong_delivery" maxlength="2000" placeholder="ระบุรายละเอียด"></textarea>
-          <div class="char-counter" id="pd_wrong_deliveryCounter"></div>
-        </div>
-        <div class="problem-item" data-key="other">
-          <label class="chk"><input type="checkbox"> อื่นๆ</label>
-          <textarea id="pd_other" maxlength="2000" placeholder="ระบุรายละเอียด"></textarea>
-          <div class="char-counter" id="pd_otherCounter"></div>
-        </div>
+      <div class="problem-grid">
+        <div class="problem-item" data-key="overweight"><label class="chk"><input type="checkbox"> น้ำหนักเกิน</label><textarea id="pd_overweight" placeholder="ระบุรายละเอียด"></textarea></div>
+        <div class="problem-item" data-key="driver_behavior"><label class="chk"><input type="checkbox"> พฤติกรรมคนขับ</label><textarea id="pd_driver_behavior" placeholder="ระบุรายละเอียด"></textarea></div>
+        <div class="problem-item" data-key="system"><label class="chk"><input type="checkbox"> ระบบ/อุปกรณ์</label><textarea id="pd_system" placeholder="ระบุรายละเอียด"></textarea></div>
+        <div class="problem-item" data-key="wrong_queue"><label class="chk"><input type="checkbox"> ชั่งรถผิดคิว</label><textarea id="pd_wrong_queue" placeholder="ระบุรายละเอียด"></textarea></div>
+        <div class="problem-item" data-key="wrong_plate"><label class="chk"><input type="checkbox"> ทะเบียนผิด (สลับคัน)</label><textarea id="pd_wrong_plate" placeholder="กรอกข้อมูลรถคู่ที่สลับทะเบียนกัน"></textarea></div>
+        <div class="problem-item" data-key="wrong_delivery"><label class="chk"><input type="checkbox"> ส่งของผิดที่</label><textarea id="pd_wrong_delivery" placeholder="ระบุรายละเอียด"></textarea></div>
+        <div class="problem-item" data-key="other"><label class="chk"><input type="checkbox"> อื่นๆ</label><textarea id="pd_other" placeholder="ระบุรายละเอียด"></textarea></div>
       </div>
     </div>
-
-    <div class="card"><h2><span class="icon">🛠️</span> แนวทางการแก้ไข (Corrective Action)</h2><textarea id="f_corrective" maxlength="2000"></textarea><div class="char-counter" id="f_correctiveCounter"></div></div>
-    <div class="card"><h2><span class="icon">💡</span> ข้อเสนอแนะ (Suggestions)</h2><textarea id="f_suggestions" maxlength="2000"></textarea><div class="char-counter" id="f_suggestionsCounter"></div></div>
-
+    <div class="card"><h2><span class="icon">🛠️</span> แนวทางการแก้ไข</h2><textarea id="f_corrective"></textarea></div>
+    <div class="card"><h2><span class="icon">💡</span> ข้อเสนอแนะ</h2><textarea id="f_suggestions"></textarea></div>
     <button type="button" class="btn no-print" id="submitBtn" onclick="reviewForm()">บันทึกข้อมูล</button>
-    <button type="button" class="btn secondary no-print" style="margin-top:12px;" onclick="window.print()">🖨️ พิมพ์ / Export PDF หน้านี้</button>
   </section>
 
   <section id="page-report" style="display:none;">
-    <div class="card">
-      <h2><span class="icon">🔍</span> ตัวกรองข้อมูล</h2>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:end;">
-        <div class="field" style="flex:1;min-width:130px;margin-bottom:0;"><label>จากวันที่</label><input type="date" id="r_dateFrom"></div>
-        <div class="field" style="flex:1;min-width:130px;margin-bottom:0;"><label>ถึงวันที่</label><input type="date" id="r_dateTo"></div>
-        <div class="field" style="flex:1;min-width:130px;margin-bottom:0;">
-          <label>กะ</label>
-          <select id="r_shift"><option value="">ทั้งหมด</option><option value="เช้า">เช้า</option><option value="บ่าย">บ่าย</option><option value="ดึก">ดึก</option></select>
+    <div class="card no-print">
+      <h2><span class="icon">📅</span> 1. เลือกช่วงเวลาเพื่อ Export รายงานภาพรวม</h2>
+      <div style="display:flex; gap:15px; flex-wrap:wrap; margin-bottom:14px;">
+        <label style="font-weight:600;"><input type="radio" name="reportScope" value="daily" checked onclick="toggleScopeInput()"> รายวัน (เจาะจงวัน)</label>
+        <label style="font-weight:600;"><input type="radio" name="reportScope" value="monthly" onclick="toggleScopeInput()"> รายเดือน (สรุปภาพรวมทั้งเดือน)</label>
+      </div>
+      
+      <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+        <div id="div_dateInput" style="flex:1; min-width:200px;">
+          <input type="date" id="r_dateSelect">
         </div>
-        <div class="field" style="flex:1;min-width:150px;margin-bottom:0;"><label>ทะเบียนรถ</label><input type="text" id="r_plate" maxlength="50" placeholder="ค้นหาทะเบียน"></div>
-        <button type="button" class="btn secondary" style="width:auto;padding:14px 22px;" onclick="loadHistory()">ค้นหา</button>
+        <div id="div_monthInput" style="flex:1; min-width:200px; display:none;">
+          <input type="month" id="r_monthSelect">
+        </div>
+        <button type="button" class="btn" style="width:auto; padding:0 24px;" onclick="buildQuickSummary()">⚡ ดึงรายงานภาพรวม</button>
       </div>
     </div>
 
-    <div class="card">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
-        <h2 style="margin:0;"><span class="icon">📊</span> สรุปภาพรวมและรายงาน</h2>
-        <button type="button" class="btn secondary no-print" style="width:auto; padding:8px 16px; min-height:42px; border-radius:20px; font-size:14px;" onclick="window.print()">📥 Export PDF รายงาน</button>
+    <div class="card" id="summaryOutputCard" style="display:none;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
+        <h2 style="margin:0;"><span class="icon">📊</span> สรุปภาพรวมและรายละเอียดปัญหาประจำช่วงเวลา</h2>
+        <button type="button" class="btn secondary no-print" style="width:auto; padding:6px 14px; min-height:38px; font-size:14px;" onclick="window.print()">🖨️ พิมพ์ / Export PDF รายงานนี้</button>
       </div>
-      <div class="summary-cards" id="summaryCards"></div>
-      <div id="problemBreakdown" style="margin-top:14px;display:flex;flex-wrap:wrap;gap:6px;"></div>
+      
+      <div class="quick-summary-box">
+        <h4 id="summaryPeriodTitle">📅 ช่วงเวลา: -</h4>
+        <div class="quick-stats-row" id="quickStatsContainer"></div>
+      </div>
+
+      <div class="quick-summary-box" style="background:#fff3cd; border-color:#ffeeba;">
+        <h4 style="color:#856404;"><span class="icon">📝</span> รายละเอียดปัญหา และรายการสลับแผ่นป้ายทะเบียน</h4>
+        <div class="issue-text-list" id="quickDetailsContainer">- ไม่มีข้อมูลปัญหา -</div>
+      </div>
     </div>
 
-    <div class="card">
-      <h2><span class="icon">🕘</span> ประวัติการบันทึก</h2>
-      <div id="historyContainer"><div class="empty-state"><span class="spinner dark"></span> กำลังโหลดข้อมูล...</div></div>
-      <div id="paginationControls" style="display:none;align-items:center;justify-content:space-between;margin-top:14px;gap:10px;flex-wrap:wrap;">
-        <button type="button" class="btn secondary" id="prevPageBtn" style="width:auto;padding:8px 16px;" onclick="changePage(-1)">← ก่อนหน้า</button>
-        <span id="pageInfo" style="font-size:12.5px;color:var(--muted);"></span>
-        <button type="button" class="btn secondary" id="nextPageBtn" style="width:auto;padding:8px 16px;" onclick="changePage(1)">ถัดไป →</button>
-      </div>
+    <div class="card no-print">
+      <h2><span class="icon">🕘</span> รายการประวัติบันทึกทั้งหมดในระบบ</h2>
+      <div id="historyContainer"><div class="empty-state">กรุณากดดึงรายงานภาพรวมด้านบน</div></div>
     </div>
   </section>
 </main>
 
 <div class="toast" id="toast"></div>
 
-<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this) closeModal()">
-  <div class="modal"><button type="button" class="modal-close" onclick="closeModal()">&times;</button><div id="modalBody"></div></div>
-</div>
-<div class="modal-overlay" id="confirmModalOverlay" onclick="if(event.target===this && !saveInProgress) closeConfirmModal()">
-  <div class="modal"><button type="button" class="modal-close" onclick="if(!saveInProgress) closeConfirmModal()">&times;</button><div id="confirmModalBody"></div></div>
-</div>
-<div class="modal-overlay" id="editModalOverlay" onclick="if(event.target===this && !editSaveInProgress) closeEditModal()">
-  <div class="modal"><button type="button" class="modal-close" onclick="if(!editSaveInProgress) closeEditModal()">&times;</button><div id="editModalBody"></div></div>
-</div>
+<div class="modal-overlay" id="confirmModalOverlay"><div class="modal" id="confirmModalBody"></div></div>
 
 <script>
-/* ---------------- CONFIG ---------------- */
 const XOR_KEY = 42;
 function xorDecode(encoded) {
   try {
-    const raw = atob(encoded);
-    let out = '';
+    const raw = atob(encoded); let out = '';
     for (let i = 0; i < raw.length; i++) out += String.fromCharCode(raw.charCodeAt(i) ^ XOR_KEY);
     return out;
   } catch (e) { return ''; }
@@ -367,671 +252,176 @@ const APPS_SCRIPT_URL_ENCODED = 'Ql5eWlkQBQVZSVhDWl4ETUVFTUZPBElFRwVHS0lYRVkFWQV
 const TOKEN = 'z0CPHpdf8xJmfbMbwxVE1t2ghIEOJY03';
 const APPS_SCRIPT_URL = xorDecode(APPS_SCRIPT_URL_ENCODED);
 
-const MAX_TEXT_LEN = 2000;
-const MAX_SHORT_LEN = 200;
-const MAX_PLATE_LEN = 50;
-const MAX_VEHICLE_COUNT = 500;
-
-function escHtml(str) {
-  if (str === null || str === undefined) return '';
-  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-}
-
-let toastHideTimer = null;
-function showToast(msg, type) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast show' + (type ? ' ' + type : '');
-  const duration = type === 'success' ? 5000 : 4200;
-  clearTimeout(toastHideTimer);
-  toastHideTimer = setTimeout(() => { t.className = 'toast'; }, duration);
-  t.onclick = () => { clearTimeout(toastHideTimer); t.className = 'toast'; };
-}
-
-function setupCharCounter_(inputId, counterId, maxLen) {
-  const el = document.getElementById(inputId);
-  const counter = document.getElementById(counterId);
-  if (!el || !counter) return;
-  const update = () => {
-    const len = el.value.length;
-    counter.textContent = len + ' / ' + maxLen;
-    counter.classList.toggle('warn', len > maxLen * 0.8 && len <= maxLen * 0.95);
-    counter.classList.toggle('danger', len > maxLen * 0.95);
-  };
-  el.addEventListener('input', update);
-  update();
-}
-setupCharCounter_('f_corrective', 'f_correctiveCounter', 2000);
-setupCharCounter_('f_suggestions', 'f_suggestionsCounter', 2000);
-['overweight','driver_behavior','system','wrong_queue','wrong_plate','wrong_delivery','other'].forEach(key => {
-  setupCharCounter_('pd_' + key, 'pd_' + key + 'Counter', 2000);
+let selectedShift = '';
+document.querySelectorAll('.shift-option').forEach(opt => {
+  const radio = opt.querySelector('input[type="radio"]');
+  opt.addEventListener('click', () => {
+    document.querySelectorAll('.shift-option').forEach(o => o.classList.remove('selected'));
+    opt.classList.add('selected'); radio.checked = true; selectedShift = radio.value;
+  });
 });
 
-/* ---------------- API layer ---------------- */
-const API_TIMEOUT_MS = 15000;
-const API_MAX_RETRY = 1;
-let activeApiCalls = 0;
-function setTopLoading_(active) {
-  activeApiCalls += active ? 1 : -1;
-  if (activeApiCalls < 0) activeApiCalls = 0;
-  document.getElementById('topLoadingBar').classList.toggle('active', activeApiCalls > 0);
-}
-async function fetchWithTimeout_(url, options, timeoutMs) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-  try { return await fetch(url, Object.assign({}, options, { signal: controller.signal })); }
-  finally { clearTimeout(timer); }
-}
-async function callApi(action, extra) {
-  if (!APPS_SCRIPT_URL) throw new Error('ยังไม่ได้ตั้งค่า APPS_SCRIPT_URL_ENCODED');
-  const body = Object.assign({ action: action, token: TOKEN }, extra || {});
-  setTopLoading_(true);
-  try {
-    let lastErr;
-    for (let attempt = 0; attempt <= API_MAX_RETRY; attempt++) {
-      try {
-        const res = await fetchWithTimeout_(APPS_SCRIPT_URL, { method: 'POST', body: JSON.stringify(body) }, API_TIMEOUT_MS);
-        if (!res.ok) throw new Error('เครือข่ายผิดพลาด: ' + res.status);
-        const json = await res.json();
-        if (!json.success) throw new Error(json.error || 'เกิดข้อผิดพลาดไม่ทราบสาเหตุ');
-        return json;
-      } catch (err) {
-        lastErr = (err && err.name === 'AbortError') ? new Error('เชื่อมต่อไม่สำเร็จ (หมดเวลา)') : err;
-        if (attempt < API_MAX_RETRY && (err.name === 'AbortError' || err instanceof TypeError)) continue;
-        throw lastErr;
-      }
-    }
-    throw lastErr;
-  } finally { setTopLoading_(false); }
-}
+document.querySelectorAll('.problem-item').forEach(item => {
+  const chk = item.querySelector('input[type=checkbox]');
+  chk.addEventListener('change', () => item.classList.toggle('checked', chk.checked));
+});
 
-/* ---------------- Tabs ---------------- */
-let currentTab = 'form';
-function switchTab(tab, fromHistory) {
+function switchTab(tab) {
   const isForm = tab === 'form';
   document.getElementById('page-form').style.display = isForm ? '' : 'none';
   document.getElementById('page-report').style.display = isForm ? 'none' : '';
   document.getElementById('tabFormBtn').classList.toggle('active', isForm);
   document.getElementById('tabReportBtn').classList.toggle('active', !isForm);
-  currentTab = tab;
-  if (!isForm) loadHistory();
-  if (!fromHistory) history.pushState({ tab: tab, overlay: null }, '', '#' + tab);
 }
 
-/* ---------------- Accessible shift selector ---------------- */
-let selectedShift = '';
-document.querySelectorAll('input[name="shift"]').forEach(radio => {
-  radio.addEventListener('change', () => {
-    document.querySelectorAll('.shift-option').forEach(o => o.classList.remove('selected'));
-    radio.closest('.shift-option').classList.add('selected');
-    selectedShift = radio.value;
-  });
-  radio.addEventListener('focus', () => radio.closest('.shift-option').classList.add('kbd-focus'));
-  radio.addEventListener('blur', () => radio.closest('.shift-option').classList.remove('kbd-focus'));
-});
-
-/* ---------------- Problem checkboxes ---------------- */
-document.querySelectorAll('.problem-item').forEach(item => {
-  const chk = item.querySelector('input[type=checkbox]');
-  chk.addEventListener('change', () => item.classList.toggle('checked', chk.checked));
-});
-function getProblemData(key) {
-  const item = document.querySelector('.problem-item[data-key="' + key + '"]');
-  const chk = item.querySelector('input[type=checkbox]');
-  return { checked: chk.checked, detail: item.querySelector('textarea').value.trim() };
-}
-const PROBLEM_KEY_LABELS = {
-  overweight: 'น้ำหนักเกิน (Overweight)', driver_behavior: 'พฤติกรรมคนขับ (Driver Behavior)', system: 'ระบบ/อุปกรณ์ (System/Equipment)',
-  wrong_queue: 'ชั่งน้ำหนักรถผิดคิว', wrong_plate: 'ทะเบียนรถผิด', wrong_delivery: 'ส่งของผิดที่', other: 'อื่นๆ'
-};
-const PROBLEM_FLAG_KEY_MAP = {
-  overweight: 'p_overweight', driver_behavior: 'p_driver_behavior', system: 'p_system',
-  wrong_queue: 'p_wrong_queue', wrong_plate: 'p_wrong_plate', wrong_delivery: 'p_wrong_delivery', other: 'p_other'
-};
-function buildProblemsText() {
-  const lines = [];
-  Object.keys(PROBLEM_KEY_LABELS).forEach(key => {
-    const p = getProblemData(key);
-    if (p.checked) lines.push('- ' + PROBLEM_KEY_LABELS[key] + (p.detail ? ': ' + p.detail : ''));
-  });
-  return lines.join('\n');
-}
-function buildProblemFlags() {
-  const flags = {};
-  Object.keys(PROBLEM_FLAG_KEY_MAP).forEach(key => { flags[PROBLEM_FLAG_KEY_MAP[key]] = getProblemData(key).checked; });
-  return flags;
+function toggleScopeInput() {
+  const scope = document.querySelector('input[name="reportScope"]:checked').value;
+  document.getElementById('div_dateInput').style.display = scope === 'daily' ? 'block' : 'none';
+  document.getElementById('div_monthInput').style.display = scope === 'monthly' ? 'block' : 'none';
 }
 
-/* ---------------- Validation error highlight ---------------- */
-function showValidationError_(fieldId, message) {
-  showToast(message, 'error');
-  const el = fieldId && document.getElementById(fieldId);
-  if (!el) return;
-  el.classList.add('validation-error');
-  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  if (['INPUT','TEXTAREA','SELECT'].indexOf(el.tagName) !== -1) {
-    setTimeout(() => { try { el.focus({ preventScroll: true }); } catch (e) { el.focus(); } }, 300);
-  }
-  const clear = () => el.classList.remove('validation-error');
-  el.addEventListener('input', clear, { once: true });
-  el.addEventListener('change', clear, { once: true });
-  el.addEventListener('click', clear, { once: true });
-  setTimeout(clear, 6000);
+function showToast(msg, type) {
+  const t = document.getElementById('toast'); t.textContent = msg;
+  t.className = 'toast show ' + (type || ''); setTimeout(() => t.className = 'toast', 4000);
 }
 
-/* ---------------- Submit guard ---------------- */
-let saveInProgress = false;
-let pendingSaveData = null;
-
-const VEHICLE_FIELDS = [
-  { key: 'veh_rawmat_out', formId: 'f_veh_rawmat_out', editFormId: 'e_veh_rawmat_out', label: 'รถส่งวัตถุดิบ/เคมีภัณฑ์/บรรจุภัณฑ์' },
-  { key: 'veh_feed_out', formId: 'f_veh_feed_out', editFormId: 'e_veh_feed_out', label: 'รถส่งอาหาร' },
-  { key: 'veh_feed_in', formId: 'f_veh_feed_in', editFormId: 'e_veh_feed_in', label: 'รถรับอาหาร' },
-  { key: 'veh_rawmat_in', formId: 'f_veh_rawmat_in', editFormId: 'e_veh_rawmat_in', label: 'รถรับวัตถุดิบ/เคมีภัณฑ์/บรรจุภัณฑ์' }
-];
-
-function collectAndValidateForm() {
-  const date = document.getElementById('f_date').value;
-  const weighmaster = document.getElementById('f_weighmaster').value.trim();
-  const licensePlate = document.getElementById('f_license_plate').value.trim();
-  const vehOtherType = document.getElementById('f_veh_other_type').value.trim();
-  const correctiveAction = document.getElementById('f_corrective').value.trim();
-  const suggestions = document.getElementById('f_suggestions').value.trim();
-  const problemsText = buildProblemsText();
-
-  if (!date) return { error: 'กรุณาระบุวันที่', fieldId: 'f_date' };
-  if (!weighmaster) return { error: 'กรุณาระบุชื่อผู้บันทึก', fieldId: 'f_weighmaster' };
-  if (weighmaster.length > MAX_SHORT_LEN) return { error: 'ชื่อผู้บันทึกยาวเกินไป', fieldId: 'f_weighmaster' };
-  if (licensePlate.length > MAX_PLATE_LEN) return { error: 'ทะเบียนรถยาวเกินไป', fieldId: 'f_license_plate' };
-  if (!selectedShift) return { error: 'กรุณาเลือกกะปฏิบัติงาน', fieldId: 'shiftGroup' };
-
-  const vehicleCounts = {};
-  for (let i = 0; i < VEHICLE_FIELDS.length; i++) {
-    const f = VEHICLE_FIELDS[i];
-    const val = Number(document.getElementById(f.formId).value);
-    if (!Number.isFinite(val) || val < 0 || val > MAX_VEHICLE_COUNT) {
-      return { error: 'จำนวน "' + f.label + '" ไม่ถูกต้อง (ต้องอยู่ระหว่าง 0-' + MAX_VEHICLE_COUNT + ' คัน)', fieldId: f.formId };
-    }
-    vehicleCounts[f.key] = Math.floor(val);
-  }
-
-  if (vehOtherType.length > MAX_SHORT_LEN) return { error: 'ข้อความ "ประเภทรถอื่นๆ" ยาวเกินไป', fieldId: 'f_veh_other_type' };
-  if (problemsText.length > MAX_TEXT_LEN) return { error: 'ข้อความ "ปัญหาที่พบ" ยาวเกินไป', fieldId: 'problemsCard' };
-  if (correctiveAction.length > MAX_TEXT_LEN) return { error: 'ข้อความ "แนวทางการแก้ไข" ยาวเกินไป', fieldId: 'f_corrective' };
-  if (suggestions.length > MAX_TEXT_LEN) return { error: 'ข้อความ "ข้อเสนอแนะ" ยาวเกินไป', fieldId: 'f_suggestions' };
-
-  const data = Object.assign({
-    date: date, weighmaster: weighmaster, licensePlate: licensePlate, shift: selectedShift,
-    veh_other_type: vehOtherType, problems: problemsText, corrective_action: correctiveAction, suggestions: suggestions
-  }, vehicleCounts, buildProblemFlags());
-
-  return { data: data };
-}
-
-function reviewForm() {
-  if (saveInProgress) return;
-  const mainBtn = document.getElementById('submitBtn');
-  if (mainBtn.disabled) return;
-  if (navigator.onLine === false) { showToast('ไม่มีการเชื่อมต่ออินเทอร์เน็ต', 'error'); return; }
-
-  const result = collectAndValidateForm();
-  if (result.error) { showValidationError_(result.fieldId, result.error); return; }
-
-  mainBtn.disabled = true;
-  pendingSaveData = result.data;
-  openConfirmModal(pendingSaveData);
-}
-
-function fmtMultiline_(text) {
-  return text && String(text).trim() ? escHtml(text).replace(/\n/g,'<br>') : '<span style="color:var(--muted);">-</span>';
-}
-
-function openConfirmModal(data) {
-  const rows = [['วันที่', data.date], ['กะ', data.shift], ['ผู้บันทึก', data.weighmaster]];
-  if (data.licensePlate) rows.push(['ทะเบียนรถ', data.licensePlate]);
-  VEHICLE_FIELDS.forEach(f => { rows.push([f.label + ' (คัน)', data[f.key]]); });
-  rows.push(['ประเภทรถอื่นๆ', data.veh_other_type || '-']);
-
-  let html = '<h3>⚠️ ตรวจสอบข้อมูลก่อนบันทึก</h3>';
-  if (data.problems) {
-    html += '<div style="background:#fff3cd;padding:10px;border-radius:8px;color:#7a5b00;font-size:13px;margin-bottom:14px;">⚠️ มีการติ๊กปัญหาไว้ — รายการนี้จะ<b>ลบไม่ได้อีก</b>หลังบันทึก กรุณาตรวจสอบให้แน่ใจก่อนยืนยัน</div>';
-  }
-  rows.forEach(([l,v]) => { html += '<div class="modal-row"><span class="k">' + escHtml(l) + '</span>' + escHtml(v) + '</div>'; });
-  html += '<div class="modal-row"><span class="k">ปัญหาที่พบและรายละเอียด</span>' + fmtMultiline_(data.problems) + '</div>';
-  html += '<div class="modal-row"><span class="k">แนวทางการแก้ไข</span>' + fmtMultiline_(data.corrective_action) + '</div>';
-  html += '<div class="modal-row"><span class="k">ข้อเสนอแนะ</span>' + fmtMultiline_(data.suggestions) + '</div>';
-  html += '<div style="display:flex;gap:10px;margin-top:22px;">' +
-    '<button type="button" class="btn secondary" style="flex:1;" onclick="closeConfirmModal()">แก้ไขข้อมูล</button>' +
-    '<button type="button" class="btn" style="flex:1;" id="confirmSaveBtn" onclick="confirmAndSave()">ยืนยันบันทึก</button></div>';
-
-  document.getElementById('confirmModalBody').innerHTML = html;
-  document.getElementById('confirmModalOverlay').classList.add('show');
-  history.pushState({ tab: currentTab, overlay: 'confirm' }, '', '#confirm');
-}
-
-function closeConfirmModal(fromHistory) {
-  if (saveInProgress) return;
-  document.getElementById('confirmModalOverlay').classList.remove('show');
-  document.getElementById('submitBtn').disabled = false;
-  if (!fromHistory) history.back();
-}
-
-async function confirmAndSave() {
-  if (saveInProgress || !pendingSaveData) return;
-  const confirmBtn = document.getElementById('confirmSaveBtn');
-  const mainBtn = document.getElementById('submitBtn');
-  saveInProgress = true;
-  mainBtn.disabled = true;
-  if (confirmBtn) { confirmBtn.disabled = true; confirmBtn.innerHTML = '<span class="spinner"></span> กำลังบันทึก...'; }
+// ฟังก์ชันดึงข้อมูลมาคัดกรองและจัดกลุ่มหน้าจอรายงานสรุปตัวใหม่แบบเข้าใจง่าย
+async function buildQuickSummary() {
+  const scope = document.querySelector('input[name="reportScope"]:checked').value;
+  let targetValue = scope === 'daily' ? document.getElementById('r_dateSelect').value : document.getElementById('r_monthSelect').value;
+  
+  if (!targetValue) { showToast('กรุณาเลือกวันที่หรือเดือนก่อนครับ', 'error'); return; }
+  
+  const container = document.getElementById('historyContainer');
+  container.innerHTML = '<div class="empty-state"><span class="spinner dark"></span> กำลังประมวลผลสรุปภาพรวม...</div>';
+  document.getElementById('summaryOutputCard').style.display = 'none';
 
   try {
-    await callApi('save', { data: pendingSaveData });
-    showToast('บันทึกข้อมูลสำเร็จ', 'success');
-    saveInProgress = false;
-    closeConfirmModal();
-    resetForm();
+    // เรียกดึงข้อมูลทั้งหมดจากระบบฐานข้อมูลมาคำนวณสดบนหน้าเว็บหน้าต่างควบคุม
+    const body = { action: 'list', token: TOKEN, filters: { page: 1, pageSize: 500 } };
+    const res = await fetch(APPS_SCRIPT_URL, { method: 'POST', body: JSON.stringify(body) });
+    const json = await res.json();
+    
+    if (!json.success) throw new Error(json.error);
+    const records = json.records || [];
+    
+    let totalIssues = 0, overweight = 0, driver = 0, system = 0, wrongQueue = 0, wrongPlate = 0, otherProblem = 0;
+    let detailsArr = [];
+    let matchRecords = [];
+
+    records.forEach(r => {
+      let isMatch = false;
+      if (scope === 'daily' && r.date === targetValue) isMatch = true;
+      if (scope === 'monthly' && r.date && r.date.substring(0, 7) === targetValue) isMatch = true;
+      
+      if (isMatch) {
+        matchRecords.push(r);
+        if (r.p_overweight) { overweight++; totalIssues++; }
+        if (r.p_driver_behavior) { driver++; totalIssues++; }
+        if (r.p_system) { system++; totalIssues++; }
+        if (r.p_wrong_queue) { wrongQueue++; totalIssues++; }
+        if (r.p_wrong_plate) { wrongPlate++; totalIssues++; }
+        if (r.p_other) { otherProblem++; totalIssues++; }
+        
+        if (r.problems && r.problems.trim()) {
+          detailsArr.push(`[ทะเบียน ${r.licensePlate || 'ไม่ระบุ'} / กะ ${r.shift}]: ${r.problems.trim()}`);
+        }
+      }
+    });
+
+    // แสดงผลข้อมูลตัวเลขรวมเข้ากลุ่มแบบสวยงามในคลิกเดียว
+    document.getElementById('summaryPeriodTitle').innerText = `📅 สรุปรายงานภาพรวมประจำ: ${targetValue}`;
+    
+    document.getElementById('quickStatsContainer').innerHTML = `
+      <div class="quick-stat-badge ${totalIssues > 0 ? 'has-val' : ''}">🚨 รวมปัญหาทั้งหมด: ${totalIssues} รายการ</div>
+      <div class="quick-stat-badge">⚖️ น้ำหนักเกิน: ${overweight} ครั้ง</div>
+      <div class="quick-stat-badge">🙋 พฤติกรรมคนขับ: ${driver} ครั้ง</div>
+      <div class="quick-stat-badge">⚙️ ระบบ/อุปกรณ์: ${system} ครั้ง</div>
+      <div class="quick-stat-badge">⏱️ ผิดคิว: ${wrongQueue} ครั้ง</div>
+      <div class="quick-stat-badge ${wrongPlate > 0 ? 'has-val' : ''}">🆔 ทะเบียนผิด/สลับคัน: ${wrongPlate} ครั้ง</div>
+    `;
+
+    document.getElementById('quickDetailsContainer').innerHTML = detailsArr.length > 0 
+      ? detailsArr.map(txt => `• ${txt}`).join('\n\n') 
+      : '- ตรวจสอบแล้ว ไม่พบรายการแจ้งปัญหาใดๆ ในช่วงเวลานี้ -';
+
+    document.getElementById('summaryOutputCard').style.display = 'block';
+    renderSimpleTable(matchRecords);
+
   } catch (err) {
-    saveInProgress = false;
-    showToast('บันทึกไม่สำเร็จ: ' + err.message, 'error');
-  } finally {
-    saveInProgress = false;
-    mainBtn.disabled = false;
-    mainBtn.textContent = 'บันทึกข้อมูล';
-    if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.textContent = 'ยืนยันบันทึก'; }
-    pendingSaveData = null;
+    container.innerHTML = `<div class="empty-state" style="color:var(--danger);">เกิดข้อผิดพลาดในการดึงข้อมูล: ${err.message}</div>`;
   }
 }
 
-function resetForm() {
-  document.getElementById('f_weighmaster').value = '';
-  document.getElementById('f_license_plate').value = '';
-  VEHICLE_FIELDS.forEach(f => { document.getElementById(f.formId).value = 0; });
-  document.getElementById('f_veh_other_type').value = '';
-  document.querySelectorAll('.problem-item').forEach(item => {
-    item.classList.remove('checked');
-    item.querySelector('input[type=checkbox]').checked = false;
-    item.querySelector('textarea').value = '';
-  });
-  document.getElementById('f_corrective').value = '';
-  document.getElementById('f_suggestions').value = '';
-  document.querySelectorAll('input[name="shift"]').forEach(r => { r.checked = false; });
-  document.querySelectorAll('.shift-option').forEach(o => o.classList.remove('selected'));
-  selectedShift = '';
-  setDefaultDate();
-}
-
-function formatLocalDateYYYYMMDD_(date) {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return y + '-' + m + '-' + d;
-}
-function setDefaultDate() {
-  document.getElementById('f_date').value = formatLocalDateYYYYMMDD_(new Date());
-}
-
-/* ==========================================================
-   REPORT PAGE
-   ========================================================== */
-let currentRecords = [];
-let isLoadingHistory = false;
-let historyRequestSeq = 0;
-const PAGE_SIZE = 20;
-let currentPage = 1;
-let totalRecordsCount = 0;
-
-async function loadHistory(resetPage) {
-  if (resetPage !== false) currentPage = 1;
+function renderSimpleTable(records) {
   const container = document.getElementById('historyContainer');
-  if (isLoadingHistory) return;
-  isLoadingHistory = true;
-  const mySeq = ++historyRequestSeq;
-  container.innerHTML = '<div class="empty-state"><span class="spinner dark"></span> กำลังโหลดข้อมูล...</div>';
-
-  const filters = {
-    dateFrom: document.getElementById('r_dateFrom').value || undefined,
-    dateTo: document.getElementById('r_dateTo').value || undefined,
-    shift: document.getElementById('r_shift').value || undefined,
-    plate: document.getElementById('r_plate').value.trim() || undefined,
-    page: currentPage, pageSize: PAGE_SIZE
-  };
-
-  try {
-    const json = await callApi('list', { filters: filters });
-    if (mySeq !== historyRequestSeq) return;
-    currentRecords = json.records || [];
-    totalRecordsCount = json.totalCount || 0;
-    currentPage = json.page || currentPage;
-    renderSummary(json.summary || {}, totalRecordsCount);
-    renderHistoryTable(currentRecords);
-    renderPaginationControls();
-  } catch (err) {
-    if (mySeq !== historyRequestSeq) return;
-    container.innerHTML = '<div class="empty-state">โหลดข้อมูลไม่สำเร็จ: ' + escHtml(err.message) +
-      '<br><button type="button" class="btn secondary" style="width:auto;margin-top:10px;" onclick="loadHistory()">ลองใหม่</button></div>';
-    document.getElementById('summaryCards').innerHTML = '';
-  } finally {
-    if (mySeq === historyRequestSeq) isLoadingHistory = false;
-  }
-}
-
-function changePage(delta) {
-  if (isLoadingHistory) return;
-  const maxPage = Math.max(1, Math.ceil(totalRecordsCount / PAGE_SIZE));
-  const newPage = currentPage + delta;
-  if (newPage < 1 || newPage > maxPage) return;
-  currentPage = newPage;
-  loadHistory(false);
-}
-
-function renderPaginationControls() {
-  const container = document.getElementById('paginationControls');
-  const maxPage = Math.max(1, Math.ceil(totalRecordsCount / PAGE_SIZE));
-  if (totalRecordsCount === 0) { container.style.display = 'none'; return; }
-  container.style.display = 'flex';
-  document.getElementById('pageInfo').textContent = 'หน้า ' + currentPage + ' จาก ' + maxPage + ' (ทั้งหมด ' + totalRecordsCount + ' รายการ)';
-  document.getElementById('prevPageBtn').disabled = currentPage <= 1;
-  document.getElementById('nextPageBtn').disabled = currentPage >= maxPage;
-}
-
-const PROBLEM_BREAKDOWN_LABELS = {
-  p_overweight: 'น้ำหนักเกิน', p_driver_behavior: 'พฤติกรรมคนขับ', p_system: 'ระบบ/อุปกรณ์',
-  p_wrong_queue: 'ชั่งผิดคิว', p_wrong_plate: 'ทะเบียนผิด', p_wrong_delivery: 'ส่งของผิดที่', p_other: 'อื่นๆ'
-};
-
-function renderSummary(summary, totalCount) {
-  const vt = summary.vehicleTotals || {};
-  const totalVehicles = VEHICLE_FIELDS.reduce((s, f) => s + (vt[f.key] || 0), 0);
-  const cards = [
-    { num: totalCount || 0, lbl: 'จำนวนรอบที่บันทึก (ตามตัวกรอง)' },
-    { num: totalVehicles, lbl: 'รถทั้งหมด (คัน)' },
-    { num: vt.veh_rawmat_out || 0, lbl: 'รถส่งวัตถุดิบ/เคมี/บรรจุภัณฑ์ (คัน)' },
-    { num: vt.veh_feed_out || 0, lbl: 'รถส่งอาหาร (คัน)' },
-    { num: vt.veh_feed_in || 0, lbl: 'รถรับอาหาร (คัน)' },
-    { num: vt.veh_rawmat_in || 0, lbl: 'รถรับวัตถุดิบ/เคมี/บรรจุภัณฑ์ (คัน)' },
-    { num: summary.problemCount || 0, lbl: 'รอบที่พบปัญหา' }
-  ];
-  document.getElementById('summaryCards').innerHTML = cards.map(c =>
-    '<div class="summary-card"><div class="num">' + escHtml(c.num) + '</div><div class="lbl">' + escHtml(c.lbl) + '</div></div>'
-  ).join('');
-  renderProblemBreakdown_(summary.problemBreakdown || {});
-}
-
-function renderProblemBreakdown_(breakdown) {
-  const container = document.getElementById('problemBreakdown');
-  const items = Object.keys(PROBLEM_BREAKDOWN_LABELS).map(k => ({ label: PROBLEM_BREAKDOWN_LABELS[k], count: breakdown[k] || 0 })).filter(i => i.count > 0).sort((a,b) => b.count - a.count);
-  if (!items.length) { container.innerHTML = '<div style="font-size:12.5px;color:var(--muted);">ไม่พบปัญหาในช่วงที่เลือก</div>'; return; }
-  container.innerHTML = items.map(i => '<span class="tag" style="font-size:12px;padding:4px 10px;">' + escHtml(i.label) + ': ' + escHtml(i.count) + ' ครั้ง</span>').join(' ');
-}
-
-function renderHistoryTable(records) {
-  const container = document.getElementById('historyContainer');
-  if (!records.length) { container.innerHTML = '<div class="empty-state">ไม่พบข้อมูลตามเงื่อนไขที่เลือก</div>'; return; }
-
-  let html = '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;"><table class="history"><thead><tr>' +
-    '<th>วันที่</th><th>กะ</th><th>ผู้บันทึก</th><th>ทะเบียนรถ</th><th>รวมรถ (คัน)</th><th>ปัญหา</th><th></th>' +
-    '</tr></thead><tbody>';
-
-  records.forEach((r, idx) => {
-    const hasProblem = r.problems && String(r.problems).trim();
-    const tag = hasProblem ? '<span class="tag">มีปัญหา</span>' : '<span style="color:#5f6368;font-size:12px;">-</span>';
-    const totalVeh = VEHICLE_FIELDS.reduce((s, f) => s + (Number(r[f.key]) || 0), 0);
-
-    html += '<tr onclick="showDetail(' + idx + ')">' +
-      '<td>' + escHtml(r.date) + '</td>' +
-      '<td>' + escHtml(r.shift) + '</td>' +
-      '<td>' + escHtml(r.weighmaster) + '</td>' +
-      '<td>' + escHtml(r.licensePlate || '-') + '</td>' +
-      '<td>' + escHtml(totalVeh) + '</td>' +
-      '<td>' + tag + '</td>' +
-      '<td class="row-arrow">›</td></tr>';
+  if(!records.length) { container.innerHTML = '<div class="empty-state">ไม่พบประวัติการบันทึกในช่วงเวลานี้</div>'; return; }
+  
+  let html = '<table class="history"><thead><tr><th>วันที่</th><th>กะ</th><th>ผู้บันทึก</th><th>ทะเบียน</th><th>สถานะปัญหา</th></tr></thead><tbody>';
+  records.forEach(r => {
+    html += `<tr><td>${r.date}</td><td>${r.shift}</td><td>${r.weighmaster}</td><td>${r.licensePlate || '-'}</td><td>${r.problems ? '<span class="tag">พบปัญหา</span>' : 'ปกติ'}</td></tr>`;
   });
-  html += '</tbody></table></div>';
+  html += '</tbody></table>';
   container.innerHTML = html;
 }
 
-function hasAnyProblem_(r) {
-  if (r.problems && String(r.problems).trim()) return true;
-  return Object.values(PROBLEM_FLAG_KEY_MAP).some(k => r[k] === true);
+function reviewForm() {
+  const date = document.getElementById('f_date').value;
+  const master = document.getElementById('f_weighmaster').value.trim();
+  if(!date || !master || !selectedShift) { showToast('กรุณากรอกข้อมูลช่องที่จำเป็น (*) ให้ครบถ้วน', 'error'); return; }
+  confirmAndSave();
 }
 
-function showDetail(idx) {
-  const r = currentRecords[idx];
-  if (!r) return;
+async function confirmAndSave() {
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true; btn.textContent = 'กำลังบันทึก...';
+  
+  const p_overweight = document.querySelector('.problem-item[data-key="overweight"] input').checked;
+  const p_driver_behavior = document.querySelector('.problem-item[data-key="driver_behavior"] input').checked;
+  const p_system = document.querySelector('.problem-item[data-key="system"] input').checked;
+  const p_wrong_queue = document.querySelector('.problem-item[data-key="wrong_queue"] input').checked;
+  const p_wrong_plate = document.querySelector('.problem-item[data-key="wrong_plate"] input').checked;
+  const p_other = document.querySelector('.problem-item[data-key="other"] input').checked;
 
-  const rows = [
-    ['วันที่', r.date], ['กะ', r.shift], ['ผู้บันทึก', r.weighmaster], ['ทะเบียนรถ', r.licensePlate || '-'],
-    ['รถส่งวัตถุดิบ/เคมีภัณฑ์/บรรจุภัณฑ์ (คัน)', r.veh_rawmat_out],
-    ['รถส่งอาหาร (คัน)', r.veh_feed_out],
-    ['รถรับอาหาร (คัน)', r.veh_feed_in],
-    ['รถรับวัตถุดิบ/เคมีภัณฑ์/บรรจุภัณฑ์ (คัน)', r.veh_rawmat_in],
-    ['ประเภทรถอื่นๆ', r.veh_other_type || '-']
-  ];
-  let html = '<h3>รายละเอียดการบันทึก</h3>';
-  rows.forEach(([l,v]) => { html += '<div class="modal-row"><span class="k">' + escHtml(l) + '</span>' + escHtml(v) + '</div>'; });
+  let probTxt = [];
+  if(p_overweight) probTxt.push('น้ำหนักเกิน: ' + document.getElementById('pd_overweight').value);
+  if(p_driver_behavior) probTxt.push('พฤติกรรมคนขับ: ' + document.getElementById('pd_driver_behavior').value);
+  if(p_system) probTxt.push('ระบบ/อุปกรณ์: ' + document.getElementById('pd_system').value);
+  if(p_wrong_queue) probTxt.push('ชั่งผิดคิว: ' + document.getElementById('pd_wrong_queue').value);
+  if(p_wrong_plate) probTxt.push('ทะเบียนผิดสลับคัน: ' + document.getElementById('pd_wrong_plate').value);
+  if(p_other) probTxt.push('อื่นๆ: ' + document.getElementById('pd_other').value);
 
-  const problemsHtml = r.problems && String(r.problems).trim() ? escHtml(r.problems).replace(/\n/g,'<br>') : '<span style="color:var(--muted);">ไม่พบปัญหา</span>';
-  html += '<div class="modal-row"><span class="k">ปัญหาที่พบและรายละเอียด</span>' + problemsHtml + '</div>';
-  html += '<div class="modal-row"><span class="k">แนวทางการแก้ไข</span>' + (r.corrective_action ? escHtml(r.corrective_action).replace(/\n/g,'<br>') : '-') + '</div>';
-  html += '<div class="modal-row"><span class="k">ข้อเสนอแนะ</span>' + (r.suggestions ? escHtml(r.suggestions).replace(/\n/g,'<br>') : '-') + '</div>';
-
-  if (r.lastEditedBy) {
-    html += '<div class="modal-row" style="background:#f8faf9;padding:8px 10px;border-radius:6px;font-size:12px;color:var(--muted);">✏️ แก้ไขล่าสุดโดย ' + escHtml(r.lastEditedBy) + ' เมื่อ ' + escHtml(r.lastEditedAt ? new Date(r.lastEditedAt).toLocaleString('th-TH') : '') + '</div>';
-  }
-
-  const locked = hasAnyProblem_(r);
-  html += '<div style="display:flex;gap:10px;margin-top:20px;">' +
-    '<button type="button" class="btn secondary" style="flex:1;" onclick="openEditModal(' + idx + ')">แก้ไขข้อมูล</button>';
-  if (locked) {
-    html += '<button type="button" class="btn" style="flex:1;background:#9aa0a6;cursor:not-allowed;" disabled title="รายการนี้มีปัญหาบันทึกไว้ ลบไม่ได้">🔒 ลบไม่ได้</button>';
-  } else {
-    html += '<button type="button" class="btn danger" style="flex:1;" onclick="deleteRecord(' + idx + ')">ลบรายการนี้</button>';
-  }
-  html += '</div>';
-  if (locked) html += '<div class="locked-note">🔒 รายการนี้มีการบันทึกปัญหาไว้ จึงลบไม่ได้ เพื่อรักษาหลักฐานไว้ตรวจสอบย้อนหลัง (ยังแก้ไขข้อมูลได้ตามปกติ)</div>';
-
-  document.getElementById('modalBody').innerHTML = html;
-  document.getElementById('modalOverlay').classList.add('show');
-  history.pushState({ tab: currentTab, overlay: 'detail' }, '', '#detail');
-}
-
-function closeModal(fromHistory) {
-  document.getElementById('modalOverlay').classList.remove('show');
-  if (!fromHistory) history.back();
-}
-
-let editSaveInProgress = false;
-function openEditModal(idx) {
-  const r = currentRecords[idx];
-  if (!r || !r.entryId) { showToast('ไม่พบรหัสอ้างอิงของรายการนี้', 'error'); return; }
-  window.currentEditEntryId = r.entryId;
-
-  const html =
-    '<h3>แก้ไขข้อมูล</h3>' +
-    '<div class="field" style="background:#fff8e1;padding:10px;border-radius:8px;"><label>ชื่อผู้แก้ไขข้อมูลนี้ <span class="req">*</span></label><input type="text" id="e_editedBy" maxlength="200"></div>' +
-    '<div class="field"><label>วันที่</label><input type="date" id="e_date"></div>' +
-    '<div class="field"><label>ผู้บันทึก/เจ้าหน้าที่เครื่องชั่ง</label><input type="text" id="e_weighmaster" maxlength="200"></div>' +
-    '<div class="field"><label>ทะเบียนรถ</label><input type="text" id="e_license_plate" maxlength="50"></div>' +
-    '<div class="field"><label>กะปฏิบัติงาน</label><select id="e_shift"><option value="เช้า">เช้า</option><option value="บ่าย">บ่าย</option><option value="ดึก">ดึก</option></select></div>' +
-    '<div class="field"><label>รถส่งวัตถุดิบ/เคมีภัณฑ์/บรรจุภัณฑ์ (คัน)</label><input type="number" min="0" max="500" inputmode="numeric" id="e_veh_rawmat_out"></div>' +
-    '<div class="field"><label>รถส่งอาหาร (คัน)</label><input type="number" min="0" max="500" inputmode="numeric" id="e_veh_feed_out"></div>' +
-    '<div class="field"><label>รถรับอาหาร (คัน)</label><input type="number" min="0" max="500" inputmode="numeric" id="e_veh_feed_in"></div>' +
-    '<div class="field"><label>รถรับวัตถุดิบ/เคมีภัณฑ์/บรรจุภัณฑ์ (คัน)</label><input type="number" min="0" max="500" inputmode="numeric" id="e_veh_rawmat_in"></div>' +
-    '<div class="field"><label>ระบุประเภทรถอื่นๆ</label><input type="text" id="e_veh_other_type" maxlength="200"></div>' +
-    '<div class="field"><label>ปัญหาที่พบและรายละเอียด</label><textarea id="e_problems" maxlength="2000"></textarea></div>' +
-    '<div class="field"><label>แนวทางการแก้ไข</label><textarea id="e_corrective" maxlength="2000"></textarea></div>' +
-    '<div class="field"><label>ข้อเสนอแนะ</label><textarea id="e_suggestions" maxlength="2000"></textarea></div>' +
-    '<div style="display:flex;gap:10px;margin-top:16px;">' +
-    '<button type="button" class="btn secondary" style="flex:1;" onclick="closeEditModal()">ยกเลิก</button>' +
-    '<button type="button" class="btn" style="flex:1;" id="editSaveBtn" onclick="saveEdit()">บันทึกการแก้ไข</button></div>';
-
-  document.getElementById('editModalBody').innerHTML = html;
-  document.getElementById('e_date').value = r.date || '';
-  document.getElementById('e_weighmaster').value = r.weighmaster || '';
-  document.getElementById('e_license_plate').value = r.licensePlate || '';
-  document.getElementById('e_shift').value = r.shift || 'เช้า';
-  VEHICLE_FIELDS.forEach(f => { document.getElementById(f.editFormId).value = r[f.key] || 0; });
-  document.getElementById('e_veh_other_type').value = r.veh_other_type || '';
-  document.getElementById('e_problems').value = r.problems || '';
-  document.getElementById('e_corrective').value = r.corrective_action || '';
-  document.getElementById('e_suggestions').value = r.suggestions || '';
-
-  document.getElementById('editModalOverlay').classList.add('show');
-  history.pushState({ tab: currentTab, overlay: 'edit' }, '', '#edit');
-}
-
-function closeEditModal(fromHistory) {
-  if (editSaveInProgress) return;
-  document.getElementById('editModalOverlay').classList.remove('show');
-  if (!fromHistory) history.back();
-}
-
-async function saveEdit() {
-  if (editSaveInProgress || !window.currentEditEntryId) return;
-  const editedBy = document.getElementById('e_editedBy').value.trim();
-  const date = document.getElementById('e_date').value;
-  const weighmaster = document.getElementById('e_weighmaster').value.trim();
-  const shift = document.getElementById('e_shift').value;
-  const licensePlate = document.getElementById('e_license_plate').value.trim();
-  const vehOtherType = document.getElementById('e_veh_other_type').value.trim();
-  const problemsText = document.getElementById('e_problems').value.trim();
-  const correctiveAction = document.getElementById('e_corrective').value.trim();
-  const suggestions = document.getElementById('e_suggestions').value.trim();
-
-  if (!editedBy) { showToast('กรุณาระบุชื่อผู้แก้ไขข้อมูล', 'error'); return; }
-  if (!date) { showToast('กรุณาระบุวันที่', 'error'); return; }
-  if (!weighmaster) { showToast('กรุณาระบุชื่อผู้บันทึก', 'error'); return; }
-
-  const vehicleCounts = {};
-  for (let i = 0; i < VEHICLE_FIELDS.length; i++) {
-    const f = VEHICLE_FIELDS[i];
-    const val = Number(document.getElementById(f.editFormId).value);
-    if (!Number.isFinite(val) || val < 0 || val > MAX_VEHICLE_COUNT) {
-      showToast('จำนวน "' + f.label + '" ไม่ถูกต้อง', 'error'); return;
+  const payload = {
+    action: 'save', token: TOKEN,
+    data: {
+      date: document.getElementById('f_date').value,
+      weighmaster: document.getElementById('f_weighmaster').value,
+      licensePlate: document.getElementById('f_license_plate').value,
+      shift: selectedShift,
+      problems: probTxt.join('\n'),
+      p_overweight, p_driver_behavior, p_system, p_wrong_queue, p_wrong_plate, p_other,
+      veh_rawmat_out: document.getElementById('f_veh_rawmat_out').value,
+      veh_feed_out: document.getElementById('f_veh_feed_out').value,
+      veh_feed_in: document.getElementById('f_veh_feed_in').value,
+      veh_rawmat_in: document.getElementById('f_veh_rawmat_in').value
     }
-    vehicleCounts[f.key] = Math.floor(val);
-  }
-
-  const data = Object.assign({
-    editedBy: editedBy, date: date, weighmaster: weighmaster, shift: shift, licensePlate: licensePlate,
-    veh_other_type: vehOtherType, problems: problemsText, corrective_action: correctiveAction, suggestions: suggestions
-  }, vehicleCounts);
-
-  const btn = document.getElementById('editSaveBtn');
-  editSaveInProgress = true;
-  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> กำลังบันทึก...'; }
-
-  try {
-    await callApi('update', { entryId: window.currentEditEntryId, data: data });
-    showToast('แก้ไขข้อมูลสำเร็จ', 'success');
-    editSaveInProgress = false;
-    document.getElementById('editModalOverlay').classList.remove('show');
-    document.getElementById('modalOverlay').classList.remove('show');
-    history.go(-2);
-    window.currentEditEntryId = null;
-    loadHistory();
-  } catch (err) {
-    editSaveInProgress = false;
-    showToast('แก้ไขไม่สำเร็จ: ' + err.message, 'error');
-  } finally {
-    editSaveInProgress = false;
-    if (btn) { btn.disabled = false; btn.textContent = 'บันทึกการแก้ไข'; }
-  }
-}
-
-async function deleteRecord(idx) {
-  const r = currentRecords[idx];
-  if (!r || !r.entryId) { showToast('ไม่พบรหัสอ้างอิงของรายการนี้', 'error'); return; }
-  if (hasAnyProblem_(r)) { showToast('รายการนี้มีปัญหาบันทึกไว้ ลบไม่ได้', 'error'); return; }
-
-  const deletedBy = window.prompt('กรุณาระบุชื่อผู้ทำการลบข้อมูลนี้ (เพื่อบันทึกไว้เป็นหลักฐาน):', '');
-  if (deletedBy === null) return;
-  if (!deletedBy.trim()) { showToast('กรุณาระบุชื่อผู้ทำการลบ', 'error'); return; }
-
-  const confirmed = window.confirm('ยืนยันการลบข้อมูลนี้หรือไม่?\nวันที่: ' + r.date + ' กะ: ' + r.shift + ' ผู้บันทึก: ' + r.weighmaster + '\nผู้ทำการลบ: ' + deletedBy.trim());
-  if (!confirmed) return;
-
-  try {
-    await callApi('delete', { entryId: r.entryId, deletedBy: deletedBy.trim() });
-    showToast('ลบข้อมูลสำเร็จ', 'success');
-    document.getElementById('modalOverlay').classList.remove('show');
-    history.back();
-    loadHistory();
-  } catch (err) {
-    showToast('ลบไม่สำเร็จ: ' + err.message, 'error');
-  }
-}
-
-/* ---------------- Overlay + history + Esc handling ---------------- */
-function getOpenOverlay_() {
-  if (document.getElementById('editModalOverlay').classList.contains('show')) return 'edit';
-  if (document.getElementById('confirmModalOverlay').classList.contains('show')) return 'confirm';
-  if (document.getElementById('modalOverlay').classList.contains('show')) return 'detail';
-  return null;
-}
-window.addEventListener('popstate', (event) => {
-  const state = event.state || { tab: 'form', overlay: null };
-  const openOverlay = getOpenOverlay_();
-  if (openOverlay && openOverlay !== state.overlay) {
-    if (openOverlay === 'edit') closeEditModal(true);
-    if (openOverlay === 'confirm') closeConfirmModal(true);
-    if (openOverlay === 'detail') closeModal(true);
-  }
-  if (state.tab && state.tab !== currentTab) switchTab(state.tab, true);
-});
-window.addEventListener('keydown', (event) => {
-  if (event.key !== 'Escape') return;
-  const o = getOpenOverlay_();
-  if (o === 'edit') closeEditModal();
-  if (o === 'confirm') closeConfirmModal();
-  if (o === 'detail') closeModal();
-});
-
-function setupModalScrollLock_() {
-  const overlayIds = ['modalOverlay','confirmModalOverlay','editModalOverlay'];
-  const update = () => {
-    const anyOpen = overlayIds.some(id => document.getElementById(id).classList.contains('show'));
-    document.body.classList.toggle('modal-open', anyOpen);
   };
-  overlayIds.forEach(id => new MutationObserver(update).observe(document.getElementById(id), { attributes: true, attributeFilter: ['class'] }));
-  update();
+
+  try {
+    const res = await fetch(APPS_SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+    const json = await res.json();
+    if(!json.success) throw new Error(json.error);
+    showToast('บันทึกข้อมูลเรียบร้อยแล้วครับ', 'success');
+    location.reload();
+  } catch(e) {
+    showToast('บันทึกไม่สำเร็จ: ' + e.message, 'error');
+    btn.disabled = false; btn.textContent = 'บันทึกข้อมูล';
+  }
 }
 
-/* ---------------- beforeunload ---------------- */
-function hasUnsavedFormData_() {
-  const weighmaster = document.getElementById('f_weighmaster').value.trim();
-  const licensePlate = document.getElementById('f_license_plate').value.trim();
-  const vehOtherType = document.getElementById('f_veh_other_type').value.trim();
-  const corrective = document.getElementById('f_corrective').value.trim();
-  const suggestions = document.getElementById('f_suggestions').value.trim();
-  const anyVehicleCount = VEHICLE_FIELDS.some(f => (Number(document.getElementById(f.formId).value) || 0) > 0);
-  const anyProblemChecked = Object.keys(PROBLEM_KEY_LABELS).some(key => getProblemData(key).checked);
-  return !!(weighmaster || licensePlate || vehOtherType || corrective || suggestions || anyVehicleCount || anyProblemChecked);
-}
-window.addEventListener('beforeunload', (event) => {
-  if (saveInProgress) return;
-  if (hasUnsavedFormData_()) { event.preventDefault(); event.returnValue = ''; }
-});
-
-/* ---------------- Network status ---------------- */
-function updateNetStatus_(showMsg) {
-  const el = document.getElementById('netStatus');
-  const textEl = document.getElementById('netStatusText');
-  const isOnline = navigator.onLine !== false;
-  el.className = 'net-status ' + (isOnline ? 'online' : 'offline');
-  textEl.textContent = isOnline ? 'ออนไลน์' : 'ออฟไลน์';
-  if (showMsg) showToast(isOnline ? 'กลับมาเชื่อมต่ออินเทอร์เน็ตแล้ว' : 'ขาดการเชื่อมต่ออินเทอร์เน็ต', isOnline ? 'success' : 'error');
-}
-window.addEventListener('online', () => updateNetStatus_(true));
-window.addEventListener('offline', () => updateNetStatus_(true));
-
-/* ---------------- Init ---------------- */
 window.addEventListener('DOMContentLoaded', () => {
-  setDefaultDate();
-  history.replaceState({ tab: 'form', overlay: null }, '', '#form');
-  updateNetStatus_(false);
-  setupModalScrollLock_();
-  if (!APPS_SCRIPT_URL) document.getElementById('configWarning').style.display = 'block';
+  document.getElementById('f_date').value = new Date().toISOString().split('T')[0];
+  document.getElementById('r_dateSelect').value = new Date().toISOString().split('T')[0];
 });
 </script>
 </body>
