@@ -406,7 +406,6 @@ function generatePrintLayout(records, scope, targetValue) {
             <div class="print-meta">
               <span><b>กะปฏิบัติงาน:</b> ${r.shift}</span>
               <span><b>เจ้าหน้าที่เวรชั่ง:</b> ${r.weighmaster}</span>
-              <span><b>ทะเบียนรถ:</b> ${r.licensePlate || '-'}</span>
             </div>
             <div style="font-size:14px; margin-bottom:10px;">
               <b>📊 ยอดรวมจำนวนรถ:</b> วัตถุดิบออก ${r.veh_rawmat_out} คัน | อาหารออก ${r.veh_feed_out || 0} คัน | รถอาหารภายใน ${r.veh_feed_in} คัน | รถวัตถุดิบภายใน ${r.veh_rawmat_in} คัน${r.veh_other_type ? ' | อื่นๆ: ' + r.veh_other_type : ''}
