@@ -59,7 +59,6 @@
   .btn:hover{ background:var(--primary-dark); }
   .btn:disabled{ background:#9aa0a6; cursor:not-allowed; }
   .btn.navy{ background:var(--navy); }
-  .btn.secondary{ background:#fff; color:var(--text); border:1.5px solid var(--border); border-radius:8px; }
 
   table.history{ width:100%; border-collapse:collapse; font-size:14px; margin-top:14px; }
   table.history th, table.history td{ text-align:left; padding:14px 10px; border-bottom:1px solid var(--border); white-space:nowrap; }
@@ -77,11 +76,10 @@
   .net-status.online{ background:rgba(15,157,88,0.1); color:var(--primary-dark); }
   .net-status.online .dot{ background:var(--primary); }
 
-  /* สำหรับซ่อนเนื้อหาเวลาสั่ง Print ออกทางเครื่องพิมพ์/PDF */
   #print-area { display: none; }
 
   @media print {
-    .no-print, header, nav, button, .btn, .card:not(.print-card) { display: none !important; }
+    .no-print, header, nav, button, .btn, .card { display: none !important; }
     body { background: #fff !important; color: #000 !important; }
     main { max-width: 100% !important; margin: 0 !important; padding: 0 !important; }
     #print-area { display: block !important; font-family: 'Sarabun', sans-serif; padding: 10px; }
@@ -92,9 +90,11 @@
     .print-section { margin-bottom: 25px; }
     .print-section h3 { font-size: 16px; margin: 0 0 10px 0; border-bottom: 1px dashed #ccc; padding-bottom: 4px; }
     table.print-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-    table.print-table th, table.print-table td { border: 1px solid #000; padding: 8px 10px; text-align: left; font-size: 14px; }
+    table.print-table th, table.print-table td { border: 1px solid #000; padding: 10px; text-align: left; font-size: 13px; vertical-align: top; white-space: normal; word-break: break-word; }
     table.print-table th { background: #f2f2f2 !important; -webkit-print-color-adjust: exact; font-weight: bold; }
     .item-block { border: 1px solid #000; padding: 12px; margin-bottom: 15px; border-radius: 4px; page-break-inside: avoid; }
+    .text-danger { color: #d93025 !important; font-weight: bold; }
+    .text-success { color: #0f9d58 !important; }
   }
 </style>
 </head>
@@ -159,7 +159,7 @@
         <label>ประเภทช่วงรายงาน</label>
         <select id="reportScope" onchange="toggleScopeInput()">
           <option value="daily">รายวัน (ฟอร์มเดี่ยวประจำวัน)</option>
-          <option value="monthly">รายเดือน (สรุปภาพรวมแยกกะ)</option>
+          <option value="monthly">รายเดือน (สรุปภาพรวมแยกกะแจ้งปัญหา)</option>
         </select>
       </div>
 
@@ -235,7 +235,6 @@ function showToast(msg, type) {
   t.className = 'toast show ' + (type || ''); setTimeout(() => t.className = 'toast', 4000);
 }
 
-// ฟังก์ชันหลักดึงฐานข้อมูลมาจัด Format สั่งพิมพ์ตามแบบที่เลือก
 async function fetchAndPrint() {
   const scope = document.getElementById('reportScope').value;
   const targetVal = scope === 'daily' ? document.getElementById('r_dateSelect').value : document.getElementById('r_monthSelect').value;
@@ -253,7 +252,6 @@ async function fetchAndPrint() {
     const records = json.records || [];
     let matchRecords = [];
 
-    // คัดกรองข้อมูลตามเงื่อนไขเวลา
     records.forEach(r => {
       let isMatch = false;
       if (scope === 'daily' && r.date === targetVal) isMatch = true;
@@ -264,7 +262,6 @@ async function fetchAndPrint() {
     renderSimpleTable(matchRecords);
     buildPrintPage(matchRecords, scope, targetVal);
 
-    // เรียกหน้าต่างพิมพ์ (Print / Save PDF) ของเบราว์เซอร์ทันที
     setTimeout(() => { window.print(); }, 400);
 
   } catch(e) {
@@ -284,13 +281,13 @@ function renderSimpleTable(records) {
   container.innerHTML = html;
 }
 
-// จัดโครงสร้างหน้ากระดาษพิมพ์ตามรูปที่ 2 และ 3
+// ฟังก์ชันหัวใจหลักในการจัดข้อมูลใส่หน้ารายงาน Print
 function buildPrintPage(records, scope, targetVal) {
   const printArea = document.getElementById('print-area');
   printArea.innerHTML = '';
 
   if (scope === 'daily') {
-    // 📄 รูปแบบฟอร์มตอนกดรายงานแบบรายวัน (เน้นดูบันทึกดิบรายกะทีละบล็อกตามรูปที่ 2)
+    // 📄 รายงานแบบรายวันคงเดิม (ดึงบล็อกข้อมูลดิบรายกะ)
     let blocksHtml = '';
     if(records.length === 0) {
       blocksHtml = '<div class="empty-state">ไม่มีบันทึกข้อมูลรายงานในวันที่เลือก</div>';
@@ -323,23 +320,26 @@ function buildPrintPage(records, scope, targetVal) {
       </div>
     `;
   } else {
-    // 📅 รูปแบบฟอร์มตอนกดรายงานแบบรายเดือน (จัดกลุ่มวันที่และสรุปแบ่งกะตามรูปที่ 3)
+    // 📅 รายงานแบบรายเดือนเวอร์ชันปรับปรุง (แสดงรายละเอียดข้อความปัญหาจริงลงในคอลัมน์กะ)
     let rowsHtml = '';
     if(records.length === 0) {
       rowsHtml = '<tr><td colspan="4" style="text-align:center;">ไม่มีข้อมูลรายงานประวัติในเดือนนี้</td></tr>';
     } else {
-      // จัดแจงกลุ่มข้อมูลเอาวันเป็นหลัก
+      // จัดกลุ่มข้อมูลโดยใช้ วันที่ เป็น Key หลัก
       let monthlyGroup = {};
       records.forEach(r => {
-        if(!monthlyGroup[r.date]) monthlyGroup[r.date] = { 'เช้า': 'ปกติ', 'บ่าย': 'ปกติ', 'ดึก': 'ปกติ' };
+        if(!monthlyGroup[r.date]) {
+          monthlyGroup[r.date] = { 'เช้า': '<span class="text-success">ปกติ</span>', 'บ่าย': '<span class="text-success">ปกติ</span>', 'ดึก': '<span class="text-success">ปกติ</span>' };
+        }
+        
+        // ถ้ามีข้อความปัญหา ให้ดึงมาแสดงแทนคำว่าปกติทันที
         if(r.problems && r.problems.trim()) {
-          monthlyGroup[r.date][r.shift] = '⚠️ พบปัญหา (' + (r.licensePlate || 'ไม่ระบุทะเบียน') + ')';
-        } else {
-          monthlyGroup[r.date][r.shift] = '🟢 ปกติ';
+          let plateInfo = r.licensePlate ? `(ทะเบียน: ${r.licensePlate}) ` : '';
+          monthlyGroup[r.date][r.shift] = `<span class="text-danger">⚠️ แจ้งปัญหา: ${plateInfo}${r.problems.trim().replace(/\n/g, ', ')}</span>`;
         }
       });
 
-      // เรียงลำดับวันที่จากน้อยไปมากแล้วแสดงในตาราง
+      // วนลูปเรียงตามลำดับวันที่ในเดือนนั้นๆ
       Object.keys(monthlyGroup).sort().forEach(d => {
         rowsHtml += `
           <tr>
@@ -358,14 +358,14 @@ function buildPrintPage(records, scope, targetVal) {
         <div><b>ประจำเดือน:</b> ${targetVal}</div>
       </div>
       <div class="print-section">
-        <h3>แบ่งแจกแจงสถานะตามกะ (เช้า / บ่าย / ดึก)</h3>
+        <h3>สรุปรายละเอียดปัญหาและสถานะจำแนกตามรายวันและกะปฏิบัติงาน</h3>
         <table class="print-table">
           <thead>
             <tr>
-              <th>วันที่ (Date)</th>
-              <th>สรุปสถานะกะเช้า</th>
-              <th>สรุปสถานะกะบ่าย</th>
-              <th>สรุปสถานะกะดึก</th>
+              <th style="width: 15%;">วันที่ (Date)</th>
+              <th style="width: 28.33%;">รายละเอียดกะเช้า</th>
+              <th style="width: 28.33%;">รายละเอียดกะบ่าย</th>
+              <th style="width: 28.33%;">รายละเอียดกะดึก</th>
             </tr>
           </thead>
           <tbody>
