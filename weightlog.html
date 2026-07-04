@@ -35,8 +35,6 @@
   }
   input:focus, textarea:focus, select:focus{ outline:none; border-color:var(--primary); box-shadow:0 0 0 3px rgba(15,157,88,0.12); }
   textarea{ resize:vertical; min-height:80px; }
-  .validation-error{ outline:3px solid var(--danger) !important; outline-offset:2px; border-radius:8px; animation:shakeError .35s ease; }
-  @keyframes shakeError{ 0%,100%{transform:translateX(0);} 25%{transform:translateX(-4px);} 75%{transform:translateX(4px);} }
 
   .shift-group{ display:flex; gap:10px; flex-wrap:wrap; }
   .shift-option{ flex:1; min-width:100px; min-height:52px; display:flex; align-items:center; justify-content:center; border:1.5px solid var(--border); border-radius:8px; padding:14px; text-align:center; cursor:pointer; color:var(--muted); user-select:none; position:relative; }
@@ -62,8 +60,6 @@
   .btn:disabled{ background:#9aa0a6; cursor:not-allowed; }
   .btn.secondary{ background:#fff; color:var(--primary-dark); border:1.5px solid var(--primary); }
   .btn.danger{ background:var(--danger); }
-
-  .char-counter{ font-size:11px; color:var(--muted); text-align:right; margin-top:3px; }
 
   /* ปรับปรุงหน้าสรุปแบบใหม่ให้อ่านง่าย */
   .quick-summary-box { background:#f8faf9; border:1px solid var(--border); border-radius:8px; padding:16px; margin-bottom:16px; }
@@ -112,8 +108,6 @@
   .net-status.online .dot{ background:var(--primary); }
   .net-status.offline{ background:rgba(217,48,37,0.1); color:var(--danger); }
   .net-status.offline .dot{ background:var(--danger); }
-
-  .locked-note{ background:#fff8e1; border:1px solid var(--warn); color:#7a5b00; padding:10px 12px; border-radius:8px; font-size:13px; margin-top:10px; }
 
   @media (max-width:480px){
     header.appbar{ padding:10px 14px; }
@@ -189,13 +183,13 @@
     <div class="card" id="problemsCard">
       <h2><span class="icon">⚠️</span> ปัญหาที่พบ (เลือกหัวข้อเพื่อกรอกรายละเอียดเพิ่มเติม)</h2>
       <div class="problem-grid">
-        <div class="problem-item" data-key="overweight"><label class="chk"><input type="checkbox"> น้ำหนักเกิน</label><textarea id="pd_overweight" placeholder="ระบุรายละเอียด"></textarea></div>
-        <div class="problem-item" data-key="driver_behavior"><label class="chk"><input type="checkbox"> พฤติกรรมคนขับ</label><textarea id="pd_driver_behavior" placeholder="ระบุรายละเอียด"></textarea></div>
-        <div class="problem-item" data-key="system"><label class="chk"><input type="checkbox"> ระบบ/อุปกรณ์</label><textarea id="pd_system" placeholder="ระบุรายละเอียด"></textarea></div>
-        <div class="problem-item" data-key="wrong_queue"><label class="chk"><input type="checkbox"> ชั่งรถผิดคิว</label><textarea id="pd_wrong_queue" placeholder="ระบุรายละเอียด"></textarea></div>
-        <div class="problem-item" data-key="wrong_plate"><label class="chk"><input type="checkbox"> ทะเบียนผิด (สลับคัน)</label><textarea id="pd_wrong_plate" placeholder="กรอกข้อมูลรถคู่ที่สลับทะเบียนกัน"></textarea></div>
-        <div class="problem-item" data-key="wrong_delivery"><label class="chk"><input type="checkbox"> ส่งของผิดที่</label><textarea id="pd_wrong_delivery" placeholder="ระบุรายละเอียด"></textarea></div>
-        <div class="problem-item" data-key="other"><label class="chk"><input type="checkbox"> อื่นๆ</label><textarea id="pd_other" placeholder="ระบุรายละเอียด"></textarea></div>
+        <div class="problem-item" data-key="overweight"><label class="chk"><input type="checkbox"> น้ำหนักเกิน</label><textarea id="pd_overweight" placeholder="ระบุรายละเอียด เช่น ทะเบียนรถ, เกินกี่ กก."></textarea></div>
+        <div class="problem-item" data-key="driver_behavior"><label class="chk"><input type="checkbox"> พฤติกรรมคนขับ</label><textarea id="pd_driver_behavior" placeholder="ระบุรายละเอียด เช่น ทะเบียนรถ, พฤติกรรมที่พบ"></textarea></div>
+        <div class="problem-item" data-key="system"><label class="chk"><input type="checkbox"> ระบบ/อุปกรณ์</label><textarea id="pd_system" placeholder="ระบุรายละเอียด เช่น เครื่องชั่งค้าง, ไม้กั้นเสีย, ระบบล่ม"></textarea></div>
+        <div class="problem-item" data-key="wrong_queue"><label class="chk"><input type="checkbox"> ชั่งรถผิดคิว</label><textarea id="pd_wrong_queue" placeholder="ระบุรายละเอียด เช่น ทะเบียนรถ, คิวที่ชั่งผิดไป"></textarea></div>
+        <div class="problem-item" data-key="wrong_plate"><label class="chk"><input type="checkbox"> ทะเบียนผิด (สลับคัน)</label><textarea id="pd_wrong_plate" placeholder="ระบุรายละเอียด เช่น กรอกข้อมูลรถคู่ที่สลับทะเบียนกัน"></textarea></div>
+        <div class="problem-item" data-key="wrong_delivery"><label class="chk"><input type="checkbox"> ส่งของผิดที่</label><textarea id="pd_wrong_delivery" placeholder="ระบุรายละเอียด เช่น ทะเบียนรถ, สถานที่ที่ควรส่งกับที่ส่งผิด"></textarea></div>
+        <div class="problem-item" data-key="other"><label class="chk"><input type="checkbox"> อื่นๆ</label><textarea id="pd_other" placeholder="ระบุรายละเอียด เช่น ทะเบียนรถ, เหตุการณ์ที่พบ"></textarea></div>
       </div>
     </div>
     <div class="card"><h2><span class="icon">🛠️</span> แนวทางการแก้ไข</h2><textarea id="f_corrective"></textarea></div>
@@ -265,6 +259,31 @@ const APPS_SCRIPT_URL_ENCODED = 'Ql5eWlkQBQVZSVhDWl4ETUVFTUZPBElFRwVHS0lYRVkFWQV
 const TOKEN = 'z0CPHpdf8xJmfbMbwxVE1t2ghIEOJY03';
 const APPS_SCRIPT_URL = xorDecode(APPS_SCRIPT_URL_ENCODED);
 
+// เดิมมี div คำเตือน #configWarning อยู่ในหน้าเว็บ แต่ไม่เคยมีโค้ดสั่งให้แสดงผลเลย
+// จึงเพิ่มการตรวจสอบว่าตั้งค่า URL ของ Apps Script ไว้ถูกต้องหรือไม่
+if (!APPS_SCRIPT_URL) {
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('configWarning').style.display = 'block';
+    document.getElementById('submitBtn').disabled = true;
+  });
+}
+
+// อัปเดตสถานะออนไลน์/ออฟไลน์ตามการเชื่อมต่อเครือข่ายจริง (เดิมค่านี้ถูก hardcode ไว้ว่า "ออนไลน์" เสมอ ไม่เคยอัปเดตตามจริง)
+function updateNetStatus() {
+  const el = document.getElementById('netStatus');
+  const txt = document.getElementById('netStatusText');
+  if (navigator.onLine) {
+    el.className = 'net-status online';
+    txt.textContent = 'ออนไลน์';
+  } else {
+    el.className = 'net-status offline';
+    txt.textContent = 'ออฟไลน์';
+  }
+}
+window.addEventListener('online', updateNetStatus);
+window.addEventListener('offline', updateNetStatus);
+updateNetStatus();
+
 let selectedShift = '';
 document.querySelectorAll('.shift-option').forEach(opt => {
   const radio = opt.querySelector('input[type="radio"]');
@@ -317,7 +336,7 @@ async function buildQuickSummary() {
     if (!json.success) throw new Error(json.error);
     const records = json.records || [];
     
-    let totalIssues = 0, overweight = 0, driver = 0, system = 0, wrongQueue = 0, wrongPlate = 0, otherProblem = 0;
+    let totalIssues = 0, overweight = 0, driver = 0, system = 0, wrongQueue = 0, wrongPlate = 0, wrongDelivery = 0, otherProblem = 0;
     let detailsArr = [];
     let matchRecords = [];
 
@@ -333,6 +352,7 @@ async function buildQuickSummary() {
         if (r.p_system) { system++; totalIssues++; }
         if (r.p_wrong_queue) { wrongQueue++; totalIssues++; }
         if (r.p_wrong_plate) { wrongPlate++; totalIssues++; }
+        if (r.p_wrong_delivery) { wrongDelivery++; totalIssues++; }
         if (r.p_other) { otherProblem++; totalIssues++; }
         
         if (r.problems && r.problems.trim()) {
@@ -341,7 +361,7 @@ async function buildQuickSummary() {
       }
     });
 
-    // แสดงผลข้อมูลตัวเลขรวมเข้ากลุ่มแบบสวยงามในคลิกเดียว (ส่วนเดิมคงไว้ 100%)
+    // แสดงผลข้อมูลตัวเลขรวมเข้ากลุ่มแบบสวยงามในคลิกเดียว
     document.getElementById('summaryPeriodTitle').innerText = `📅 สรุปรายงานภาพรวมประจำ: ${targetValue}`;
     
     document.getElementById('quickStatsContainer').innerHTML = `
@@ -351,6 +371,8 @@ async function buildQuickSummary() {
       <div class="quick-stat-badge">⚙️ ระบบ/อุปกรณ์: ${system} ครั้ง</div>
       <div class="quick-stat-badge">⏱️ ผิดคิว: ${wrongQueue} ครั้ง</div>
       <div class="quick-stat-badge ${wrongPlate > 0 ? 'has-val' : ''}">🆔 ทะเบียนผิด/สลับคัน: ${wrongPlate} ครั้ง</div>
+      <div class="quick-stat-badge ${wrongDelivery > 0 ? 'has-val' : ''}">📦 ส่งของผิดที่: ${wrongDelivery} ครั้ง</div>
+      <div class="quick-stat-badge">📌 อื่นๆ: ${otherProblem} ครั้ง</div>
     `;
 
     document.getElementById('quickDetailsContainer').innerHTML = detailsArr.length > 0 
@@ -387,7 +409,7 @@ function generatePrintLayout(records, scope, targetValue) {
               <span><b>ทะเบียนรถ:</b> ${r.licensePlate || '-'}</span>
             </div>
             <div style="font-size:14px; margin-bottom:10px;">
-              <b>📊 ยอดรวมจำนวนรถ:</b> วัตถุดิบออก ${r.veh_rawmat_out} คัน | อาหารออก ${r.veh_feed_out || 0} คัน | รถอาหารภายใน ${r.veh_feed_in} คัน | รถวัตถุดิบภายใน ${r.veh_rawmat_in} คัน
+              <b>📊 ยอดรวมจำนวนรถ:</b> วัตถุดิบออก ${r.veh_rawmat_out} คัน | อาหารออก ${r.veh_feed_out || 0} คัน | รถอาหารภายใน ${r.veh_feed_in} คัน | รถวัตถุดิบภายใน ${r.veh_rawmat_in} คัน${r.veh_other_type ? ' | อื่นๆ: ' + r.veh_other_type : ''}
             </div>
             <div style="font-size:14px; white-space:pre-wrap; background:#f9f9f9; padding:10px; border-left:3px solid #d93025;"><b>⚠️ รายงานรายละเอียดปัญหา:</b>\n${r.problems || '- ไม่มีรายงานปัญหา -'}</div>
           </div>
@@ -460,6 +482,7 @@ async function confirmAndSave() {
   const p_system = document.querySelector('.problem-item[data-key="system"] input').checked;
   const p_wrong_queue = document.querySelector('.problem-item[data-key="wrong_queue"] input').checked;
   const p_wrong_plate = document.querySelector('.problem-item[data-key="wrong_plate"] input').checked;
+  const p_wrong_delivery = document.querySelector('.problem-item[data-key="wrong_delivery"] input').checked;
   const p_other = document.querySelector('.problem-item[data-key="other"] input').checked;
 
   let probTxt = [];
@@ -468,21 +491,25 @@ async function confirmAndSave() {
   if(p_system) probTxt.push('ระบบ/อุปกรณ์: ' + document.getElementById('pd_system').value);
   if(p_wrong_queue) probTxt.push('ชั่งผิดคิว: ' + document.getElementById('pd_wrong_queue').value);
   if(p_wrong_plate) probTxt.push('ทะเบียนผิดสลับคัน: ' + document.getElementById('pd_wrong_plate').value);
+  if(p_wrong_delivery) probTxt.push('ส่งของผิดที่: ' + document.getElementById('pd_wrong_delivery').value);
   if(p_other) probTxt.push('อื่นๆ: ' + document.getElementById('pd_other').value);
 
   const payload = {
     action: 'save', token: TOKEN,
     data: {
       date: document.getElementById('f_date').value,
-      weighmaster: document.getElementById('f_weighmaster').value,
-      licensePlate: document.getElementById('f_license_plate').value,
+      weighmaster: document.getElementById('f_weighmaster').value.trim(),
+      licensePlate: document.getElementById('f_license_plate').value.trim(),
       shift: selectedShift,
       problems: probTxt.join('\n'),
-      p_overweight, p_driver_behavior, p_system, p_wrong_queue, p_wrong_plate, p_other,
+      p_overweight, p_driver_behavior, p_system, p_wrong_queue, p_wrong_plate, p_wrong_delivery, p_other,
       veh_rawmat_out: document.getElementById('f_veh_rawmat_out').value,
       veh_feed_out: document.getElementById('f_veh_feed_out').value,
       veh_feed_in: document.getElementById('f_veh_feed_in').value,
-      veh_rawmat_in: document.getElementById('f_veh_rawmat_in').value
+      veh_rawmat_in: document.getElementById('f_veh_rawmat_in').value,
+      veh_other_type: document.getElementById('f_veh_other_type').value,
+      corrective: document.getElementById('f_corrective').value,
+      suggestions: document.getElementById('f_suggestions').value
     }
   };
 
