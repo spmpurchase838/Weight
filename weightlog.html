@@ -149,6 +149,7 @@
     ⚠️ ยังไม่ได้ตั้งค่า URL ของ Apps Script — แก้ค่า <code>APPS_SCRIPT_URL_ENCODED</code> ในโค้ดก่อนใช้งานจริง
   </div>
 
+  <!-- ================= FORM PAGE ================= -->
   <section id="page-form">
     <div class="card">
       <h2><span class="icon">📋</span> ฟอร์มบันทึกข้อมูลห้องชั่ง</h2>
@@ -163,9 +164,10 @@
         <input type="text" id="f_weighmaster" maxlength="200" placeholder="ระบุชื่อ-นามสกุล">
       </div>
 
+      <!-- ปรับปรุงช่องกรอกทะเบียนรถตามคำขอตัดเงื่อนไขเรื่องปัญหาออก -->
       <div class="field">
-        <label>ทะเบียนรถ (ถ้ามีปัญหาเกี่ยวข้อง)</label>
-        <input type="text" id="f_license_plate" maxlength="50" placeholder="ระบุถ้ามีรถคันใดคันหนึ่งเกี่ยวข้องกับปัญหาที่พบ (เว้นว่างได้)">
+        <label>ทะเบียนรถ (License Plate)</label>
+        <input type="text" id="f_license_plate" maxlength="50" placeholder="ระบุทะเบียนรถ">
       </div>
 
       <div class="field">
@@ -238,6 +240,7 @@
     <button type="button" class="btn" id="submitBtn" onclick="reviewForm()">บันทึกข้อมูล</button>
   </section>
 
+  <!-- ================= REPORT PAGE ================= -->
   <section id="page-report" style="display:none;">
     <div class="card">
       <h2><span class="icon">🔍</span> ตัวกรองข้อมูล</h2>
