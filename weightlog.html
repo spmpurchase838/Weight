@@ -418,12 +418,12 @@ function generatePrintLayout(records, scope, targetValue) {
         const problemBlockHtml = hasProblem
           ? '<div style="font-size:14px; white-space:pre-wrap; background:#f9f9f9; padding:10px; border-left:3px solid #d93025;"><b>⚠️ รายงานรายละเอียดปัญหา:</b>\n' + r.problems + '</div>'
           : '<div style="font-size:14px; color:#0f9d58;">✅ ไม่พบปัญหาในกะนี้</div>';
-        blocksHtml += '<div class="item-block"><div class="print-meta"><span><b>กะปฏิบัติงาน:</b> ' + r.shift + '</span><span><b>เจ้าหน้าที่เวรชั่ง:</b> ' + r.weighmaster + '</span></div><div style="font-size:14px; margin-bottom:10px;"><b>📊 ยอดรวมจำนวนรถ:</b> วัตถุดิบออก ' + r.veh_rawmat_out + ' คัน | อาหารออก ' + (r.veh_feed_out || 0) + ' คัน | รถอาหารภายใน ' + r.veh_feed_in + ' คัน | รถวัตถุดิบภายใน ' + r.veh_rawmat_in + ' คัน' + (r.veh_other_type ? ' | อื่นๆ: ' + r.veh_other_type : '') + '</div>' + problemBlockHtml + '</div>';
+        blocksHtml += '<div class="item-block"><div class="print-meta"><span><b>กะปฏิบัติงาน:</b> ' + r.shift + '</span><span><b>เจ้าหน้าที่เวรชั่ง:</b> ' + r.weighmaster + '</span></div><div style="font-size:14px; margin-bottom:10px;"><b>📊 ยอดรวมจำนวนรถ:</b> วัตถุดิบออก ' + r.veh_rawmat_out + ' คัน | อาหารออก(ภายใน) ' + (r.veh_feed_out || 0) + ' คัน | อาหาร(ภายนอก) ' + (r.veh_feed_ext || 0) + ' คัน | รถอาหารภายใน ' + r.veh_feed_in + ' คัน | รถวัตถุดิบภายใน ' + r.veh_rawmat_in + ' คัน' + (r.veh_other_type ? ' | อื่นๆ: ' + r.veh_other_type : '') + '</div>' + problemBlockHtml + '</div>';
       });
     }
     printArea.innerHTML = '<div class="print-header"><h2>📋 รายงานสรุปห้องชั่งประจำวัน</h2><div><b>วันที่:</b> ' + targetValue + '</div></div><div class="print-section"><h3>รายการบันทึกจำแนกตามรายกะเวรประจำวัน</h3>' + blocksHtml + '</div>';
   } else {
-    let totalV = { rawmat_out: 0, feed_out: 0, feed_in: 0, rawmat_in: 0 };
+    let totalV = { rawmat_out: 0, feed_out: 0, feed_ext: 0, feed_in: 0, rawmat_in: 0 };
     let stats = { total: 0, overweight: 0, driver: 0, system: 0, wrongQueue: 0, wrongPlate: 0, wrongDelivery: 0, other: 0 };
     let otherTypes = new Set();
     let dayGroups = {};
@@ -431,6 +431,7 @@ function generatePrintLayout(records, scope, targetValue) {
     records.forEach(r => {
       totalV.rawmat_out += Number(r.veh_rawmat_out) || 0;
       totalV.feed_out   += Number(r.veh_feed_out) || 0;
+      totalV.feed_ext   += Number(r.veh_feed_ext) || 0;
       totalV.feed_in    += Number(r.veh_feed_in) || 0;
       totalV.rawmat_in  += Number(r.veh_rawmat_in) || 0;
       if (r.veh_other_type && String(r.veh_other_type).trim()) otherTypes.add(String(r.veh_other_type).trim());
@@ -447,7 +448,7 @@ function generatePrintLayout(records, scope, targetValue) {
       dayGroups[r.date].push(r);
     });
 
-    const overviewHtml = '<div class="item-block"><div style="font-size:14px; margin-bottom:10px;"><b>🚚 ยอดรวมจำนวนรถทั้งเดือน:</b> วัตถุดิบออก ' + totalV.rawmat_out + ' คัน | อาหารออก ' + totalV.feed_out + ' คัน | รถอาหารภายใน ' + totalV.feed_in + ' คัน | รถวัตถุดิบภายใน ' + totalV.rawmat_in + ' คัน' + (otherTypes.size ? ' | อื่นๆ: ' + Array.from(otherTypes).join(', ') : '') + '</div><div style="font-size:14px;"><b>🚨 สรุปปัญหาทั้งเดือน:</b> รวม ' + stats.total + ' รายการ &nbsp;(น้ำหนักเกิน ' + stats.overweight + ' | พฤติกรรมคนขับ ' + stats.driver + ' | ระบบ/อุปกรณ์ ' + stats.system + ' | ผิดคิว ' + stats.wrongQueue + ' | ทะเบียนผิด ' + stats.wrongPlate + ' | ส่งผิดที่ ' + stats.wrongDelivery + ' | อื่นๆ ' + stats.other + ')</div></div>';
+    const overviewHtml = '<div class="item-block"><div style="font-size:14px; margin-bottom:10px;"><b>🚚 ยอดรวมจำนวนรถทั้งเดือน:</b> วัตถุดิบออก ' + totalV.rawmat_out + ' คัน | อาหารออก(ภายใน) ' + totalV.feed_out + ' คัน | อาหาร(ภายนอก) ' + totalV.feed_ext + ' คัน | รถอาหารภายใน ' + totalV.feed_in + ' คัน | รถวัตถุดิบภายใน ' + totalV.rawmat_in + ' คัน' + (otherTypes.size ? ' | อื่นๆ: ' + Array.from(otherTypes).join(', ') : '') + '</div><div style="font-size:14px;"><b>🚨 สรุปปัญหาทั้งเดือน:</b> รวม ' + stats.total + ' รายการ &nbsp;(น้ำหนักเกิน ' + stats.overweight + ' | พฤติกรรมคนขับ ' + stats.driver + ' | ระบบ/อุปกรณ์ ' + stats.system + ' | ผิดคิว ' + stats.wrongQueue + ' | ทะเบียนผิด ' + stats.wrongPlate + ' | ส่งผิดที่ ' + stats.wrongDelivery + ' | อื่นๆ ' + stats.other + ')</div></div>';
 
     let daysHtml = '';
     if (records.length === 0) {
@@ -463,7 +464,7 @@ function generatePrintLayout(records, scope, targetValue) {
           const problemHtml = hasProblem
             ? '<div style="font-size:13.5px; white-space:pre-wrap; background:#f9f9f9; padding:8px; border-left:3px solid #d93025; margin-top:6px;"><b class="text-danger">⚠️ รายละเอียดปัญหา:</b>\n' + rec.problems + '</div>'
             : '<div class="text-success" style="font-size:13.5px; margin-top:6px;">✅ ไม่พบปัญหาในกะนี้</div>';
-          shiftsHtml += '<div style="padding:8px 0; border-top:1px dashed #ccc;"><div style="font-size:14px;"><b>กะ' + shiftName + '</b> — เจ้าหน้าที่เวรชั่ง: ' + (rec.weighmaster || '-') + (rec.licensePlate ? ' | ทะเบียนที่เกี่ยวข้อง: ' + rec.licensePlate : '') + '</div><div style="font-size:13.5px; color:#555; margin-top:2px;">📊 จำนวนรถ: วัตถุดิบออก ' + (rec.veh_rawmat_out || 0) + ' | อาหารออก ' + (rec.veh_feed_out || 0) + ' | อาหารภายใน ' + (rec.veh_feed_in || 0) + ' | วัตถุดิบภายใน ' + (rec.veh_rawmat_in || 0) + '</div>' + problemHtml + '</div>';
+          shiftsHtml += '<div style="padding:8px 0; border-top:1px dashed #ccc;"><div style="font-size:14px;"><b>กะ' + shiftName + '</b> — เจ้าหน้าที่เวรชั่ง: ' + (rec.weighmaster || '-') + (rec.licensePlate ? ' | ทะเบียนที่เกี่ยวข้อง: ' + rec.licensePlate : '') + '</div><div style="font-size:13.5px; color:#555; margin-top:2px;">📊 จำนวนรถ: วัตถุดิบออก ' + (rec.veh_rawmat_out || 0) + ' | อาหารออก(ภายใน) ' + (rec.veh_feed_out || 0) + ' | อาหาร(ภายนอก) ' + (rec.veh_feed_ext || 0) + ' | อาหารภายใน ' + (rec.veh_feed_in || 0) + ' | วัตถุดิบภายใน ' + (rec.veh_rawmat_in || 0) + '</div>' + problemHtml + '</div>';
         });
         daysHtml += '<div class="item-block"><div class="print-meta"><span><b>📆 วันที่:</b> ' + d + '</span></div>' + shiftsHtml + '</div>';
       });
