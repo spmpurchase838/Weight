@@ -547,11 +547,18 @@ async function confirmAndSave() {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('f_date').value = new Date().toISOString().split('T')[0];
-  document.getElementById('r_dateSelect').value = new Date().toISOString().split('T')[0];
-  const todayStr = new Date().toISOString().split('T')[0];
-  document.getElementById('r_dateFrom').value = todayStr;
-  document.getElementById('r_dateTo').value = todayStr;
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('f_date').value = today;
+  document.getElementById('f_date').min = today;
+  document.getElementById('f_date').max = today;
+  document.getElementById('r_dateSelect').value = today;
+  document.getElementById('r_dateFrom').value = today;
+  document.getElementById('r_dateTo').value = today;
+  // จำกัดไม่ให้เลือกวันที่อนาคตในหน้ารายงาน
+  document.getElementById('r_dateSelect').max = today;
+  document.getElementById('r_dateFrom').max = today;
+  document.getElementById('r_dateTo').max = today;
+  document.getElementById('r_monthSelect').max = today.substring(0, 7);
 });
 </script>
 </body>
