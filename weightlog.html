@@ -85,16 +85,6 @@
   .bar-fill.gray{ background:linear-gradient(90deg,#bdbdbd,#757575); }
   .bar-count{ width:40px; font-size:13px; font-weight:700; flex-shrink:0; }
 
-  /* === Employee Ranking === */
-  .emp-ranking{ margin-bottom:16px; }
-  .emp-row{ display:flex; align-items:center; gap:10px; padding:8px 12px; border-bottom:1px solid var(--border); font-size:14px; }
-  .emp-row:last-child{ border-bottom:none; }
-  .emp-rank{ width:24px; height:24px; border-radius:50%; background:var(--primary); color:#fff; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-  .emp-row:nth-child(1) .emp-rank{ background:var(--danger); }
-  .emp-row:nth-child(2) .emp-rank{ background:var(--warn); }
-  .emp-name{ flex:1; font-weight:600; }
-  .emp-count{ font-weight:700; color:var(--danger); }
-
   /* === Issue text list === */
   .issue-text-list { background:#fff; border:1px solid var(--border); border-radius:6px; padding:12px; font-size:14px; line-height:1.6; max-height:200px; overflow-y:auto; white-space:pre-wrap; }
 
@@ -271,18 +261,6 @@
         <h2>📊 สัดส่วนปัญหาแยกตามประเภท</h2>
         <div class="bar-chart" id="barChartContainer"></div>
       </div>
-
-      <!-- Employee Ranking -->
-      <div class="card" id="empRankingCard" style="display:none;">
-        <h2>👤 สรุปปัญหาแยกตามพนักงาน</h2>
-        <div class="emp-ranking" id="empRankingContainer"></div>
-      </div>
-
-      <!-- Issue Details -->
-      <div class="card">
-        <h2 style="color:#856404;">📝 รายละเอียดปัญหา</h2>
-        <div class="issue-text-list" id="quickDetailsContainer">- ไม่มีข้อมูลปัญหา -</div>
-      </div>
     </div>
 
     <!-- History Table -->
@@ -406,26 +384,14 @@ async function buildQuickSummary() {
     let problemCounts = {};
     PROBLEM_KEYS.forEach(k => { problemCounts[k] = 0; });
     let totalIssueShifts = 0;
-    let detailsArr = [];
-    let empMap = {}; // weighmaster -> issue count
 
     matchRecords.forEach(r => {
       totalVehicles += (Number(r.veh_rawmat_out)||0) + (Number(r.veh_feed_out)||0) + (Number(r.veh_feed_in)||0) + (Number(r.veh_rawmat_in)||0);
-
       let hasIssue = false;
       PROBLEM_KEYS.forEach(k => {
         if (r[k]) { problemCounts[k]++; hasIssue = true; }
       });
-      if (hasIssue) {
-        totalIssueShifts++;
-        // Employee ranking
-        const name = r.weighmaster || 'ไม่ระบุ';
-        empMap[name] = (empMap[name] || 0) + 1;
-      }
-
-      if (r.problems && r.problems.trim()) {
-        detailsArr.push('[กะ ' + r.shift + (r.weighmaster ? ' / ' + r.weighmaster : '') + ']:\n' + r.problems.trim());
-      }
+      if (hasIssue) totalIssueShifts++;
     });
 
     let totalIssues = 0;
@@ -456,28 +422,9 @@ async function buildQuickSummary() {
     });
     document.getElementById('barChartContainer').innerHTML = barHtml;
 
-    // === Render Employee Ranking ===
-    const empArr = Object.entries(empMap).sort((a, b) => b[1] - a[1]);
-    const empCard = document.getElementById('empRankingCard');
-    if (empArr.length > 0) {
-      empCard.style.display = 'block';
-      let empHtml = '';
-      empArr.forEach((e, i) => {
-        empHtml += '<div class="emp-row"><span class="emp-rank">' + (i + 1) + '</span><span class="emp-name">' + e[0] + '</span><span class="emp-count">' + e[1] + ' กะ</span></div>';
-      });
-      document.getElementById('empRankingContainer').innerHTML = empHtml;
-    } else {
-      empCard.style.display = 'none';
-    }
-
-    // === Details ===
-    document.getElementById('quickDetailsContainer').innerHTML = detailsArr.length > 0
-      ? detailsArr.map(txt => '• ' + txt).join('\n\n')
-      : '- ไม่พบรายการแจ้งปัญหาในช่วงเวลานี้ -';
-
     document.getElementById('summaryOutputCard').style.display = 'block';
     renderSimpleTable(matchRecords);
-    generatePrintLayout(matchRecords, scope, periodLabel, totalShifts, totalVehicles, totalIssues, errorRate, problemCounts, empArr, detailsArr);
+    generatePrintLayout(matchRecords, scope, periodLabel, totalShifts, totalVehicles, totalIssues, errorRate, problemCounts);
 
   } catch (err) {
     container.innerHTML = '<div class="empty-state" style="color:var(--danger);">เกิดข้อผิดพลาด: ' + err.message + '</div>';
@@ -489,12 +436,11 @@ function kpiHtml(icon, value, label, isAlert) {
 }
 
 // ============ PRINT LAYOUT ============
-function generatePrintLayout(records, scope, periodLabel, totalShifts, totalVehicles, totalIssues, errorRate, problemCounts, empArr, detailsArr) {
+function generatePrintLayout(records, scope, periodLabel, totalShifts, totalVehicles, totalIssues, errorRate, problemCounts) {
   const printArea = document.getElementById('print-area');
   const isRange = scope === 'range';
   const scopeLabel = scope === 'daily' ? 'ประจำวัน' : (isRange ? 'ช่วงวันที่' : 'ประจำเดือน');
 
-  // KPI section
   const kpiHtml = '<div class="print-kpi-grid">' +
     '<div class="print-kpi-box"><div class="val">' + totalShifts + '</div><div class="lbl">กะที่บันทึก</div></div>' +
     '<div class="print-kpi-box"><div class="val">' + totalVehicles + '</div><div class="lbl">รถทั้งหมด (คัน)</div></div>' +
@@ -502,7 +448,6 @@ function generatePrintLayout(records, scope, periodLabel, totalShifts, totalVehi
     '<div class="print-kpi-box"><div class="val">' + errorRate + '%</div><div class="lbl">กะที่พบปัญหา</div></div>' +
     '</div>';
 
-  // Bar chart for print
   const maxCount = Math.max(1, ...PROBLEM_KEYS.map(k => problemCounts[k]));
   let barHtml = '';
   PROBLEM_KEYS.forEach(k => {
@@ -511,27 +456,6 @@ function generatePrintLayout(records, scope, periodLabel, totalShifts, totalVehi
     barHtml += '<div class="print-bar-row"><div class="print-bar-label">' + PROBLEM_META[k].label + '</div><div class="print-bar-track"><div class="print-bar-fill" style="width:' + pct + '%"></div></div><div class="print-bar-count">' + c + '</div></div>';
   });
 
-  // Employee ranking for print
-  let empHtml = '';
-  if (empArr.length > 0) {
-    empHtml = '<div class="print-section"><h3>👤 พนักงานที่เกี่ยวข้องกับปัญหา</h3><table class="print-table"><thead><tr><th>ลำดับ</th><th>ชื่อพนักงาน</th><th>จำนวนกะที่พบปัญหา</th></tr></thead><tbody>';
-    empArr.forEach((e, i) => {
-      empHtml += '<tr><td>' + (i + 1) + '</td><td>' + e[0] + '</td><td>' + e[1] + '</td></tr>';
-    });
-    empHtml += '</tbody></table></div>';
-  }
-
-  // Details
-  let detailsHtml = '';
-  if (detailsArr.length > 0) {
-    detailsHtml = '<div class="print-section"><h3>📝 รายละเอียดปัญหา</h3>';
-    detailsArr.forEach(txt => {
-      detailsHtml += '<div style="font-size:13px; white-space:pre-wrap; border-left:3px solid #d93025; padding:8px 12px; margin-bottom:10px; background:#f9f9f9;">• ' + txt + '</div>';
-    });
-    detailsHtml += '</div>';
-  }
-
-  // Shift detail blocks
   let shiftBlocksHtml = '';
   if (records.length > 0) {
     records.forEach(r => {
@@ -547,8 +471,6 @@ function generatePrintLayout(records, scope, periodLabel, totalShifts, totalVehi
     '<div class="print-header"><h2>📋 รายงานสรุปห้องชั่ง' + scopeLabel + '</h2><div><b>' + (isRange ? 'ช่วงวันที่' : (scope === 'daily' ? 'วันที่' : 'เดือน')) + ':</b> ' + periodLabel + '</div></div>' +
     '<div class="print-section"><h3>📊 ภาพรวม</h3>' + kpiHtml + '</div>' +
     '<div class="print-section"><h3>📊 สัดส่วนปัญหาแยกตามประเภท</h3>' + barHtml + '</div>' +
-    empHtml +
-    detailsHtml +
     '<div class="print-section"><h3>📋 บันทึกทั้งหมด (' + records.length + ' รายการ)</h3>' + shiftBlocksHtml + '</div>';
 }
 
