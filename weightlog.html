@@ -172,7 +172,8 @@
     <div class="card">
       <h2><span class="icon">🚚</span> สรุปจำนวนรถที่ชั่ง</h2>
       <div class="veh-row"><div class="label">รถส่งวัตถุดิบ/เคมีภัณฑ์/บรรจุภัณฑ์ (คัน)</div><input type="number" min="0" value="0" id="f_veh_rawmat_out"></div>
-      <div class="veh-row"><div class="label">รถส่งอาหาร (คัน)</div><input type="number" min="0" value="0" id="f_veh_feed_out"></div>
+      <div class="veh-row"><div class="label">รถส่งอาหาร (ภายใน)</div><input type="number" min="0" value="0" id="f_veh_feed_out"></div>
+      <div class="veh-row"><div class="label">รถรับอาหาร (ภายนอก)</div><input type="number" min="0" value="0" id="f_veh_feed_ext"></div>
       <div class="veh-row"><div class="label">รถรับอาหาร (รถภายใน)</div><input type="number" min="0" value="0" id="f_veh_feed_in"></div>
       <div class="veh-row"><div class="label">รถรับวัตถุดิบ/เคมีภัณฑ์/บรรจุภัณฑ์ (รถภายใน)</div><input type="number" min="0" value="0" id="f_veh_rawmat_in"></div>
       <div class="field" style="margin-top:14px;"><label>ระบุประเภทรถอื่นๆ</label><input type="text" id="f_veh_other_type" placeholder="เว้นว่างได้ถ้าไม่มี"></div>
@@ -523,6 +524,7 @@ async function confirmAndSave() {
       p_overweight, p_driver_behavior, p_system, p_wrong_queue, p_wrong_plate, p_wrong_delivery, p_other,
       veh_rawmat_out: document.getElementById('f_veh_rawmat_out').value,
       veh_feed_out: document.getElementById('f_veh_feed_out').value,
+      veh_feed_ext: document.getElementById('f_veh_feed_ext').value,
       veh_feed_in: document.getElementById('f_veh_feed_in').value,
       veh_rawmat_in: document.getElementById('f_veh_rawmat_in').value,
       veh_other_type: document.getElementById('f_veh_other_type').value,
