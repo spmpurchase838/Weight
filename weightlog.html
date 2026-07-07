@@ -61,12 +61,41 @@
   .btn.secondary{ background:#fff; color:var(--primary-dark); border:1.5px solid var(--primary); }
   .btn.danger{ background:var(--danger); }
 
-  /* ปรับปรุงหน้าสรุปแบบใหม่ให้อ่านง่าย */
-  .quick-summary-box { background:#f8faf9; border:1px solid var(--border); border-radius:8px; padding:16px; margin-bottom:16px; }
-  .quick-summary-box h4 { margin:0 0 10px 0; font-size:15px; color:var(--primary-dark); display:flex; align-items:center; gap:6px; }
-  .quick-stats-row { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
-  .quick-stat-badge { background:#fff; border:1px solid var(--border); padding:8px 12px; border-radius:6px; font-size:13.5px; font-weight:600; display:flex; align-items:center; gap:6px; }
-  .quick-stat-badge.has-val { background:#fce8e6; color:var(--danger); border-color:#fad2cf; }
+  /* === KPI Dashboard === */
+  .kpi-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:16px; }
+  @media (max-width:600px){ .kpi-grid{ grid-template-columns:repeat(2,1fr); } }
+  .kpi-card{ background:#f8faf9; border:1px solid var(--border); border-radius:8px; padding:14px; text-align:center; }
+  .kpi-card.alert{ background:#fce8e6; border-color:#fad2cf; }
+  .kpi-card .kpi-value{ font-size:28px; font-weight:700; color:var(--primary-dark); line-height:1.2; }
+  .kpi-card.alert .kpi-value{ color:var(--danger); }
+  .kpi-card .kpi-label{ font-size:12.5px; color:var(--muted); margin-top:4px; }
+
+  /* === Problem Bar Chart (CSS only) === */
+  .bar-chart{ margin-bottom:16px; }
+  .bar-row{ display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+  .bar-label{ width:130px; font-size:13.5px; font-weight:600; text-align:right; flex-shrink:0; }
+  .bar-track{ flex:1; height:24px; background:#f0f0f0; border-radius:4px; overflow:hidden; position:relative; }
+  .bar-fill{ height:100%; border-radius:4px; transition:width .4s ease; min-width:0; }
+  .bar-fill.red{ background:linear-gradient(90deg,#ef5350,#d93025); }
+  .bar-fill.orange{ background:linear-gradient(90deg,#ffb74d,#f9ab00); }
+  .bar-fill.blue{ background:linear-gradient(90deg,#64b5f6,#1976d2); }
+  .bar-fill.green{ background:linear-gradient(90deg,#81c784,#43a047); }
+  .bar-fill.purple{ background:linear-gradient(90deg,#ba68c8,#8e24aa); }
+  .bar-fill.teal{ background:linear-gradient(90deg,#4dd0e1,#00838f); }
+  .bar-fill.gray{ background:linear-gradient(90deg,#bdbdbd,#757575); }
+  .bar-count{ width:40px; font-size:13px; font-weight:700; flex-shrink:0; }
+
+  /* === Employee Ranking === */
+  .emp-ranking{ margin-bottom:16px; }
+  .emp-row{ display:flex; align-items:center; gap:10px; padding:8px 12px; border-bottom:1px solid var(--border); font-size:14px; }
+  .emp-row:last-child{ border-bottom:none; }
+  .emp-rank{ width:24px; height:24px; border-radius:50%; background:var(--primary); color:#fff; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .emp-row:nth-child(1) .emp-rank{ background:var(--danger); }
+  .emp-row:nth-child(2) .emp-rank{ background:var(--warn); }
+  .emp-name{ flex:1; font-weight:600; }
+  .emp-count{ font-weight:700; color:var(--danger); }
+
+  /* === Issue text list === */
   .issue-text-list { background:#fff; border:1px solid var(--border); border-radius:6px; padding:12px; font-size:14px; line-height:1.6; max-height:200px; overflow-y:auto; white-space:pre-wrap; }
 
   table.history{ width:100%; border-collapse:collapse; font-size:14px; margin-top:14px; }
@@ -74,18 +103,9 @@
   table.history th{ color:var(--muted); font-weight:700; font-size:12.5px; }
   table.history tr{ cursor:pointer; }
   table.history tr:hover{ background:#f8faf9; }
-  table.history td.row-arrow{ color:var(--muted); font-size:18px; font-weight:700; text-align:center; width:28px; }
 
   .tag{ display:inline-block; background:#fce8e6; color:var(--danger); border-radius:10px; padding:2px 8px; font-size:11px; margin:1px 2px 1px 0; }
   .empty-state{ text-align:center; color:var(--muted); padding:40px 10px; font-size:14px; }
-
-  .modal-overlay{ position:fixed; inset:0; background:rgba(0,0,0,0.45); display:none; align-items:center; justify-content:center; z-index:50; padding:16px; }
-  .modal-overlay.show{ display:flex; }
-  .modal{ background:#fff; border-radius:12px; max-width:520px; width:100%; max-height:85vh; overflow-y:auto; padding:22px 24px; }
-  .modal h3{ margin-top:0; font-size:18px; }
-  .modal-row{ margin-bottom:12px; font-size:15px; }
-  .modal-row .k{ color:var(--muted); font-weight:600; display:block; margin-bottom:3px; font-size:13px; }
-  .modal-close{ float:right; background:none; border:none; font-size:28px; cursor:pointer; color:var(--muted); padding:6px 10px; line-height:1; }
 
   .toast{ position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px); background:#323232; color:#fff; padding:12px 20px; border-radius:8px; font-size:14px; opacity:0; pointer-events:none; transition:all .25s ease; z-index:100; max-width:90vw; text-align:center; }
   .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
@@ -115,7 +135,7 @@
     nav.tabs button{ padding:8px 12px; font-size:13px; }
   }
 
-  /* ตกแต่งโครงสร้างตารางและซ่อนส่วนอื่นเมื่อทำการพิมพ์รายงานสรุปออกทาง PDF/Printer */
+  /* Print styles */
   #print-area { display: none; }
   @media print {
     .no-print, header.appbar, #configWarning, .modal-overlay, .toast, #topLoadingBar, button, .btn, .card { display: none !important; }
@@ -131,6 +151,15 @@
     table.print-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
     table.print-table th, table.print-table td { border: 1px solid #000; padding: 10px; text-align: left; font-size: 13px; vertical-align: top; white-space: normal; word-break: break-word; line-height: 1.6; }
     table.print-table th { background: #f2f2f2 !important; -webkit-print-color-adjust: exact; font-weight: bold; }
+    .print-kpi-grid { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px; }
+    .print-kpi-box { border: 1px solid #000; padding: 10px 16px; border-radius: 4px; text-align: center; flex: 1; min-width: 120px; }
+    .print-kpi-box .val { font-size: 22px; font-weight: bold; }
+    .print-kpi-box .lbl { font-size: 12px; color: #555; }
+    .print-bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 13px; }
+    .print-bar-label { width: 120px; text-align: right; font-weight: 600; }
+    .print-bar-track { flex: 1; height: 16px; background: #eee; border: 1px solid #ccc; }
+    .print-bar-fill { height: 100%; background: #333 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .print-bar-count { width: 40px; font-weight: 700; }
     .item-block { border: 1px solid #000; padding: 12px; margin-bottom: 15px; border-radius: 4px; page-break-inside: avoid; }
     .text-danger { color: #d93025 !important; font-weight: bold; }
     .text-success { color: #0f9d58 !important; }
@@ -158,6 +187,7 @@
     ⚠️ ยังไม่ได้ตั้งค่า URL ของ Apps Script — แก้ค่า <code>APPS_SCRIPT_URL_ENCODED</code> ในโค้ดก่อนใช้งานจริง
   </div>
 
+  <!-- ============ FORM TAB ============ -->
   <section id="page-form">
     <div class="card">
       <h2><span class="icon">📋</span> ฟอร์มบันทึกข้อมูลห้องชั่ง</h2>
@@ -196,20 +226,18 @@
     <button type="button" class="btn no-print" id="submitBtn" onclick="reviewForm()">บันทึกข้อมูล</button>
   </section>
 
+  <!-- ============ REPORT TAB ============ -->
   <section id="page-report" style="display:none;">
     <div class="card no-print">
-      <h2><span class="icon">📅</span> 1. เลือกช่วงเวลาเพื่อ Export รายงานภาพรวม</h2>
+      <h2><span class="icon">📅</span> เลือกช่วงเวลา</h2>
       <div style="display:flex; gap:15px; flex-wrap:wrap; margin-bottom:14px;">
-        <label style="font-weight:600;"><input type="radio" name="reportScope" value="daily" checked onclick="toggleScopeInput()"> รายวัน (เจาะจงวัน)</label>
-        <label style="font-weight:600;"><input type="radio" name="reportScope" value="range" onclick="toggleScopeInput()"> ช่วงวันที่ (เลือกวันเริ่มต้น-สิ้นสุด)</label>
-        <label style="font-weight:600;"><input type="radio" name="reportScope" value="monthly" onclick="toggleScopeInput()"> รายเดือน (สรุปภาพรวมทั้งเดือน)</label>
+        <label style="font-weight:600;"><input type="radio" name="reportScope" value="daily" checked onclick="toggleScopeInput()"> รายวัน</label>
+        <label style="font-weight:600;"><input type="radio" name="reportScope" value="range" onclick="toggleScopeInput()"> ช่วงวันที่</label>
+        <label style="font-weight:600;"><input type="radio" name="reportScope" value="monthly" onclick="toggleScopeInput()"> รายเดือน</label>
       </div>
-      
       <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
-        <div id="div_dateInput" style="flex:1; min-width:200px;">
-          <input type="date" id="r_dateSelect">
-        </div>
-        <div id="div_rangeInput" style="flex:1; min-width:280px; display:none; gap:10px; align-items:center;">
+        <div id="div_dateInput" style="flex:1; min-width:200px;"><input type="date" id="r_dateSelect"></div>
+        <div id="div_rangeInput" style="flex:1; min-width:280px; display:none;">
           <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
             <div style="flex:1; min-width:120px;">
               <label style="display:block; font-size:12.5px; color:var(--muted); margin-bottom:4px;">ตั้งแต่วันที่</label>
@@ -221,42 +249,52 @@
             </div>
           </div>
         </div>
-        <div id="div_monthInput" style="flex:1; min-width:200px; display:none;">
-          <input type="month" id="r_monthSelect">
-        </div>
-        <button type="button" class="btn" style="width:auto; padding:0 24px;" onclick="buildQuickSummary()">⚡ ดึงรายงานภาพรวม</button>
+        <div id="div_monthInput" style="flex:1; min-width:200px; display:none;"><input type="month" id="r_monthSelect"></div>
+        <button type="button" class="btn" style="width:auto; padding:0 24px;" onclick="buildQuickSummary()">⚡ ดึงรายงาน</button>
       </div>
     </div>
 
-    <div class="card" id="summaryOutputCard" style="display:none;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
-        <h2 style="margin:0;"><span class="icon">📊</span> สรุปภาพรวมและรายละเอียดปัญหาประจำช่วงเวลา</h2>
-        <button type="button" class="btn secondary no-print" style="width:auto; padding:6px 14px; min-height:38px; font-size:14px;" onclick="window.print()">🖨️ พิมพ์ / Export PDF รายงานนี้</button>
-      </div>
-      
-      <div class="quick-summary-box">
-        <h4 id="summaryPeriodTitle">📅 ช่วงเวลา: -</h4>
-        <div class="quick-stats-row" id="quickStatsContainer"></div>
+    <!-- ===== Summary Output ===== -->
+    <div id="summaryOutputCard" style="display:none;">
+
+      <!-- KPI Cards -->
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
+          <h2 style="margin:0;" id="summaryPeriodTitle">📊 สรุปภาพรวม</h2>
+          <button type="button" class="btn secondary no-print" style="width:auto; padding:6px 14px; min-height:38px; font-size:14px;" onclick="window.print()">🖨️ พิมพ์ / PDF</button>
+        </div>
+        <div class="kpi-grid" id="kpiGrid"></div>
       </div>
 
-      <div class="quick-summary-box" style="background:#fff3cd; border-color:#ffeeba;">
-        <h4 style="color:#856404;"><span class="icon">📝</span> รายละเอียดปัญหา</h4>
+      <!-- Problem Bar Chart -->
+      <div class="card">
+        <h2>📊 สัดส่วนปัญหาแยกตามประเภท</h2>
+        <div class="bar-chart" id="barChartContainer"></div>
+      </div>
+
+      <!-- Employee Ranking -->
+      <div class="card" id="empRankingCard" style="display:none;">
+        <h2>👤 สรุปปัญหาแยกตามพนักงาน</h2>
+        <div class="emp-ranking" id="empRankingContainer"></div>
+      </div>
+
+      <!-- Issue Details -->
+      <div class="card">
+        <h2 style="color:#856404;">📝 รายละเอียดปัญหา</h2>
         <div class="issue-text-list" id="quickDetailsContainer">- ไม่มีข้อมูลปัญหา -</div>
       </div>
     </div>
 
+    <!-- History Table -->
     <div class="card no-print">
-      <h2><span class="icon">🕘</span> รายการประวัติบันทึกทั้งหมดในระบบ</h2>
-      <div id="historyContainer"><div class="empty-state">กรุณากดดึงรายงานภาพรวมด้านบน</div></div>
+      <h2><span class="icon">🕘</span> รายการบันทึกทั้งหมด</h2>
+      <div id="historyContainer"><div class="empty-state">กรุณากดดึงรายงานด้านบน</div></div>
     </div>
   </section>
 </main>
 
 <div id="print-area"></div>
-
 <div class="toast" id="toast"></div>
-
-<div class="modal-overlay" id="confirmModalOverlay"><div class="modal" id="confirmModalBody"></div></div>
 
 <script>
 const XOR_KEY = 42;
@@ -271,8 +309,6 @@ const APPS_SCRIPT_URL_ENCODED = 'Ql5eWlkQBQVZSVhDWl4ETUVFTUZPBElFRwVHS0lYRVkFWQV
 const TOKEN = 'z0CPHpdf8xJmfbMbwxVE1t2ghIEOJY03';
 const APPS_SCRIPT_URL = xorDecode(APPS_SCRIPT_URL_ENCODED);
 
-// เดิมมี div คำเตือน #configWarning อยู่ในหน้าเว็บ แต่ไม่เคยมีโค้ดสั่งให้แสดงผลเลย
-// จึงเพิ่มการตรวจสอบว่าตั้งค่า URL ของ Apps Script ไว้ถูกต้องหรือไม่
 if (!APPS_SCRIPT_URL) {
   document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('configWarning').style.display = 'block';
@@ -280,17 +316,11 @@ if (!APPS_SCRIPT_URL) {
   });
 }
 
-// อัปเดตสถานะออนไลน์/ออฟไลน์ตามการเชื่อมต่อเครือข่ายจริง (เดิมค่านี้ถูก hardcode ไว้ว่า "ออนไลน์" เสมอ ไม่เคยอัปเดตตามจริง)
 function updateNetStatus() {
   const el = document.getElementById('netStatus');
   const txt = document.getElementById('netStatusText');
-  if (navigator.onLine) {
-    el.className = 'net-status online';
-    txt.textContent = 'ออนไลน์';
-  } else {
-    el.className = 'net-status offline';
-    txt.textContent = 'ออฟไลน์';
-  }
+  if (navigator.onLine) { el.className = 'net-status online'; txt.textContent = 'ออนไลน์'; }
+  else { el.className = 'net-status offline'; txt.textContent = 'ออฟไลน์'; }
 }
 window.addEventListener('online', updateNetStatus);
 window.addEventListener('offline', updateNetStatus);
@@ -304,7 +334,6 @@ document.querySelectorAll('.shift-option').forEach(opt => {
     opt.classList.add('selected'); radio.checked = true; selectedShift = radio.value;
   });
 });
-
 document.querySelectorAll('.problem-item').forEach(item => {
   const chk = item.querySelector('input[type=checkbox]');
   chk.addEventListener('change', () => item.classList.toggle('checked', chk.checked));
@@ -317,20 +346,30 @@ function switchTab(tab) {
   document.getElementById('tabFormBtn').classList.toggle('active', isForm);
   document.getElementById('tabReportBtn').classList.toggle('active', !isForm);
 }
-
 function toggleScopeInput() {
   const scope = document.querySelector('input[name="reportScope"]:checked').value;
   document.getElementById('div_dateInput').style.display = scope === 'daily' ? 'block' : 'none';
   document.getElementById('div_rangeInput').style.display = scope === 'range' ? 'flex' : 'none';
   document.getElementById('div_monthInput').style.display = scope === 'monthly' ? 'block' : 'none';
 }
-
 function showToast(msg, type) {
   const t = document.getElementById('toast'); t.textContent = msg;
   t.className = 'toast show ' + (type || ''); setTimeout(() => t.className = 'toast', 4000);
 }
 
-// ฟังก์ชันดึงข้อมูลมาคัดกรองและจัดกลุ่มหน้าจอรายงานสรุปตัวใหม่แบบเข้าใจง่าย
+// ============ PROBLEM META (shared labels/colors) ============
+const PROBLEM_META = {
+  p_overweight:      { label: 'น้ำหนักเกิน',        color: 'red' },
+  p_driver_behavior: { label: 'พฤติกรรมคนขับ',      color: 'orange' },
+  p_system:          { label: 'ระบบ/อุปกรณ์',        color: 'blue' },
+  p_wrong_queue:     { label: 'ชั่งผิดคิว',          color: 'purple' },
+  p_wrong_plate:     { label: 'ทะเบียนผิด/สลับคัน',  color: 'teal' },
+  p_wrong_delivery:  { label: 'ส่งของผิดที่',        color: 'green' },
+  p_other:           { label: 'อื่นๆ',               color: 'gray' }
+};
+const PROBLEM_KEYS = Object.keys(PROBLEM_META);
+
+// ============ BUILD REPORT ============
 async function buildQuickSummary() {
   const scope = document.querySelector('input[name="reportScope"]:checked').value;
   let targetValue = scope === 'daily' ? document.getElementById('r_dateSelect').value : document.getElementById('r_monthSelect').value;
@@ -340,206 +379,191 @@ async function buildQuickSummary() {
   if (scope === 'range') {
     if (!rangeFrom || !rangeTo) { showToast('กรุณาเลือกวันเริ่มต้นและวันสิ้นสุดก่อนครับ', 'error'); return; }
     if (rangeFrom > rangeTo) { showToast('วันเริ่มต้นต้องไม่มากกว่าวันสิ้นสุด', 'error'); return; }
-  } else if (!targetValue) {
-    showToast('กรุณาเลือกวันที่หรือเดือนก่อนครับ', 'error'); return;
-  }
-  
+  } else if (!targetValue) { showToast('กรุณาเลือกวันที่หรือเดือนก่อนครับ', 'error'); return; }
+
   const container = document.getElementById('historyContainer');
-  container.innerHTML = '<div class="empty-state"><span class="spinner dark"></span> กำลังประมวลผลสรุปภาพรวม...</div>';
+  container.innerHTML = '<div class="empty-state"><span class="spinner dark"></span> กำลังดึงข้อมูล...</div>';
   document.getElementById('summaryOutputCard').style.display = 'none';
 
   try {
     const body = { action: 'list', token: TOKEN, filters: { page: 1, pageSize: 500 } };
     const res = await fetch(APPS_SCRIPT_URL, { method: 'POST', body: JSON.stringify(body) });
     const json = await res.json();
-    
     if (!json.success) throw new Error(json.error);
     const records = json.records || [];
-    
-    let totalIssues = 0, overweight = 0, driver = 0, system = 0, wrongQueue = 0, wrongPlate = 0, wrongDelivery = 0, otherProblem = 0;
-    let detailsArr = [];
-    let matchRecords = [];
 
-    records.forEach(r => {
-      let isMatch = false;
-      if (scope === 'daily' && r.date === targetValue) isMatch = true;
-      if (scope === 'range' && r.date && r.date >= rangeFrom && r.date <= rangeTo) isMatch = true;
-      if (scope === 'monthly' && r.date && r.date.substring(0, 7) === targetValue) isMatch = true;
-      
-      if (isMatch) {
-        matchRecords.push(r);
-        if (r.p_overweight) { overweight++; totalIssues++; }
-        if (r.p_driver_behavior) { driver++; totalIssues++; }
-        if (r.p_system) { system++; totalIssues++; }
-        if (r.p_wrong_queue) { wrongQueue++; totalIssues++; }
-        if (r.p_wrong_plate) { wrongPlate++; totalIssues++; }
-        if (r.p_wrong_delivery) { wrongDelivery++; totalIssues++; }
-        if (r.p_other) { otherProblem++; totalIssues++; }
-        
-        if (r.problems && r.problems.trim()) {
-          detailsArr.push(`[กะ ${r.shift}${r.licensePlate ? ' / ทะเบียน ' + r.licensePlate : ''}]: ${r.problems.trim()}`);
-        }
+    // Filter records
+    let matchRecords = records.filter(r => {
+      if (scope === 'daily') return r.date === targetValue;
+      if (scope === 'range') return r.date && r.date >= rangeFrom && r.date <= rangeTo;
+      if (scope === 'monthly') return r.date && r.date.substring(0, 7) === targetValue;
+      return false;
+    });
+
+    // === Compute stats ===
+    let totalShifts = matchRecords.length;
+    let totalVehicles = 0;
+    let problemCounts = {};
+    PROBLEM_KEYS.forEach(k => { problemCounts[k] = 0; });
+    let totalIssueShifts = 0;
+    let detailsArr = [];
+    let empMap = {}; // weighmaster -> issue count
+
+    matchRecords.forEach(r => {
+      totalVehicles += (Number(r.veh_rawmat_out)||0) + (Number(r.veh_feed_out)||0) + (Number(r.veh_feed_in)||0) + (Number(r.veh_rawmat_in)||0);
+
+      let hasIssue = false;
+      PROBLEM_KEYS.forEach(k => {
+        if (r[k]) { problemCounts[k]++; hasIssue = true; }
+      });
+      if (hasIssue) {
+        totalIssueShifts++;
+        // Employee ranking
+        const name = r.weighmaster || 'ไม่ระบุ';
+        empMap[name] = (empMap[name] || 0) + 1;
+      }
+
+      if (r.problems && r.problems.trim()) {
+        detailsArr.push('[กะ ' + r.shift + (r.weighmaster ? ' / ' + r.weighmaster : '') + ']:\n' + r.problems.trim());
       }
     });
 
-    // แสดงผลข้อมูลตัวเลขรวมเข้ากลุ่มแบบสวยงามในคลิกเดียว
-    const periodLabel = scope === 'range' ? `${rangeFrom} ถึง ${rangeTo}` : targetValue;
-    document.getElementById('summaryPeriodTitle').innerText = `📅 สรุปรายงานภาพรวมประจำ: ${periodLabel}`;
-    
-    document.getElementById('quickStatsContainer').innerHTML = `
-      <div class="quick-stat-badge ${totalIssues > 0 ? 'has-val' : ''}">🚨 รวมปัญหาทั้งหมด: ${totalIssues} รายการ</div>
-      <div class="quick-stat-badge">⚖️ น้ำหนักเกิน: ${overweight} ครั้ง</div>
-      <div class="quick-stat-badge">🙋 พฤติกรรมคนขับ: ${driver} ครั้ง</div>
-      <div class="quick-stat-badge">⚙️ ระบบ/อุปกรณ์: ${system} ครั้ง</div>
-      <div class="quick-stat-badge">⏱️ ผิดคิว: ${wrongQueue} ครั้ง</div>
-      <div class="quick-stat-badge ${wrongPlate > 0 ? 'has-val' : ''}">🆔 ทะเบียนผิด/สลับคัน: ${wrongPlate} ครั้ง</div>
-      <div class="quick-stat-badge ${wrongDelivery > 0 ? 'has-val' : ''}">📦 ส่งของผิดที่: ${wrongDelivery} ครั้ง</div>
-      <div class="quick-stat-badge">📌 อื่นๆ: ${otherProblem} ครั้ง</div>
-    `;
+    let totalIssues = 0;
+    PROBLEM_KEYS.forEach(k => { totalIssues += problemCounts[k]; });
+    const errorRate = totalShifts > 0 ? ((totalIssueShifts / totalShifts) * 100).toFixed(1) : '0.0';
 
-    document.getElementById('quickDetailsContainer').innerHTML = detailsArr.length > 0 
-      ? detailsArr.map(txt => `• ${txt}`).join('\n\n') 
-      : '- ตรวจสอบแล้ว ไม่พบรายการแจ้งปัญหาใดๆ ในช่วงเวลานี้ -';
+    // === Render KPI ===
+    const periodLabel = scope === 'range' ? rangeFrom + ' ถึง ' + rangeTo : targetValue;
+    document.getElementById('summaryPeriodTitle').innerText = '📊 สรุปภาพรวม: ' + periodLabel;
+
+    document.getElementById('kpiGrid').innerHTML =
+      kpiHtml('📋', totalShifts, 'กะที่บันทึก', false) +
+      kpiHtml('🚚', totalVehicles, 'รถทั้งหมด (คัน)', false) +
+      kpiHtml('🚨', totalIssues, 'ปัญหาทั้งหมด (ครั้ง)', totalIssues > 0) +
+      kpiHtml('📉', errorRate + '%', 'กะที่พบปัญหา', parseFloat(errorRate) > 30);
+
+    // === Render Bar Chart ===
+    const maxCount = Math.max(1, ...PROBLEM_KEYS.map(k => problemCounts[k]));
+    let barHtml = '';
+    PROBLEM_KEYS.forEach(k => {
+      const c = problemCounts[k];
+      const pct = (c / maxCount * 100).toFixed(1);
+      const meta = PROBLEM_META[k];
+      barHtml += '<div class="bar-row">' +
+        '<div class="bar-label">' + meta.label + '</div>' +
+        '<div class="bar-track"><div class="bar-fill ' + meta.color + '" style="width:' + pct + '%"></div></div>' +
+        '<div class="bar-count">' + c + '</div></div>';
+    });
+    document.getElementById('barChartContainer').innerHTML = barHtml;
+
+    // === Render Employee Ranking ===
+    const empArr = Object.entries(empMap).sort((a, b) => b[1] - a[1]);
+    const empCard = document.getElementById('empRankingCard');
+    if (empArr.length > 0) {
+      empCard.style.display = 'block';
+      let empHtml = '';
+      empArr.forEach((e, i) => {
+        empHtml += '<div class="emp-row"><span class="emp-rank">' + (i + 1) + '</span><span class="emp-name">' + e[0] + '</span><span class="emp-count">' + e[1] + ' กะ</span></div>';
+      });
+      document.getElementById('empRankingContainer').innerHTML = empHtml;
+    } else {
+      empCard.style.display = 'none';
+    }
+
+    // === Details ===
+    document.getElementById('quickDetailsContainer').innerHTML = detailsArr.length > 0
+      ? detailsArr.map(txt => '• ' + txt).join('\n\n')
+      : '- ไม่พบรายการแจ้งปัญหาในช่วงเวลานี้ -';
 
     document.getElementById('summaryOutputCard').style.display = 'block';
     renderSimpleTable(matchRecords);
-
-    // แทรกเพิ่มระบบแปลงหน้าเอกสารสำหรับการสั่งพิมพ์ (Print area) แยกไว้ โดยไม่กวนหน้าจอหลัก
-    generatePrintLayout(matchRecords, scope, periodLabel);
+    generatePrintLayout(matchRecords, scope, periodLabel, totalShifts, totalVehicles, totalIssues, errorRate, problemCounts, empArr, detailsArr);
 
   } catch (err) {
-    container.innerHTML = `<div class="empty-state" style="color:var(--danger);">เกิดข้อผิดพลาดในการดึงข้อมูล: ${err.message}</div>`;
+    container.innerHTML = '<div class="empty-state" style="color:var(--danger);">เกิดข้อผิดพลาด: ' + err.message + '</div>';
   }
 }
 
-// ฟังก์ชันสร้างหน้าตาตารางสำหรับพิมพ์ออกเครื่องพิมพ์/เซฟ PDF
-function generatePrintLayout(records, scope, targetValue) {
+function kpiHtml(icon, value, label, isAlert) {
+  return '<div class="kpi-card' + (isAlert ? ' alert' : '') + '"><div class="kpi-value">' + icon + ' ' + value + '</div><div class="kpi-label">' + label + '</div></div>';
+}
+
+// ============ PRINT LAYOUT ============
+function generatePrintLayout(records, scope, periodLabel, totalShifts, totalVehicles, totalIssues, errorRate, problemCounts, empArr, detailsArr) {
   const printArea = document.getElementById('print-area');
-  printArea.innerHTML = '';
+  const isRange = scope === 'range';
+  const scopeLabel = scope === 'daily' ? 'ประจำวัน' : (isRange ? 'ช่วงวันที่' : 'ประจำเดือน');
 
-  if (scope === 'daily') {
-    let blocksHtml = '';
-    if(records.length === 0) {
-      blocksHtml = '<div class="empty-state">ไม่มีบันทึกข้อมูลรายงานในวันที่เลือก</div>';
-    } else {
-      records.forEach(r => {
-        const hasProblem = r.problems && String(r.problems).trim();
-        const problemBlockHtml = hasProblem
-          ? `<div style="font-size:14px; white-space:pre-wrap; background:#f9f9f9; padding:10px; border-left:3px solid #d93025;"><b>⚠️ รายงานรายละเอียดปัญหา:</b>\n${r.problems}</div>`
-          : `<div style="font-size:14px; color:#0f9d58;">✅ ไม่พบปัญหาในกะนี้</div>`;
-        blocksHtml += `
-          <div class="item-block">
-            <div class="print-meta">
-              <span><b>กะปฏิบัติงาน:</b> ${r.shift}</span>
-              <span><b>เจ้าหน้าที่เวรชั่ง:</b> ${r.weighmaster}</span>
-            </div>
-            <div style="font-size:14px; margin-bottom:10px;">
-              <b>📊 ยอดรวมจำนวนรถ:</b> วัตถุดิบออก ${r.veh_rawmat_out} คัน | อาหารออก ${r.veh_feed_out || 0} คัน | รถอาหารภายใน ${r.veh_feed_in} คัน | รถวัตถุดิบภายใน ${r.veh_rawmat_in} คัน${r.veh_other_type ? ' | อื่นๆ: ' + r.veh_other_type : ''}
-            </div>
-            ${problemBlockHtml}
-          </div>
-        `;
-      });
-    }
-    printArea.innerHTML = `
-      <div class="print-header"><h2>📋 รายงานสรุปห้องชั่งประจำวัน</h2><div><b>วันที่:</b> ${targetValue}</div></div>
-      <div class="print-section"><h3>รายการบันทึกจำแนกตามรายกะเวรประจำวัน</h3>${blocksHtml}</div>
-    `;
-  } else {
-    // สรุปยอดรวมทั้งเดือน (รถ + ปัญหา) เพื่อแสดงเป็นกล่องภาพรวมด้านบน เหมือนสไตล์หน้ารายวัน
-    let totalV = { rawmat_out: 0, feed_out: 0, feed_in: 0, rawmat_in: 0 };
-    let stats = { total: 0, overweight: 0, driver: 0, system: 0, wrongQueue: 0, wrongPlate: 0, wrongDelivery: 0, other: 0 };
-    let otherTypes = new Set();
-    let dayGroups = {};
+  // KPI section
+  const kpiHtml = '<div class="print-kpi-grid">' +
+    '<div class="print-kpi-box"><div class="val">' + totalShifts + '</div><div class="lbl">กะที่บันทึก</div></div>' +
+    '<div class="print-kpi-box"><div class="val">' + totalVehicles + '</div><div class="lbl">รถทั้งหมด (คัน)</div></div>' +
+    '<div class="print-kpi-box"><div class="val">' + totalIssues + '</div><div class="lbl">ปัญหาทั้งหมด</div></div>' +
+    '<div class="print-kpi-box"><div class="val">' + errorRate + '%</div><div class="lbl">กะที่พบปัญหา</div></div>' +
+    '</div>';
 
-    records.forEach(r => {
-      totalV.rawmat_out += Number(r.veh_rawmat_out) || 0;
-      totalV.feed_out   += Number(r.veh_feed_out) || 0;
-      totalV.feed_in    += Number(r.veh_feed_in) || 0;
-      totalV.rawmat_in  += Number(r.veh_rawmat_in) || 0;
-      if (r.veh_other_type && String(r.veh_other_type).trim()) otherTypes.add(String(r.veh_other_type).trim());
+  // Bar chart for print
+  const maxCount = Math.max(1, ...PROBLEM_KEYS.map(k => problemCounts[k]));
+  let barHtml = '';
+  PROBLEM_KEYS.forEach(k => {
+    const c = problemCounts[k];
+    const pct = (c / maxCount * 100).toFixed(1);
+    barHtml += '<div class="print-bar-row"><div class="print-bar-label">' + PROBLEM_META[k].label + '</div><div class="print-bar-track"><div class="print-bar-fill" style="width:' + pct + '%"></div></div><div class="print-bar-count">' + c + '</div></div>';
+  });
 
-      if (r.p_overweight)      { stats.overweight++; stats.total++; }
-      if (r.p_driver_behavior) { stats.driver++; stats.total++; }
-      if (r.p_system)          { stats.system++; stats.total++; }
-      if (r.p_wrong_queue)     { stats.wrongQueue++; stats.total++; }
-      if (r.p_wrong_plate)     { stats.wrongPlate++; stats.total++; }
-      if (r.p_wrong_delivery)  { stats.wrongDelivery++; stats.total++; }
-      if (r.p_other)           { stats.other++; stats.total++; }
-
-      if (!dayGroups[r.date]) dayGroups[r.date] = [];
-      dayGroups[r.date].push(r);
+  // Employee ranking for print
+  let empHtml = '';
+  if (empArr.length > 0) {
+    empHtml = '<div class="print-section"><h3>👤 พนักงานที่เกี่ยวข้องกับปัญหา</h3><table class="print-table"><thead><tr><th>ลำดับ</th><th>ชื่อพนักงาน</th><th>จำนวนกะที่พบปัญหา</th></tr></thead><tbody>';
+    empArr.forEach((e, i) => {
+      empHtml += '<tr><td>' + (i + 1) + '</td><td>' + e[0] + '</td><td>' + e[1] + '</td></tr>';
     });
-
-    const overviewHtml = `
-      <div class="item-block">
-        <div style="font-size:14px; margin-bottom:10px;">
-          <b>🚚 ยอดรวมจำนวนรถทั้งเดือน:</b> วัตถุดิบออก ${totalV.rawmat_out} คัน | อาหารออก ${totalV.feed_out} คัน | รถอาหารภายใน ${totalV.feed_in} คัน | รถวัตถุดิบภายใน ${totalV.rawmat_in} คัน${otherTypes.size ? ' | อื่นๆ: ' + Array.from(otherTypes).join(', ') : ''}
-        </div>
-        <div style="font-size:14px;">
-          <b>🚨 สรุปปัญหาทั้งเดือน:</b> รวม ${stats.total} รายการ &nbsp;(น้ำหนักเกิน ${stats.overweight} | พฤติกรรมคนขับ ${stats.driver} | ระบบ/อุปกรณ์ ${stats.system} | ผิดคิว ${stats.wrongQueue} | ทะเบียนผิด ${stats.wrongPlate} | ส่งผิดที่ ${stats.wrongDelivery} | อื่นๆ ${stats.other})
-        </div>
-      </div>
-    `;
-
-    let daysHtml = '';
-    if (records.length === 0) {
-      daysHtml = '<div class="empty-state">ไม่มีข้อมูลรายงานประวัติในเดือนนี้</div>';
-    } else {
-      Object.keys(dayGroups).sort().forEach(d => {
-        const dayRecords = dayGroups[d];
-        let shiftsHtml = '';
-        ['เช้า', 'บ่าย', 'ดึก'].forEach(shiftName => {
-          const rec = dayRecords.find(x => x.shift === shiftName);
-          if (!rec) return;
-          const hasProblem = rec.problems && String(rec.problems).trim();
-          const problemHtml = hasProblem
-            ? `<div style="font-size:13.5px; white-space:pre-wrap; background:#f9f9f9; padding:8px; border-left:3px solid #d93025; margin-top:6px;"><b class="text-danger">⚠️ รายละเอียดปัญหา:</b>\n${rec.problems}</div>`
-            : `<div class="text-success" style="font-size:13.5px; margin-top:6px;">✅ ไม่พบปัญหาในกะนี้</div>`;
-          shiftsHtml += `
-            <div style="padding:8px 0; border-top:1px dashed #ccc;">
-              <div style="font-size:14px;"><b>กะ${shiftName}</b> — เจ้าหน้าที่เวรชั่ง: ${rec.weighmaster || '-'}${rec.licensePlate ? ' | ทะเบียนที่เกี่ยวข้อง: ' + rec.licensePlate : ''}</div>
-              <div style="font-size:13.5px; color:#555; margin-top:2px;">📊 จำนวนรถ: วัตถุดิบออก ${rec.veh_rawmat_out || 0} | อาหารออก ${rec.veh_feed_out || 0} | อาหารภายใน ${rec.veh_feed_in || 0} | วัตถุดิบภายใน ${rec.veh_rawmat_in || 0}</div>
-              ${problemHtml}
-            </div>
-          `;
-        });
-        daysHtml += `
-          <div class="item-block">
-            <div class="print-meta"><span><b>📆 วันที่:</b> ${d}</span></div>
-            ${shiftsHtml}
-          </div>
-        `;
-      });
-    }
-
-    const isRange = scope === 'range';
-    printArea.innerHTML = `
-      <div class="print-header"><h2>📅 รายงานสรุปห้องชั่ง${isRange ? 'ตามช่วงวันที่' : 'รายเดือน'}</h2><div><b>${isRange ? 'ช่วงวันที่' : 'ประจำเดือน'}:</b> ${targetValue}</div></div>
-      <div class="print-section">
-        <h3>📊 สรุปภาพรวม${isRange ? 'ของช่วงเวลาที่เลือก' : 'ทั้งเดือน'}</h3>
-        ${overviewHtml}
-      </div>
-      <div class="print-section">
-        <h3>รายการบันทึกจำแนกตามรายวันและกะปฏิบัติงาน</h3>
-        ${daysHtml}
-      </div>
-    `;
+    empHtml += '</tbody></table></div>';
   }
+
+  // Details
+  let detailsHtml = '';
+  if (detailsArr.length > 0) {
+    detailsHtml = '<div class="print-section"><h3>📝 รายละเอียดปัญหา</h3>';
+    detailsArr.forEach(txt => {
+      detailsHtml += '<div style="font-size:13px; white-space:pre-wrap; border-left:3px solid #d93025; padding:8px 12px; margin-bottom:10px; background:#f9f9f9;">• ' + txt + '</div>';
+    });
+    detailsHtml += '</div>';
+  }
+
+  // Shift detail blocks
+  let shiftBlocksHtml = '';
+  if (records.length > 0) {
+    records.forEach(r => {
+      const hasProblem = r.problems && String(r.problems).trim();
+      shiftBlocksHtml += '<div class="item-block"><div class="print-meta"><span><b>วันที่:</b> ' + r.date + '</span> <span><b>กะ:</b> ' + r.shift + '</span> <span><b>เจ้าหน้าที่:</b> ' + r.weighmaster + '</span></div>' +
+        '<div style="font-size:13px;">รถ: วัตถุดิบออก ' + (r.veh_rawmat_out||0) + ' | อาหารออก ' + (r.veh_feed_out||0) + ' | อาหารภายใน ' + (r.veh_feed_in||0) + ' | วัตถุดิบภายใน ' + (r.veh_rawmat_in||0) + '</div>' +
+        (hasProblem ? '<div style="font-size:13px; white-space:pre-wrap; border-left:3px solid #d93025; padding:6px 10px; margin-top:6px; background:#f9f9f9;">' + r.problems + '</div>' : '<div class="text-success" style="font-size:13px; margin-top:4px;">✅ ไม่พบปัญหา</div>') +
+        '</div>';
+    });
+  }
+
+  printArea.innerHTML =
+    '<div class="print-header"><h2>📋 รายงานสรุปห้องชั่ง' + scopeLabel + '</h2><div><b>' + (isRange ? 'ช่วงวันที่' : (scope === 'daily' ? 'วันที่' : 'เดือน')) + ':</b> ' + periodLabel + '</div></div>' +
+    '<div class="print-section"><h3>📊 ภาพรวม</h3>' + kpiHtml + '</div>' +
+    '<div class="print-section"><h3>📊 สัดส่วนปัญหาแยกตามประเภท</h3>' + barHtml + '</div>' +
+    empHtml +
+    detailsHtml +
+    '<div class="print-section"><h3>📋 บันทึกทั้งหมด (' + records.length + ' รายการ)</h3>' + shiftBlocksHtml + '</div>';
 }
 
 function renderSimpleTable(records) {
   const container = document.getElementById('historyContainer');
   if(!records.length) { container.innerHTML = '<div class="empty-state">ไม่พบประวัติการบันทึกในช่วงเวลานี้</div>'; return; }
-  
-  let html = '<table class="history"><thead><tr><th>วันที่</th><th>กะ</th><th>ผู้บันทึก</th><th>สถานะปัญหา</th></tr></thead><tbody>';
+  let html = '<table class="history"><thead><tr><th>วันที่</th><th>กะ</th><th>ผู้บันทึก</th><th>สถานะ</th></tr></thead><tbody>';
   records.forEach(r => {
-    html += `<tr><td>${r.date}</td><td>${r.shift}</td><td>${r.weighmaster}</td><td>${r.problems ? '<span class="tag">พบปัญหา</span>' : 'ปกติ'}</td></tr>`;
+    html += '<tr><td>' + r.date + '</td><td>' + r.shift + '</td><td>' + r.weighmaster + '</td><td>' + (r.problems ? '<span class="tag">พบปัญหา</span>' : 'ปกติ') + '</td></tr>';
   });
   html += '</tbody></table>';
   container.innerHTML = html;
 }
 
+// ============ FORM SUBMIT ============
 function reviewForm() {
   const date = document.getElementById('f_date').value;
   const master = document.getElementById('f_weighmaster').value.trim();
@@ -550,7 +574,7 @@ function reviewForm() {
 async function confirmAndSave() {
   const btn = document.getElementById('submitBtn');
   btn.disabled = true; btn.textContent = 'กำลังบันทึก...';
-  
+
   const p_overweight = document.querySelector('.problem-item[data-key="overweight"] input').checked;
   const p_driver_behavior = document.querySelector('.problem-item[data-key="driver_behavior"] input').checked;
   const p_system = document.querySelector('.problem-item[data-key="system"] input').checked;
@@ -599,11 +623,11 @@ async function confirmAndSave() {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('f_date').value = new Date().toISOString().split('T')[0];
-  document.getElementById('r_dateSelect').value = new Date().toISOString().split('T')[0];
-  const todayStr = new Date().toISOString().split('T')[0];
-  document.getElementById('r_dateFrom').value = todayStr;
-  document.getElementById('r_dateTo').value = todayStr;
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('f_date').value = today;
+  document.getElementById('r_dateSelect').value = today;
+  document.getElementById('r_dateFrom').value = today;
+  document.getElementById('r_dateTo').value = today;
 });
 </script>
 </body>
